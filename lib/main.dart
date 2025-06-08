@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
+import 'start_screen.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const SachChuyenTayApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class SachChuyenTayApp extends StatelessWidget {
+  const SachChuyenTayApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+    return MaterialApp(
+      title: 'Sách Chuyển Tay',
+      debugShowCheckedModeBanner: false,
+      home: const StartScreen(),
     );
   }
 }
