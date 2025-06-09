@@ -1,16 +1,6 @@
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
-
-// TODO: Tạo file home_screen.dart và import nếu cần
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(child: Text("Chào mừng bạn đến trang chủ")),
-    );
-  }
-}
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
