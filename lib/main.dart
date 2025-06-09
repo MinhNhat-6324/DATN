@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'start_screen.dart';
-import 'home_screen.dart';
-import 'profile_screen.dart';
+import 'package:front_end/Screen/home_screen.dart';
 
 void main() {
   runApp(const SachChuyenTayApp());
@@ -14,7 +12,7 @@ class SachChuyenTayApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const HomeScreen(),
+      home: HomeScreen(),
     );
   }
 }

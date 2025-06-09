@@ -102,6 +102,21 @@ class ProfileScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 30),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                child: ListTile(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  tileColor: const Color(0xFFF6F1E9),
+                  leading: const Icon(Icons.notifications, color: Colors.black87),
+                  title: const Text('Thông báo'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    // TODO:
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 30),
             ],
           ),
         ),
