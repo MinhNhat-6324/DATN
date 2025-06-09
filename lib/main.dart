@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'start_screen.dart';
+import 'Screen/start_screen.dart';
+import 'Screen/trangChu.dart';
 
 void main() {
   runApp(const SachChuyenTayApp());
@@ -13,7 +14,7 @@ class SachChuyenTayApp extends StatelessWidget {
     return MaterialApp(
       title: 'Sách Chuyển Tay',
       debugShowCheckedModeBanner: false,
-      home: const StartScreen(),
+      home: HomeScreen(),
     );
   }
 }
