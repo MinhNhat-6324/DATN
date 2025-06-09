@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'Screen/start_screen.dart';
 import 'Screen/trangChu.dart';
+import 'Screen/home_screen.dart';
+import 'Screen/sanPhamLienQuangScreen.dart';
 
 void main() {
   runApp(const SachChuyenTayApp());
@@ -12,9 +14,8 @@ class SachChuyenTayApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Sách Chuyển Tay',
       debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
+      home: Sanphamlienquangscreen(),
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen2 extends StatelessWidget {
   final List<Map<String, String>> books = List.generate(
     3,
     (index) => {
