@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'login_screen.dart';
+import 'register_screen.dart';
 
 class StartScreen extends StatelessWidget {
   const StartScreen({super.key});
@@ -21,8 +23,8 @@ class StartScreen extends StatelessWidget {
               // Logo
               const Image(
                 image: AssetImage('images/logo.png'),
-                height: 220,
-                width: 220,
+                height: 250,
+                width: 250,
               ),
               const SizedBox(height: 100),
 
@@ -31,8 +33,11 @@ class StartScreen extends StatelessWidget {
                 width: 200,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Navigate to login
-                  },
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        );
+                      },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF4300FF),
                     foregroundColor: Colors.white,
@@ -41,7 +46,10 @@ class StartScreen extends StatelessWidget {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 15),
                   ),
-                  child: const Text('Đăng nhập'),
+                  child: const Text(
+                    'Đăng nhập',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  )
                 ),
               ),
 
@@ -52,7 +60,10 @@ class StartScreen extends StatelessWidget {
                 width: 200,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Navigate to register
+                    Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                        );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF4300FF),
@@ -62,7 +73,10 @@ class StartScreen extends StatelessWidget {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 15),
                   ),
-                  child: const Text('Đăng ký'),
+                  child: const Text(
+                            'Đăng ký',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          )
                 ),
               ),
             ],
