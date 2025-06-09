@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'start_screen.dart';
 import 'home_screen.dart';
+import 'profile_screen.dart';
 
 void main() {
   runApp(const SachChuyenTayApp());
