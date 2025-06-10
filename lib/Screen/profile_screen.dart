@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'image_picker_screen.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -38,7 +38,11 @@ class ProfileScreen extends StatelessWidget {
                           children: [
                             ElevatedButton.icon(
                               onPressed: () {
-                                // TODO: logic đổi ảnh đại diện
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const ImagePickerScreen()),
+                                );
                               },
                               icon: const Icon(Icons.image, size: 18),
                               label: const Text("Đổi ảnh đại diện"),
@@ -164,7 +168,7 @@ class _InfoRow extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.edit, color: Colors.blueAccent),
                   onPressed: () {
-                    // TODO: mở hộp thoại chỉnh sửa số điện thoại
+                    showEditPhoneDialog(context);
                   },
                 ),
             ],
@@ -174,4 +178,83 @@ class _InfoRow extends StatelessWidget {
       ],
     );
   }
+}
+
+void showEditPhoneDialog(BuildContext context) {
+  final TextEditingController phoneController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF00C6FF), Color(0xFF0072FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  hintText: 'Nhập số điện thoại mới',
+                  hintStyle: const TextStyle(color: Colors.black54),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("Huỷ"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black87,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      final newPhone = phoneController.text.trim();
+                      // TODO: xử lý cập nhật số điện thoại 
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("Lưu số"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black87,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
