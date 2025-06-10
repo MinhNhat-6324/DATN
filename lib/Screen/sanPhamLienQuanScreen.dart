@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class Sanphamlienquangscreen extends StatelessWidget {
-  const Sanphamlienquangscreen({super.key});
+class Sanphamlienquanscreen extends StatelessWidget {
+  const Sanphamlienquanscreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -129,42 +129,55 @@ class Sanphamlienquangscreen extends StatelessWidget {
   }
 
   Widget _bookItem(String title, String price, String imageUrl) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AspectRatio(
-            aspectRatio: 1, // hình vuông
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(imageUrl, fit: BoxFit.cover),
+    return SizedBox(
+      height: 100, // 👈 chiều cao cố định, bạn có thể điều chỉnh
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            price,
-            style: const TextStyle(color: Colors.grey, fontSize: 13),
-          ),
-        ],
+          ],
+        ),
+        padding: const EdgeInsets.all(6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              flex: 3,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(imageUrl, fit: BoxFit.cover),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Expanded(
+              flex: 1,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    price,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
