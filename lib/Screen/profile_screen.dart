@@ -48,7 +48,8 @@ class ProfileScreen extends StatelessWidget {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 10),
                                 elevation: 2,
                                 textStyle: const TextStyle(fontSize: 14),
                               ),
@@ -78,8 +79,12 @@ class ProfileScreen extends StatelessWidget {
                     _InfoRow(icon: Icons.school, text: "Công nghệ thông tin"),
                     _InfoRow(icon: Icons.badge, text: "0306221454"),
                     _InfoRow(icon: Icons.transgender, text: "Nam"),
-                    _InfoRow(icon: Icons.email, text: "0306221454@caothang.edu.vn"),
-                    _InfoRow(icon: Icons.phone_android, text: "0364311716", showEdit: true),
+                    _InfoRow(
+                        icon: Icons.email, text: "0306221454@caothang.edu.vn"),
+                    _InfoRow(
+                        icon: Icons.phone_android,
+                        text: "0364311716",
+                        showEdit: true),
                   ],
                 ),
               ),
@@ -90,7 +95,8 @@ class ProfileScreen extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 child: ListTile(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   tileColor: const Color(0xFFF6F1E9),
                   leading: const Icon(Icons.article, color: Colors.black87),
                   title: const Text('Bài viết của tôi'),
@@ -105,9 +111,11 @@ class ProfileScreen extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 child: ListTile(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   tileColor: const Color(0xFFF6F1E9),
-                  leading: const Icon(Icons.notifications, color: Colors.black87),
+                  leading:
+                      const Icon(Icons.notifications, color: Colors.black87),
                   title: const Text('Thông báo'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
