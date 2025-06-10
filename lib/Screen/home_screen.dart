@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'post_green.dart';
+import 'post_screen.dart';
 import 'chat_green.dart';
 import 'profile_screen.dart';
 
@@ -13,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
 
-  final List<Widget> screens = const [
+  final List<Widget> screens = [
     HomeTab(),
     PostScreen(),
     ChatScreen(),
@@ -128,10 +128,34 @@ class HomeTab extends StatelessWidget {
                 ),
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.list),
-              onPressed: () {},
-              color: Colors.blue,
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.list, color: Colors.blue),
+              onSelected: (value) {
+                print('Danh mục được chọn: $value');
+                // Gọi setState và lọc dữ liệu ở đây nếu cần
+              },
+              itemBuilder: (BuildContext context) => const [
+                PopupMenuItem<String>(
+                  value: 'Tất cả',
+                  child: Text('Tất cả'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'CN Oto',
+                  child: Text('CN Oto'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'CNTT',
+                  child: Text('CNTT'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'Cơ Khí',
+                  child: Text('Cơ Khí'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'Kế toán',
+                  child: Text('Kế toán'),
+                ),
+              ],
             ),
           ],
         ),
@@ -153,19 +177,22 @@ class HomeTab extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   title,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
               TextButton(
                 onPressed: () {},
-                child: const Text("Xem thêm →", style: TextStyle(color: Colors.white)),
+                child: const Text("Xem thêm →",
+                    style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
