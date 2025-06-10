@@ -98,12 +98,8 @@ class UpdatePostScreen extends StatelessWidget {
                                 const Text('Danh mục'),
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<String>(
-                                  items: [
-                                    'Chung',
-                                    'Điện tử',
-                                    'Thời trang',
-                                    'Khác'
-                                  ].map((String value) {
+                                  items: ['Chung', 'Sách', 'Điện tử', 'Khác']
+                                      .map((String value) {
                                     return DropdownMenuItem<String>(
                                       value: value,
                                       child: Text(value),
