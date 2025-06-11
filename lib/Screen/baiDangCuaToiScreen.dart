@@ -1,15 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'chinhSuaBaiVietScreen.dart';
-
-class MyPostScreen extends StatefulWidget {
-  const MyPostScreen({super.key});
-
-  @override
-  State<MyPostScreen> createState() => _MyPostScreenState();
-}
-
-class _MyPostScreenState extends State<MyPostScreen> {
+class MyPostScreen extends StatelessWidget {
   final List<Post> posts = [
     Post(title: 'Vật lý đại cương', price: '15,000 VNĐ', status: 'Sẵn sàng'),
     Post(
@@ -33,7 +24,10 @@ class _MyPostScreenState extends State<MyPostScreen> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF0079CF), Color(0xFF00FFDE)],
+              colors: [
+                Color(0xFF0079CF), // Xanh đậm
+                Color(0xFF00FFDE), // Xanh nhạt
+              ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -45,19 +39,7 @@ class _MyPostScreenState extends State<MyPostScreen> {
       body: ListView.builder(
         itemCount: posts.length,
         itemBuilder: (context, index) {
-          return PostCard(
-            post: posts[index],
-            onEdit: () async {
-              // Đây là nơi bạn có thể nhận dữ liệu đã chỉnh sửa nếu muốn
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => UpdatePostScreen(),
-                ),
-              );
-              setState(() {}); // Làm mới nếu cần cập nhật UI
-            },
-          );
+          return PostCard(post: posts[index]);
         },
       ),
     );
@@ -72,17 +54,11 @@ class Post {
   Post({required this.title, required this.price, required this.status});
 }
 
-class PostCard extends StatefulWidget {
+class PostCard extends StatelessWidget {
   final Post post;
-  final VoidCallback onEdit;
 
-  const PostCard({super.key, required this.post, required this.onEdit});
+  PostCard({required this.post});
 
-  @override
-  State<PostCard> createState() => _PostCardState();
-}
-
-class _PostCardState extends State<PostCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -113,18 +89,18 @@ class _PostCardState extends State<PostCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.post.title,
+                    Text(post.title,
                         style: const TextStyle(
                             color: Colors.black, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 24),
-                    Text(widget.post.price,
+                    Text(post.price,
                         style: const TextStyle(color: Colors.black)),
                     const SizedBox(height: 24),
                     Row(
                       children: [
-                        const Icon(Icons.check_circle, color: Colors.green),
+                        Icon(Icons.check_circle, color: Colors.green),
                         const SizedBox(width: 6),
-                        Text(widget.post.status,
+                        Text(post.status,
                             style: const TextStyle(color: Colors.black)),
                       ],
                     ),
@@ -133,35 +109,9 @@ class _PostCardState extends State<PostCard> {
               ),
             ),
             const SizedBox(width: 8),
-            PopupMenuButton<String>(
+            IconButton(
               icon: const Icon(Icons.settings, color: Colors.black),
-              onSelected: (value) {
-                if (value == 'edit') {
-                  widget.onEdit();
-                } else if (value == 'in_progress') {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đang giao dịch...')),
-                  );
-                } else if (value == 'delete') {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã xoá bài viết')),
-                  );
-                }
-              },
-              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                const PopupMenuItem<String>(
-                  value: 'edit',
-                  child: Text('Chỉnh sửa'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'in_progress',
-                  child: Text('Đang giao dịch'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'delete',
-                  child: Text('Xoá'),
-                ),
-              ],
+              onPressed: () {},
             ),
           ],
         ),

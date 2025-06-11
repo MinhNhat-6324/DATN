@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:front_end/Screen/baoCaoScreen.dart';
-import 'package:front_end/Screen/chiTietSanPhamScreen.dart';
-import 'package:front_end/Screen/chinhSuaBaiVietScreen.dart';
+
+import 'package:front_end/Screen/product_details_screen.dart';
 import 'package:front_end/Screen/home_screen.dart';
 import 'package:front_end/Screen/post_screen.dart';
 import 'package:front_end/Screen/profile_screen.dart';
