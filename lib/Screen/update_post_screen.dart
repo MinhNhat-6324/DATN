@@ -43,15 +43,24 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
                 ),
               ),
               padding: const EdgeInsets.symmetric(vertical: 16),
-              child: const Center(
-                child: Text(
-                  'Chỉnh bài viết',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Chỉnh bài viết',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -261,24 +270,24 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
                 ),
               ),
             ),
-            BottomNavigationBar(
-              items: const [
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.home), label: 'Trang chủ'),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.add_box), label: 'Đăng bài'),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.message), label: 'Tin nhắn'),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.person), label: 'Tài khoản'),
-              ],
-              backgroundColor: const Color(0xFF0065F8),
-              selectedItemColor: const Color(0xFF00CAFF),
-              unselectedItemColor: const Color(0xFF00CAFF),
-              selectedLabelStyle: const TextStyle(color: Colors.white),
-              unselectedLabelStyle: const TextStyle(color: Colors.white),
-              type: BottomNavigationBarType.fixed,
-            ),
+            // BottomNavigationBar(
+            //   items: const [
+            //     BottomNavigationBarItem(
+            //         icon: Icon(Icons.home), label: 'Trang chủ'),
+            //     BottomNavigationBarItem(
+            //         icon: Icon(Icons.add_box), label: 'Đăng bài'),
+            //     BottomNavigationBarItem(
+            //         icon: Icon(Icons.message), label: 'Tin nhắn'),
+            //     BottomNavigationBarItem(
+            //         icon: Icon(Icons.person), label: 'Tài khoản'),
+            //   ],
+            //   backgroundColor: const Color(0xFF0065F8),
+            //   selectedItemColor: const Color(0xFF00CAFF),
+            //   unselectedItemColor: const Color(0xFF00CAFF),
+            //   selectedLabelStyle: const TextStyle(color: Colors.white),
+            //   unselectedLabelStyle: const TextStyle(color: Colors.white),
+            //   type: BottomNavigationBarType.fixed,
+            // ),
           ],
         ),
       ),
