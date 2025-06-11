@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'image_picker_screen.dart';
+import 'my_post_screen.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -106,7 +107,10 @@ class ProfileScreen extends StatelessWidget {
                   title: const Text('Bài viết của tôi'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
-                    // TODO: điều hướng đến bài viết cá nhân
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => MyPostScreen()),
+                    );
                   },
                 ),
               ),

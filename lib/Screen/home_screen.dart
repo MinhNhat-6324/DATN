@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'post_screen.dart';
-import 'chat_green.dart';
+import 'chat_screen.dart';
 import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
