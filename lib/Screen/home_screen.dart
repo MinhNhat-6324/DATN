@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'timKiemSanPhamScreen.dart';
+import 'sanPhamLienQuanScreen.dart';
 import 'post_screen.dart';
 import 'chat_screen.dart';
 import 'profile_screen.dart';
-import 'chiTietSanPhamScreen.dart';
+import 'product_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

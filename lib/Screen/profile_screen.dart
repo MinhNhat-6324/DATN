@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front_end/Screen/baiDangCuaToiScreen.dart';
+import 'package:front_end/Screen/my_post_screen.dart';
 import 'image_picker_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
