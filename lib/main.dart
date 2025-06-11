@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:front_end/Screen/baoCaoScreen.dart';
+import 'package:front_end/Screen/report_form_screen.dart';
+import 'package:front_end/Screen/updatePostScreen.dart';
 
-import 'package:front_end/Screen/product_details_screen.dart';
 import 'package:front_end/Screen/home_screen.dart';
 import 'package:front_end/Screen/post_screen.dart';
 import 'package:front_end/Screen/profile_screen.dart';
@@ -22,7 +22,7 @@ class SachChuyenTayApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
+      home: UpdatePostScreen(),
     );
   }
 }

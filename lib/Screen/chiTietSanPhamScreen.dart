@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'baoCaoScreen.dart';
+import 'report_form_screen.dart';
 
 class Chitietsanphamscreen extends StatefulWidget {
   const Chitietsanphamscreen({super.key});
