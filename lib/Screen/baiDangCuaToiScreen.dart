@@ -15,13 +15,26 @@ class MyPostScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF00C3FF),
-        centerTitle: true, // Thuộc tính này sẽ căn giữa tiêu đề
+        centerTitle: true,
         title: const Text(
           'Bài đăng của tôi',
           style: TextStyle(
               fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
         ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF0079CF), // Xanh đậm
+                Color(0xFF00FFDE), // Xanh nhạt
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: ListView.builder(
         itemCount: posts.length,

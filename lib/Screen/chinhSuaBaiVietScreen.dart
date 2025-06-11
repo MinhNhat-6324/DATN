@@ -9,26 +9,36 @@ class UpdatePostScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFFF6F1E9), // Đổi màu nền
       body: SafeArea(
         child: Column(
           children: [
             Container(
-              color: const Color(0xFF00C3FF),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF0079CF), // Xanh đậm ở trên
+                    Color(0xFF00FFDE), // Xanh nhạt dần ở dưới
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: const Center(
                 child: Text(
-                  'Chỉnh sửa bài viết',
+                  'Chỉnh bài viết',
                   style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
             Expanded(
               child: Container(
-                color: Colors.white,
+                color: Colors.transparent, // Đảm bảo không che phủ nền
                 padding: const EdgeInsets.all(16),
                 child: SingleChildScrollView(
                   child: Column(
@@ -41,6 +51,8 @@ class UpdatePostScreen extends StatelessWidget {
                         decoration: const InputDecoration(
                           hintText: 'Tiêu đề (tên sản phẩm...)',
                           border: OutlineInputBorder(),
+                          filled: true, // Đảm bảo có nền cho TextField
+                          fillColor: Colors.white, // Màu nền TextField
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -63,7 +75,11 @@ class UpdatePostScreen extends StatelessWidget {
                                   value: 'Đã sử dụng',
                                   onChanged: (value) {},
                                   decoration: const InputDecoration(
-                                      border: OutlineInputBorder()),
+                                    border: OutlineInputBorder(),
+                                    filled: true,
+                                    fillColor:
+                                        Colors.white, // Nền trắng cho dropdown
+                                  ),
                                 ),
                               ],
                             ),
@@ -81,6 +97,9 @@ class UpdatePostScreen extends StatelessWidget {
                                   decoration: const InputDecoration(
                                     suffixText: '%',
                                     border: OutlineInputBorder(),
+                                    filled: true,
+                                    fillColor:
+                                        Colors.white, // Nền trắng cho TextField
                                   ),
                                 ),
                               ],
@@ -108,7 +127,11 @@ class UpdatePostScreen extends StatelessWidget {
                                   value: 'Chung',
                                   onChanged: (value) {},
                                   decoration: const InputDecoration(
-                                      border: OutlineInputBorder()),
+                                    border: OutlineInputBorder(),
+                                    filled: true,
+                                    fillColor:
+                                        Colors.white, // Nền trắng cho dropdown
+                                  ),
                                 ),
                               ],
                             ),
@@ -126,6 +149,9 @@ class UpdatePostScreen extends StatelessWidget {
                                   decoration: const InputDecoration(
                                     suffixText: 'VNĐ',
                                     border: OutlineInputBorder(),
+                                    filled: true,
+                                    fillColor:
+                                        Colors.white, // Nền trắng cho TextField
                                   ),
                                 ),
                               ],
@@ -149,28 +175,44 @@ class UpdatePostScreen extends StatelessWidget {
                         itemBuilder: (context, index) {
                           return Container(
                             color: Colors.grey[300],
-                            child: Icon(Icons.image, size: 40),
+                            child: const Icon(Icons.image, size: 40),
                           );
                         },
                       ),
                       const SizedBox(height: 16),
                       Align(
                         alignment: Alignment.centerRight,
-                        child: ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF00C3FF),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 12, horizontal: 24),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFF0079CF),
+                                Color(0xFF00FFDE),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                            borderRadius: BorderRadius.all(Radius.circular(8)),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Text('Camera'),
-                              SizedBox(width: 8),
-                              Icon(Icons.camera_alt),
-                            ],
+                          child: ElevatedButton(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 24),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Text('Camera'),
+                                SizedBox(width: 8),
+                                Icon(Icons.camera_alt),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -179,10 +221,13 @@ class UpdatePostScreen extends StatelessWidget {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {},
-                          child: const Text('Đăng bài'),
+                          child: const Text(
+                            'lưu',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0066FF),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: const Color(0xFF0056D2),
+                            padding: const EdgeInsets.symmetric(vertical: 20),
                             textStyle:
                                 const TextStyle(fontWeight: FontWeight.bold),
                           ),

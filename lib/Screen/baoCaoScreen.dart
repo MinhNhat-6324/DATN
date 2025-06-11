@@ -42,16 +42,30 @@ class _ReportFormState extends State<ReportFormScreen> {
       backgroundColor: Color(0xFFF6F1E9),
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
         title: const Text(
           'Báo cáo bài đăng vi phạm',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Colors.white, // Chữ màu trắng
+            color: Colors.white,
+          ),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF0079CF), // Xanh đậm
+                Color(0xFF00FFDE), // Xanh nhạt
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
         ),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         // Sử dụng SingleChildScrollView để tránh trường hợp bàn phím che khuất

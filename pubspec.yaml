@@ -23,9 +23,5 @@ flutter:
   uses-material-design: true
   assets:
     - images/logo.png
-<<<<<<< HEAD
     
     
-=======
-    - images/avatar.png
->>>>>>> ba7c42e84c62f75a57cd315dcf76c53f22a58b4c
