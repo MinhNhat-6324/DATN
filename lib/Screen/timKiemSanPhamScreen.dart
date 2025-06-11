@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 
-class Sanphamlienquanscreen extends StatelessWidget {
-  const Sanphamlienquanscreen({super.key});
+class TimKiemSanPhamScreen extends StatefulWidget {
+  final String title;
 
+  const TimKiemSanPhamScreen({super.key, required this.title});
+
+  @override
+  _TimKiemSanPhamScreenState createState() => _TimKiemSanPhamScreenState();
+}
+
+class _TimKiemSanPhamScreenState extends State<TimKiemSanPhamScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,7 +23,7 @@ class Sanphamlienquanscreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 children: [
                   _buildCategorySection(
-                    title: "Sản phẩm liên quan",
+                    title: widget.title, // Truyền title từ tham số
                     color: Colors.cyan,
                     items: List.generate(
                       8,
@@ -36,8 +43,8 @@ class Sanphamlienquanscreen extends StatelessWidget {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: const Color(0xFF0065F8),
-        selectedItemColor: Color(0xFF00CAFF),
-        unselectedItemColor: Color(0xFF00CAFF),
+        selectedItemColor: const Color(0xFF00CAFF),
+        unselectedItemColor: const Color(0xFF00CAFF),
         selectedLabelStyle: const TextStyle(color: Colors.white),
         unselectedLabelStyle: const TextStyle(color: Colors.white),
         items: const [
@@ -82,11 +89,10 @@ class Sanphamlienquanscreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCategorySection({
-    required String title,
-    required Color color,
-    required List<Widget> items,
-  }) {
+  Widget _buildCategorySection(
+      {required String title,
+      required Color color,
+      required List<Widget> items}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -119,8 +125,7 @@ class Sanphamlienquanscreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           mainAxisSpacing: 20,
           crossAxisSpacing: 22,
-          childAspectRatio:
-              0.65, // Tăng chiều cao so với chiều rộng (cho cảm giác nhỏ gọn)
+          childAspectRatio: 0.65,
           children: items,
         ),
         const SizedBox(height: 16),
@@ -130,7 +135,7 @@ class Sanphamlienquanscreen extends StatelessWidget {
 
   Widget _bookItem(String title, String price, String imageUrl) {
     return SizedBox(
-      height: 100, // 👈 chiều cao cố định, bạn có thể điều chỉnh
+      height: 100,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,

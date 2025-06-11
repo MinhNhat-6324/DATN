@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:front_end/Screen/baiDangCuaToiScreen.dart';
 import 'image_picker_screen.dart';
+
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -41,7 +43,8 @@ class ProfileScreen extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => const ImagePickerScreen()),
+                                      builder: (context) =>
+                                          const ImagePickerScreen()),
                                 );
                               },
                               icon: const Icon(Icons.image, size: 18),
@@ -106,7 +109,10 @@ class ProfileScreen extends StatelessWidget {
                   title: const Text('Bài viết của tôi'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
-                    // TODO: điều hướng đến bài viết cá nhân
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => MyPostScreen()));
                   },
                 ),
               ),
@@ -210,7 +216,8 @@ void showEditPhoneDialog(BuildContext context) {
                   hintStyle: const TextStyle(color: Colors.black54),
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -237,7 +244,7 @@ void showEditPhoneDialog(BuildContext context) {
                   ElevatedButton(
                     onPressed: () {
                       final newPhone = phoneController.text.trim();
-                      // TODO: xử lý cập nhật số điện thoại 
+                      // TODO: xử lý cập nhật số điện thoại
                       Navigator.of(context).pop();
                     },
                     child: const Text("Lưu số"),

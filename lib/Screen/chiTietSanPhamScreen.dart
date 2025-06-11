@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'baoCaoScreen.dart';
 
-class Chitietsanphamscreen extends StatelessWidget {
+class Chitietsanphamscreen extends StatefulWidget {
   const Chitietsanphamscreen({super.key});
 
+  @override
+  State<Chitietsanphamscreen> createState() => _ChitietsanphamscreenState();
+}
+
+class _ChitietsanphamscreenState extends State<Chitietsanphamscreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,10 +37,26 @@ class Chitietsanphamscreen extends StatelessWidget {
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, color: Colors.white),
                     itemBuilder: (context) => const [
-                      PopupMenuItem(value: 'edit', child: Text('Chỉnh sửa')),
-                      PopupMenuItem(value: 'delete', child: Text('Xóa')),
+                      PopupMenuItem(
+                        value: 'report',
+                        child: Row(
+                          children: [
+                            Icon(Icons.report, color: Colors.redAccent),
+                            SizedBox(width: 8),
+                            Text('Báo cáo bài đăng này'),
+                          ],
+                        ),
+                      ),
                     ],
-                    onSelected: (value) {},
+                    onSelected: (value) {
+                      if (value == 'report') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ReportFormScreen()),
+                        );
+                      }
+                    },
                   )
                 ],
               ),
@@ -49,7 +71,7 @@ class Chitietsanphamscreen extends StatelessWidget {
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
                       blurRadius: 4,
-                      offset: Offset(0, 2),
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -76,7 +98,7 @@ class Chitietsanphamscreen extends StatelessWidget {
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
                       blurRadius: 6,
-                      offset: Offset(0, 3),
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
@@ -129,7 +151,9 @@ class Chitietsanphamscreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  // Xử lý khi nhấn "Liên hệ trực tiếp"
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   elevation: 0,
@@ -138,7 +162,7 @@ class Chitietsanphamscreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  minimumSize: const Size(120, 40), // Đặt chiều rộng nhỏ hơn
+                  minimumSize: const Size(120, 40),
                 ),
                 child: Ink(
                   decoration: BoxDecoration(
@@ -154,8 +178,8 @@ class Chitietsanphamscreen extends StatelessWidget {
                   ),
                   child: Container(
                     alignment: Alignment.center,
-                    width: 160, // Đặt chiều rộng nhỏ hơn
-                    height: 40, // Đặt chiều cao
+                    width: 160,
+                    height: 40,
                     child: const Text(
                       'Liên hệ trực tiếp',
                       style: TextStyle(
@@ -171,15 +195,19 @@ class Chitietsanphamscreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      // Gọi điện thoại
+                    },
                     icon: const Icon(Icons.phone_android,
-                        color: Colors.black, size: 36), // Tăng kích thước icon
+                        color: Colors.black, size: 36),
                   ),
                   const SizedBox(width: 30),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      // Gửi mail
+                    },
                     icon: const Icon(Icons.mail_outline,
-                        color: Colors.black, size: 36), // Tăng kích thước icon
+                        color: Colors.black, size: 36),
                   ),
                 ],
               ),
@@ -189,36 +217,36 @@ class Chitietsanphamscreen extends StatelessWidget {
       ),
     );
   }
-}
 
-Widget buildSmallImage(String imageUrl) {
-  return Container(
-    width: 80,
-    height: 110,
-    margin: const EdgeInsets.symmetric(horizontal: 8),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(
-        color: Colors.grey.shade300,
-        width: 2,
+  Widget buildSmallImage(String imageUrl) {
+    return Container(
+      width: 80,
+      height: 110,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: Colors.grey.shade300,
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          )
+        ],
       ),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 4,
-          offset: Offset(0, 2),
-        )
-      ],
-    ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) =>
-            const Icon(Icons.broken_image),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.broken_image),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

@@ -7,7 +7,7 @@ import 'package:front_end/Screen/post_screen.dart';
 import 'package:front_end/Screen/profile_screen.dart';
 import 'package:front_end/Screen/baiDangCuaToiScreen.dart';
 import 'package:front_end/Screen/register_screen.dart';
-import 'package:front_end/Screen/sanPhamLienQuanScreen.dart';
+import 'package:front_end/Screen/timKiemSanPhamScreen.dart';
 import 'package:front_end/Screen/start_screen.dart';
 import 'package:front_end/Screen/image_picker_screen.dart';
 
@@ -22,7 +22,7 @@ class SachChuyenTayApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ReportFormScreen(),
+      home: HomeScreen(),
     );
   }
 }

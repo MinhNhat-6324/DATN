@@ -1,15 +1,33 @@
 import 'package:flutter/material.dart';
 
-class UpdatePostScreen extends StatelessWidget {
+class UpdatePostScreen extends StatefulWidget {
+  const UpdatePostScreen({super.key});
+
+  @override
+  State<UpdatePostScreen> createState() => _UpdatePostScreenState();
+}
+
+class _UpdatePostScreenState extends State<UpdatePostScreen> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
   final TextEditingController conditionController =
       TextEditingController(text: '99');
 
+  String selectedCondition = 'Đã sử dụng';
+  String selectedCategory = 'Chung';
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    priceController.dispose();
+    conditionController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F1E9), // Đổi màu nền
+      backgroundColor: const Color(0xFFF6F1E9),
       body: SafeArea(
         child: Column(
           children: [
@@ -17,8 +35,8 @@ class UpdatePostScreen extends StatelessWidget {
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFF0079CF), // Xanh đậm ở trên
-                    Color(0xFF00FFDE), // Xanh nhạt dần ở dưới
+                    Color(0xFF0079CF),
+                    Color(0xFF00FFDE),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -38,7 +56,6 @@ class UpdatePostScreen extends StatelessWidget {
             ),
             Expanded(
               child: Container(
-                color: Colors.transparent, // Đảm bảo không che phủ nền
                 padding: const EdgeInsets.all(16),
                 child: SingleChildScrollView(
                   child: Column(
@@ -51,8 +68,8 @@ class UpdatePostScreen extends StatelessWidget {
                         decoration: const InputDecoration(
                           hintText: 'Tiêu đề (tên sản phẩm...)',
                           border: OutlineInputBorder(),
-                          filled: true, // Đảm bảo có nền cho TextField
-                          fillColor: Colors.white, // Màu nền TextField
+                          filled: true,
+                          fillColor: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -72,13 +89,16 @@ class UpdatePostScreen extends StatelessWidget {
                                       child: Text(value),
                                     );
                                   }).toList(),
-                                  value: 'Đã sử dụng',
-                                  onChanged: (value) {},
+                                  value: selectedCondition,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedCondition = value!;
+                                    });
+                                  },
                                   decoration: const InputDecoration(
                                     border: OutlineInputBorder(),
                                     filled: true,
-                                    fillColor:
-                                        Colors.white, // Nền trắng cho dropdown
+                                    fillColor: Colors.white,
                                   ),
                                 ),
                               ],
@@ -98,8 +118,7 @@ class UpdatePostScreen extends StatelessWidget {
                                     suffixText: '%',
                                     border: OutlineInputBorder(),
                                     filled: true,
-                                    fillColor:
-                                        Colors.white, // Nền trắng cho TextField
+                                    fillColor: Colors.white,
                                   ),
                                 ),
                               ],
@@ -124,13 +143,16 @@ class UpdatePostScreen extends StatelessWidget {
                                       child: Text(value),
                                     );
                                   }).toList(),
-                                  value: 'Chung',
-                                  onChanged: (value) {},
+                                  value: selectedCategory,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedCategory = value!;
+                                    });
+                                  },
                                   decoration: const InputDecoration(
                                     border: OutlineInputBorder(),
                                     filled: true,
-                                    fillColor:
-                                        Colors.white, // Nền trắng cho dropdown
+                                    fillColor: Colors.white,
                                   ),
                                 ),
                               ],
@@ -150,8 +172,7 @@ class UpdatePostScreen extends StatelessWidget {
                                     suffixText: 'VNĐ',
                                     border: OutlineInputBorder(),
                                     filled: true,
-                                    fillColor:
-                                        Colors.white, // Nền trắng cho TextField
+                                    fillColor: Colors.white,
                                   ),
                                 ),
                               ],
@@ -171,7 +192,7 @@ class UpdatePostScreen extends StatelessWidget {
                           crossAxisSpacing: 4,
                           mainAxisSpacing: 4,
                         ),
-                        itemCount: 6, // Số ảnh giả định
+                        itemCount: 6,
                         itemBuilder: (context, index) {
                           return Container(
                             color: Colors.grey[300],
@@ -220,16 +241,18 @@ class UpdatePostScreen extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {},
-                          child: const Text(
-                            'lưu',
-                            style: TextStyle(fontSize: 16, color: Colors.white),
-                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF0056D2),
                             padding: const EdgeInsets.symmetric(vertical: 20),
                             textStyle:
                                 const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          child: const Text(
+                            'Lưu',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                         ),
                       ),

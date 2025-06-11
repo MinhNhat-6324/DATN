@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'timKiemSanPhamScreen.dart';
 import 'post_screen.dart';
 import 'chat_green.dart';
 import 'profile_screen.dart';
+import 'chiTietSanPhamScreen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
 
   final List<Widget> screens = [
-    HomeTab(),
+    const HomeTab(),
     PostScreen(),
     ChatScreen(),
     ProfileScreen(),
@@ -59,17 +61,19 @@ class HomeTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _buildSearchBar(),
+        _buildSearchBar(context),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             children: [
               _buildCategorySection(
+                context: context,
                 title: "Sách chung",
                 color: Colors.cyan,
                 items: List.generate(
                   5,
                   (_) => _bookItem(
+                    context,
                     "Vật lý đại cương",
                     "15.000 VND",
                     "https://lib.caothang.edu.vn/book_images/16037.jpg",
@@ -77,11 +81,13 @@ class HomeTab extends StatelessWidget {
                 ),
               ),
               _buildCategorySection(
+                context: context,
                 title: "Công nghệ Oto",
                 color: Colors.lightBlue,
                 items: List.generate(
                   5,
                   (_) => _bookItem(
+                    context,
                     "Thực tập ô tô 2",
                     "15.000 VND",
                     "https://lib.caothang.edu.vn/book_images/34004.jpg",
@@ -89,11 +95,13 @@ class HomeTab extends StatelessWidget {
                 ),
               ),
               _buildCategorySection(
+                context: context,
                 title: "Công nghệ thông tin",
                 color: Colors.teal,
                 items: List.generate(
                   5,
                   (_) => _bookItem(
+                    context,
                     "C++ cơ bản",
                     "20.000 VND",
                     "https://images.unsplash.com/photo-1517433456452-f9633a875f6f",
@@ -107,7 +115,7 @@ class HomeTab extends StatelessWidget {
     );
   }
 
-  static Widget _buildSearchBar() {
+  static Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Container(
@@ -118,7 +126,18 @@ class HomeTab extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.search, color: Colors.blue),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const TimKiemSanPhamScreen(title: "Tìm kiếm"),
+                  ),
+                );
+              },
+              child: const Icon(Icons.search, color: Colors.blue),
+            ),
             const SizedBox(width: 8),
             const Expanded(
               child: TextField(
@@ -131,30 +150,19 @@ class HomeTab extends StatelessWidget {
             PopupMenuButton<String>(
               icon: const Icon(Icons.list, color: Colors.blue),
               onSelected: (value) {
-                print('Danh mục được chọn: $value');
-                // Gọi setState và lọc dữ liệu ở đây nếu cần
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TimKiemSanPhamScreen(title: value),
+                  ),
+                );
               },
               itemBuilder: (BuildContext context) => const [
-                PopupMenuItem<String>(
-                  value: 'Tất cả',
-                  child: Text('Tất cả'),
-                ),
-                PopupMenuItem<String>(
-                  value: 'CN Oto',
-                  child: Text('CN Oto'),
-                ),
-                PopupMenuItem<String>(
-                  value: 'CNTT',
-                  child: Text('CNTT'),
-                ),
-                PopupMenuItem<String>(
-                  value: 'Cơ Khí',
-                  child: Text('Cơ Khí'),
-                ),
-                PopupMenuItem<String>(
-                  value: 'Kế toán',
-                  child: Text('Kế toán'),
-                ),
+                PopupMenuItem<String>(value: 'Tất cả', child: Text('Tất cả')),
+                PopupMenuItem<String>(value: 'CN Oto', child: Text('CN Oto')),
+                PopupMenuItem<String>(value: 'CNTT', child: Text('CNTT')),
+                PopupMenuItem<String>(value: 'Cơ Khí', child: Text('Cơ Khí')),
+                PopupMenuItem<String>(value: 'Kế toán', child: Text('Kế toán')),
               ],
             ),
           ],
@@ -164,6 +172,7 @@ class HomeTab extends StatelessWidget {
   }
 
   static Widget _buildCategorySection({
+    required BuildContext context,
     required String title,
     required Color color,
     required List<Widget> items,
@@ -190,9 +199,18 @@ class HomeTab extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () {},
-                child: const Text("Xem thêm →",
-                    style: TextStyle(color: Colors.white)),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TimKiemSanPhamScreen(title: title),
+                    ),
+                  );
+                },
+                child: const Text(
+                  "Xem thêm →",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -215,34 +233,49 @@ class HomeTab extends StatelessWidget {
     );
   }
 
-  static Widget _bookItem(String title, String price, String imageUrl) {
-    return Container(
-      width: 120,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(imageUrl, fit: BoxFit.cover),
+  static Widget _bookItem(
+    BuildContext context,
+    String title,
+    String price,
+    String imageUrl,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const Chitietsanphamscreen(),
+          ),
+        );
+      },
+      child: Container(
+        width: 120,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(imageUrl, fit: BoxFit.cover),
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          Text(
-            price,
-            style: const TextStyle(color: Colors.grey),
-          ),
-        ],
+            const SizedBox(height: 6),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              price,
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
       ),
     );
   }
