@@ -43,21 +43,26 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
                 ),
               ),
               padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Row(
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Chỉnh bài viết',
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                  const Center(
+                    child: Text(
+                      'Chỉnh bài viết',
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -70,7 +75,10 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Tiêu đề bài viết'),
+                      const Text(
+                        'Tiêu đề bài viết',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: titleController,
@@ -88,7 +96,10 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Tình trạng'),
+                                const Text(
+                                  'Tình trạng',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<String>(
                                   items:
@@ -118,7 +129,10 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Độ mới sản phẩm'),
+                                const Text(
+                                  'Độ mới sản phẩm',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
                                 const SizedBox(height: 8),
                                 TextField(
                                   controller: conditionController,
@@ -142,7 +156,10 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Danh mục'),
+                                const Text(
+                                  'Danh mục',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<String>(
                                   items: ['Chung', 'Sách', 'Điện tử', 'Khác']
@@ -172,7 +189,10 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Giá tiền'),
+                                const Text(
+                                  'Giá tiền',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
                                 const SizedBox(height: 8),
                                 TextField(
                                   controller: priceController,
@@ -190,25 +210,12 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      const Text('Ảnh đã chụp'),
-                      const SizedBox(height: 8),
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 4,
-                          mainAxisSpacing: 4,
-                        ),
-                        itemCount: 6,
-                        itemBuilder: (context, index) {
-                          return Container(
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.image, size: 40),
-                          );
-                        },
+                      const Text(
+                        'Ảnh đã chụp',
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
+                      const SizedBox(height: 8),
+                      // GridView.builder(...) // giữ nguyên nếu chưa cần chỉnh ảnh
                       const SizedBox(height: 16),
                       Align(
                         alignment: Alignment.centerRight,
@@ -270,24 +277,6 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
                 ),
               ),
             ),
-            // BottomNavigationBar(
-            //   items: const [
-            //     BottomNavigationBarItem(
-            //         icon: Icon(Icons.home), label: 'Trang chủ'),
-            //     BottomNavigationBarItem(
-            //         icon: Icon(Icons.add_box), label: 'Đăng bài'),
-            //     BottomNavigationBarItem(
-            //         icon: Icon(Icons.message), label: 'Tin nhắn'),
-            //     BottomNavigationBarItem(
-            //         icon: Icon(Icons.person), label: 'Tài khoản'),
-            //   ],
-            //   backgroundColor: const Color(0xFF0065F8),
-            //   selectedItemColor: const Color(0xFF00CAFF),
-            //   unselectedItemColor: const Color(0xFF00CAFF),
-            //   selectedLabelStyle: const TextStyle(color: Colors.white),
-            //   unselectedLabelStyle: const TextStyle(color: Colors.white),
-            //   type: BottomNavigationBarType.fixed,
-            // ),
           ],
         ),
       ),

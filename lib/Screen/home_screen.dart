@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'sanPhamLienQuanScreen.dart';
+import 'search_screen.dart';
 import 'post_screen.dart';
 import 'chat_screen.dart';
 import 'profile_screen.dart';
