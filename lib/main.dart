@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:front_end/Screen/report_form_screen.dart';
-import 'package:front_end/Screen/update_post_screen.dart';
-import 'Screen/post_management_screen.dart';
 import 'package:front_end/Screen/home_screen.dart';
-import 'package:front_end/Screen/post_screen.dart';
-import 'package:front_end/Screen/profile_screen.dart';
-import 'package:front_end/Screen/my_post_screen.dart';
-import 'package:front_end/Screen/register_screen.dart';
-import 'package:front_end/Screen/search_screen.dart';
-import 'package:front_end/Screen/start_screen.dart';
-import 'package:front_end/Screen/image_picker_screen.dart';
-
+import 'Screen/start_screen.dart';
+import 'Screen/my_post_screen.dart';
+import 'Screen/admin.dart';
 void main() {
   runApp(const SachChuyenTayApp());
 }
@@ -22,7 +14,7 @@ class SachChuyenTayApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
+      home: AdminScreen(),
     );
   }
 }

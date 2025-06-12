@@ -9,6 +9,7 @@ class ChatScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F1E9), // Nền xám nhạt cho toàn bộ màn hình
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         centerTitle: true,
         title: const Text(
           'Tin nhắn', // Đổi tiêu đề AppBar

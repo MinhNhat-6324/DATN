@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'search_screen.dart';
 import 'post_screen.dart';
 import 'chat_screen.dart';
 import 'profile_screen.dart';
@@ -128,13 +127,6 @@ class HomeTab extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        const TimKiemSanPhamScreen(title: "Tìm kiếm"),
-                  ),
-                );
               },
               child: const Icon(Icons.search, color: Colors.blue),
             ),
@@ -150,12 +142,6 @@ class HomeTab extends StatelessWidget {
             PopupMenuButton<String>(
               icon: const Icon(Icons.list, color: Colors.blue),
               onSelected: (value) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TimKiemSanPhamScreen(title: value),
-                  ),
-                );
               },
               itemBuilder: (BuildContext context) => const [
                 PopupMenuItem<String>(value: 'Tất cả', child: Text('Tất cả')),
@@ -200,12 +186,6 @@ class HomeTab extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TimKiemSanPhamScreen(title: title),
-                    ),
-                  );
                 },
                 child: const Text(
                   "Xem thêm →",
@@ -244,7 +224,7 @@ class HomeTab extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const Chitietsanphamscreen(),
+            builder: (context) => const ProductDetailsScreen(),
           ),
         );
       },
