@@ -72,7 +72,6 @@ class _OtpScreenState extends State<OtpScreen> {
                   onPressed: () {
                     String otp = _otpController.text.trim();
                     if (otp.length == 6) {
-                      // TODO: xác thực OTP
                       print('Đã nhập mã: $otp');
                     } else {
                       showDialog(
@@ -104,7 +103,6 @@ class _OtpScreenState extends State<OtpScreen> {
               const SizedBox(height: 20),
               TextButton(
                 onPressed: () {
-                  // TODO: Gửi lại mã OTP
                 },
                 child: const Text(
                   'Gửi lại mã',

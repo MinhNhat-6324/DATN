@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart'; // Import image_picker
-import 'dart:io'; // Để làm việc với File
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class UpdatePostScreen extends StatefulWidget {
-  // Bạn có thể truyền dữ liệu bài viết hiện có vào đây để cập nhật
   final String? initialTitle;
   final String? initialPrice;
   final String? initialCondition;
@@ -115,7 +114,6 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
   }
 
   void _savePost() {
-    // Logic lưu bài viết
     debugPrint('Tiêu đề: ${titleController.text}');
     debugPrint('Giá: ${priceController.text}');
     debugPrint('Tình trạng: $_selectedConditionType');
@@ -124,7 +122,6 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
     debugPrint('Số lượng ảnh mới chụp/chọn: ${_capturedImages.length}');
     debugPrint('Số lượng ảnh cũ: ${_existingImageUrls.length}');
 
-    // Thêm logic gửi dữ liệu và ảnh lên server ở đây
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Đã lưu bài viết!',
@@ -132,7 +129,6 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
         backgroundColor: const Color(0xFF00C6FF),
       ),
     );
-    // Có thể pop màn hình sau khi lưu thành công
     Navigator.of(context).pop();
   }
 
@@ -387,9 +383,9 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _savePost, // Gọi hàm lưu bài viết
+                onPressed: _savePost,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0056D2), // Màu xanh đậm
+                  backgroundColor: const Color(0xFF0056D2),
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -411,7 +407,6 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
     );
   }
 
-  // Helper cho tiêu đề phần
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
@@ -423,7 +418,6 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
     );
   }
 
-  // Helper cho TextField
   Widget _buildTextField({
     required TextEditingController controller,
     String? hintText,
@@ -451,18 +445,17 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
           suffixText: suffixText,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none, // Bỏ viền mặc định
+            borderSide: BorderSide.none,
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           filled: true,
-          fillColor: Colors.transparent, // Nền trong suốt để container show màu
+          fillColor: Colors.transparent,
         ),
       ),
     );
   }
 
-  // Helper cho DropdownButtonFormField
   Widget _buildDropdownButtonFormField({
     required String? value,
     required List<String> items,
@@ -486,12 +479,12 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
         decoration: InputDecoration(
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none, // Bỏ viền mặc định
+            borderSide: BorderSide.none,
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           filled: true,
-          fillColor: Colors.transparent, // Nền trong suốt để container show màu
+          fillColor: Colors.transparent,
         ),
         items: items.map((String val) {
           return DropdownMenuItem<String>(
@@ -504,7 +497,6 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
     );
   }
 
-  // Hiển thị ActionSheet để chọn nguồn ảnh
   void _showImageSourceActionSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,

@@ -1,40 +1,39 @@
 import 'package:flutter/material.dart';
 
 class ChatDetailScreen extends StatelessWidget {
-  final String userName; // Tên người dùng của cuộc trò chuyện này
-  final String? avatarAsset ; // Đường dẫn đến ảnh avatar của người dùng khác
+  final String userName;
+  final String? avatarAsset ; 
 
   const ChatDetailScreen({
     super.key,
     required this.userName,
-    this.avatarAsset, // Có thể truyền avatar từ màn hình trước
+    this.avatarAsset, 
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F5), // Nền xám nhạt cho toàn bộ màn hình
+      backgroundColor: const Color(0xFFF0F2F5), 
       appBar: AppBar(
-        // Nút quay lại mặc định đã có trong AppBar
-        titleSpacing: 0, // Bỏ khoảng cách mặc định của title
+        titleSpacing: 0, 
         title: Row(
           children: [
             CircleAvatar(
-              radius: 20, // Kích thước avatar nhỏ trong AppBar
+              radius: 20,
               backgroundColor: Colors.grey[200],
               backgroundImage: avatarAsset != null
                   ? AssetImage(avatarAsset!)
-                  : null, // Sử dụng AssetImage nếu có
+                  : null, 
               child: avatarAsset == null
                   ? Icon(Icons.person, color: Colors.grey[600])
-                  : null, // Icon mặc định nếu không có avatar
+                  : null, 
             ),
             const SizedBox(width: 10),
             Text(
-              userName, // Hiển thị tên người dùng đang trò chuyện
+              userName, 
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 18, // Điều chỉnh font size cho phù hợp
+                fontSize: 18, 
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -44,28 +43,28 @@ class ChatDetailScreen extends StatelessWidget {
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Color(0xFF0079CF), // Xanh đậm
-                Color(0xFF00FFDE), // Xanh nhạt
+                Color(0xFF0079CF), 
+                Color(0xFF00FFDE),
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
           ),
         ),
-        backgroundColor: Colors.transparent, // Đảm bảo AppBar trong suốt để gradient hiển thị
-        elevation: 0, // Bỏ đổ bóng
-        iconTheme: const IconThemeData(color: Colors.white), // Đổi màu icon quay lại thành trắng
+        backgroundColor: Colors.transparent,
+        elevation: 0, 
+        iconTheme: const IconThemeData(color: Colors.white), 
       ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF0079CF), // Xanh đậm ở trên
-              Color(0xFF00FFDE), // Xanh nhạt dần ở dưới
+              Color(0xFF0079CF), 
+              Color(0xFF00FFDE), 
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            stops: [0.0, 0.4], // Điều chỉnh dừng màu để phần dưới là xanh nhạt/trong suốt hơn
+            stops: [0.0, 0.4], 
           ),
         ),
         child: Column(
@@ -74,23 +73,21 @@ class ChatDetailScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: const [
-                  // Tin nhắn gửi đi (màu xanh nhạt)
                   Align(
                     alignment: Alignment.centerRight,
                     child: MessageBubble(
                       text: 'Chào anh',
                       time: '8:50',
-                      isMe: true, // Tin nhắn của bạn
+                      isMe: true,
                     ),
                   ),
                   SizedBox(height: 10),
-                  // Tin nhắn nhận được (màu xám nhạt)
                   Align(
                     alignment: Alignment.centerLeft,
                     child: MessageBubble(
                       text: 'Chào bạn, có chuyện gì không?',
                       time: '8:52',
-                      isMe: false, // Tin nhắn của người khác
+                      isMe: false, 
                     ),
                   ),
                   SizedBox(height: 10),
@@ -102,11 +99,10 @@ class ChatDetailScreen extends StatelessWidget {
                       isMe: true,
                     ),
                   ),
-                  // Thêm nhiều tin nhắn khác ở đây
                 ],
               ),
             ),
-            _buildInputBox(), // Hộp nhập tin nhắn
+            _buildInputBox(), 
           ],
         ),
       ),
@@ -116,13 +112,12 @@ class ChatDetailScreen extends StatelessWidget {
   Widget _buildInputBox() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      color: Colors.white, // Nền trắng cho hộp nhập tin nhắn
+      color: Colors.white,
       child: Row(
         children: [
           IconButton(
             icon: const Icon(Icons.camera_alt, color: Colors.grey),
             onPressed: () {
-              // Xử lý khi nhấn biểu tượng camera
               debugPrint('Nhấn biểu tượng camera');
             },
           ),
@@ -132,11 +127,11 @@ class ChatDetailScreen extends StatelessWidget {
                 hintText: 'Nhập tin nhắn ...',
                 hintStyle: const TextStyle(color: Colors.grey),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0), // Bo tròn góc
-                  borderSide: BorderSide.none, // Bỏ viền
+                  borderRadius: BorderRadius.circular(25.0),
+                  borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: const Color(0xFFF0F2F5), // Nền xám nhạt cho TextField
+                fillColor: const Color(0xFFF0F2F5),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
               ),
             ),
@@ -144,7 +139,6 @@ class ChatDetailScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.sentiment_satisfied_alt, color: Colors.grey),
             onPressed: () {
-              // Xử lý khi nhấn biểu tượng cảm xúc
               debugPrint('Nhấn biểu tượng cảm xúc');
             },
           ),
@@ -158,7 +152,7 @@ class ChatDetailScreen extends StatelessWidget {
 class MessageBubble extends StatelessWidget {
   final String text;
   final String time;
-  final bool isMe; // true nếu là tin nhắn của mình, false nếu là của người khác
+  final bool isMe;
 
   const MessageBubble({
     super.key,
