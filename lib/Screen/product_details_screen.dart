@@ -12,12 +12,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        // Toàn bộ màn hình có gradient nền
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF0079CF), // Xanh đậm ở trên
-              Color(0xFF00FFDE), // Xanh nhạt dần ở dưới
+              Color(0xFF0079CF),
+              Color(0xFF00FFDE),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -27,10 +26,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // AppBar tùy chỉnh
               AppBar(
-                backgroundColor: Colors.transparent, // Nền trong suốt
-                elevation: 0, // Bỏ đổ bóng
+                backgroundColor: Colors.transparent,
+                elevation: 0,
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
@@ -62,17 +60,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   )
                 ],
               ),
-              // Hình ảnh sản phẩm chính
               Container(
-                width: MediaQuery.of(context).size.width * 0.7, // Chiều rộng 70% màn hình
-                height: MediaQuery.of(context).size.width * 0.7 * (4 / 3), // <--- Đã thay đổi tỷ lệ khung hình ở đây để thành khung dọc
+                width: MediaQuery.of(context).size.width * 0.7, 
+                height: MediaQuery.of(context).size.width * 0.7 * (4 / 3),
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16), // Bo tròn góc lớn hơn
-                  color: Colors.white, // Nền trắng cho khung ảnh
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2), // Đổ bóng rõ hơn
+                      color: Colors.black.withOpacity(0.2),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -81,23 +78,23 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Image.network(
-                    'https://lib.caothang.edu.vn/book_images/16037.jpg', // Thay đổi bằng đường dẫn ảnh thực tế của bạn
-                    fit: BoxFit.contain, // Giữ nguyên để ảnh nằm gọn trong khung
+                    'https://lib.caothang.edu.vn/book_images/16037.jpg',
+                    fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) =>
-                        const Center(child: Icon(Icons.image, size: 80, color: Colors.grey)), // Icon lỗi nếu ảnh không tải được
+                        const Center(child: Icon(Icons.image, size: 80, color: Colors.grey)),
                   ),
                 ),
               ),
-              const SizedBox(height: 24), // Tăng khoảng cách
-              // Khu vực các ảnh nhỏ dạng thanh cuộn ngang
+              const SizedBox(height: 24),
+
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4), // Padding hợp lý
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9), // Nền trắng trong suốt nhẹ
+                  color: Colors.white.withOpacity(0.9),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.grey.shade300, // Viền xám nhạt
+                    color: Colors.grey.shade300,
                     width: 1,
                   ),
                   boxShadow: [
@@ -114,16 +111,15 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     children: List.generate(
                       5, // Tăng số lượng ảnh mẫu để thấy hiệu ứng cuộn
                       (index) => buildSmallImage(
-                          'https://lib.caothang.edu.vn/book_images/16037.jpg'), // Ảnh mẫu
+                          'https://lib.caothang.edu.vn/book_images/16037.jpg'),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 24), // Tăng khoảng cách
-              // Khu vực thông tin sản phẩm
+              const SizedBox(height: 24),
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding: const EdgeInsets.all(20), // Tăng padding để nội dung thoáng hơn
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -136,28 +132,28 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, // Căn trái
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
                       'Vật Lý Đại Cương',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 22, // Tăng kích thước chữ
-                        color: Color(0xFF0079CF), // Màu xanh đậm tương tự AppBar
+                        fontSize: 22,
+                        color: Color(0xFF0079CF),
                       ),
                     ),
-                    const SizedBox(height: 12), // Khoảng cách nhỏ
+                    const SizedBox(height: 12),
                     const Text(
                       '15.000 VNĐ',
                       style: TextStyle(
                         color: Colors.red,
-                        fontSize: 18, // Tăng kích thước chữ
-                        fontWeight: FontWeight.bold, // In đậm giá
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 16), // Khoảng cách lớn hơn
+                    const SizedBox(height: 16),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween, // Căn đều 2 bên
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _buildInfoChip(
                             Icons.check_circle_outline, 'Cũ 75%', Colors.green),
@@ -168,17 +164,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 30), // Khoảng cách cuối cùng trước nút
-              // Nút "Liên hệ trực tiếp"
+              const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: () {
                 },
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.zero, // Đặt padding về 0 để gradient chiếm toàn bộ nút
+                  padding: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10), // Bo tròn góc nút
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  elevation: 5, // Đổ bóng cho nút
+                  elevation: 5,
                 ),
                 child: Ink(
                   decoration: BoxDecoration(
@@ -194,19 +189,19 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                   child: Container(
                     alignment: Alignment.center,
-                    width: MediaQuery.of(context).size.width * 0.6, // Chiều rộng tương đối
-                    height: 50, // Chiều cao cố định
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    height: 50,
                     child: const Text(
                       'Liên hệ trực tiếp',
                       style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 18), // Tăng kích thước chữ
+                          fontSize: 18),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 20), // Khoảng cách
+              const SizedBox(height: 20),
               const Text(
                 'Hoặc',
                 style: TextStyle(
@@ -215,23 +210,20 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 20), // Khoảng cách
-              // Các icon liên hệ
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _buildContactIcon(Icons.phone_android, () {
-                    // Gọi điện thoại
                     debugPrint('Gọi điện thoại');
                   }, 'Gọi điện'),
                   const SizedBox(width: 30),
                   _buildContactIcon(Icons.mail_outline, () {
-                    // Gửi mail
                     debugPrint('Gửi email');
                   }, 'Gửi Email'),
                 ],
               ),
-              const SizedBox(height: 40), // Khoảng cách cuối cùng
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -239,32 +231,31 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  // Widget helper cho các ảnh nhỏ trong thanh cuộn
   Widget buildSmallImage(String imageUrl) {
     return Container(
-      width: 90, // Tăng kích thước ảnh nhỏ
-      height: 120, // Tăng kích thước ảnh nhỏ (tỷ lệ 4:3 dọc)
-      margin: const EdgeInsets.symmetric(horizontal: 6), // Giảm khoảng cách ngang
+      width: 90,
+      height: 120,
+      margin: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12), // Bo tròn góc
+        borderRadius: BorderRadius.circular(12), 
         border: Border.all(
           color: Colors.grey.shade300,
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08), // Đổ bóng nhẹ nhàng hơn
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 5,
             offset: const Offset(0, 3),
           )
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10), // Bo tròn bên trong
+        borderRadius: BorderRadius.circular(10),
         child: Image.network(
           imageUrl,
-          fit: BoxFit.contain, // Giữ nguyên để ảnh không bị cắt
+          fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) =>
               const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
         ),
@@ -272,14 +263,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  // Widget helper cho các chip thông tin (cũ/mới, danh mục)
   Widget _buildInfoChip(IconData icon, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1), // Nền màu nhẹ
-        borderRadius: BorderRadius.circular(20), // Bo tròn hình chip
-        border: Border.all(color: color, width: 1), // Viền cùng màu
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -299,13 +289,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  // Widget helper cho các icon liên hệ
   Widget _buildContactIcon(IconData icon, VoidCallback onPressed, String label) {
     return Column(
       children: [
         InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(30), // Bo tròn cho hiệu ứng splash
+          borderRadius: BorderRadius.circular(30),
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -319,7 +308,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ),
               ],
             ),
-            child: Icon(icon, color: Color(0xFF0079CF), size: 30), // Icon màu xanh đậm
+            child: Icon(icon, color: Color(0xFF0079CF), size: 30),
           ),
         ),
         const SizedBox(height: 8),

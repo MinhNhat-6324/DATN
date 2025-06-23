@@ -7,12 +7,12 @@ class ChatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F1E9), // Nền xám nhạt cho toàn bộ màn hình
+      backgroundColor: const Color(0xFFF6F1E9),
       appBar: AppBar(
         automaticallyImplyLeading: false,
         centerTitle: true,
         title: const Text(
-          'Tin nhắn', // Đổi tiêu đề AppBar
+          'Tin nhắn',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -23,16 +23,16 @@ class ChatScreen extends StatelessWidget {
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Color(0xFF0079CF), // Xanh đậm
-                Color(0xFF00FFDE), // Xanh nhạt
+                Color(0xFF0079CF),
+                Color(0xFF00FFDE),
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
           ),
         ),
-        backgroundColor: Colors.transparent, // Đảm bảo background là trong suốt để gradient hiển thị
-        elevation: 0, // Bỏ đổ bóng của AppBar
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: ListView(
         children: [
@@ -48,7 +48,6 @@ class ChatScreen extends StatelessWidget {
             lastMessage: 'Hello bạn.',
             avatarAsset: 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
           ),
-          // Thêm các _buildChatItem khác nếu có
         ],
       ),
     );
@@ -73,14 +72,14 @@ class ChatScreen extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         decoration: BoxDecoration(
-          color: Colors.white, // Nền trắng cho mỗi item
-          borderRadius: BorderRadius.circular(12), // Bo tròn góc
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withOpacity(0.1),
               spreadRadius: 1,
               blurRadius: 3,
-              offset: const Offset(0, 2), // Đổ bóng nhẹ
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -89,12 +88,11 @@ class ChatScreen extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  radius: 28, // Kích thước avatar
-                  backgroundColor: Colors.grey[200], // Màu nền avatar nếu ảnh không tải
-                  backgroundImage: NetworkImage(avatarAsset), // Sử dụng AssetImage
+                  radius: 28,
+                  backgroundColor: Colors.grey[200],
+                  backgroundImage: NetworkImage(avatarAsset),
                   onBackgroundImageError: (exception, stackTrace) {
                     debugPrint('Lỗi tải ảnh avatar: $exception');
-                    // Fallback to a default icon or blank avatar
                   },
                 ),
                 const SizedBox(width: 16),
@@ -107,7 +105,7 @@ class ChatScreen extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF333333), // Màu chữ đậm hơn
+                          color: Color(0xFF333333),
                         ),
                       ),
                       const SizedBox(height: 4),

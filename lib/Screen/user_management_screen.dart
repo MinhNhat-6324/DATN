@@ -8,12 +8,13 @@ class UserManagementScreen extends StatefulWidget {
 }
 
 class _UserManagementScreenState extends State<UserManagementScreen> {
+  // Dữ liệu người dùng
   final List<Map<String, dynamic>> _users = [
     {
       "name": "Nguyễn Vũ Minh Nhật",
       "phone": "0306221454",
       "isLocked": false,
-      "avatar": "https://cdn-icons-png.flaticon.com/512/4140/4140037.png", 
+      "avatar": "https://cdn-icons-png.flaticon.com/512/4140/4140037.png",
     },
     {
       "name": "Hỷ Châu Quang Phúc",
@@ -23,6 +24,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     },
   ];
 
+  // Logic để khóa/mở khóa người dùng
   void _toggleUserLock(int index) async {
     final user = _users[index];
     final bool currentLockStatus = user["isLocked"];
@@ -35,7 +37,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        backgroundColor: const Color(0xFF2193b0),
+        backgroundColor: const Color(0xFF2280EF), // Sử dụng màu gradient chính
         title: Text(
           "Xác nhận ${action} tài khoản",
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -53,7 +55,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF2193b0),
+              foregroundColor: const Color(0xFF2280EF), // Màu nút theo màu chính của app
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -73,6 +75,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         SnackBar(
           content: Text("Đã ${action} tài khoản của ${user["name"]}"),
           backgroundColor: const Color(0xFF00C6FF),
+          behavior: SnackBarBehavior.floating, // Hiển thị nổi
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
         ),
       );
     }
@@ -81,55 +86,73 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F1E9),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2280EF), Color(0xFF00FFDE)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
-        elevation: 0,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
-            const Spacer(),
-            const Text(
-              "Danh sách người dùng",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
+      backgroundColor: const Color(0xFFF0F2F5), // Nền màu xám nhạt hiện đại hơn
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 30.0, // Đã điều chỉnh chiều cao nhỏ hơn
+            floating: true,
+            pinned: true,
+            automaticallyImplyLeading: false,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF2280EF), // Xanh đậm
+                    Color(0xFF00FFDE), // Xanh nhạt
+                  ],
+                  begin: Alignment.topCenter, // Đổi gradient từ trên xuống
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: FlexibleSpaceBar(
+                centerTitle: true, // Căn giữa tiêu đề
+                titlePadding: const EdgeInsets.only(bottom: 5.0), // Đã điều chỉnh padding
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Đẩy các phần tử ra xa nhau
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: 'Quay lại', // Thêm tooltip
+                    ),
+                    const Text(
+                      "   Danh sách người dùng",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 50), // Để căn chỉnh cho cân đối với nút back
+                  ],
+                ),
               ),
             ),
-            const Spacer(flex: 2),
-          ],
-        ),
-        backgroundColor: Colors.transparent,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView.builder(
-          itemCount: _users.length,
-          itemBuilder: (context, index) {
-            final user = _users[index];
-            return UserItem(
-              name: user["name"],
-              phone: user["phone"],
-              isLocked: user["isLocked"],
-              avatarUrl: user["avatar"],
-              onToggleLock: () => _toggleUserLock(index),
-            );
-          },
-        ),
+          ),
+
+          // Danh sách người dùng
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final user = _users[index]; // Use _users directly
+                return UserItem(
+                  name: user["name"],
+                  phone: user["phone"],
+                  isLocked: user["isLocked"],
+                  avatarUrl: user["avatar"],
+                  onToggleLock: () => _toggleUserLock(index), // Pass the direct index
+                );
+              },
+              childCount: _users.length, // Use _users.length directly
+            ),
+          ),
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 20), // Khoảng trống cuối cùng
+          ),
+        ],
       ),
     );
   }
@@ -154,82 +177,109 @@ class UserItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 5,
-              offset: const Offset(0, 3),
-            ),
-          ],
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10), // Đã điều chỉnh padding
+      child: Card(
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
         ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 25,
-              backgroundColor: const Color(0xFF2280EF),
-              backgroundImage: NetworkImage(avatarUrl),
-              onBackgroundImageError: (exception, stackTrace) {
-                debugPrint('Failed to load image: $exception');
-              },
-              child: avatarUrl.isEmpty
-                  ? Text(
-                      name.substring(0, 1).toUpperCase(),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Color(0xFF333333),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    phone,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF666666),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Color(0xFF666666)),
-              onSelected: (String value) {
-                if (value == 'toggleLock') {
-                  onToggleLock();
-                }
-              },
-              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
-                  value: 'toggleLock',
-                  child: Row(
+        child: InkWell(
+          onTap: () {
+            debugPrint('Tapped on user: $name');
+          },
+          borderRadius: BorderRadius.circular(15),
+          splashColor: const Color(0xFF2280EF).withOpacity(0.1),
+          highlightColor: const Color(0xFF2280EF).withOpacity(0.05),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18), // Đã điều chỉnh padding
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 23,
+                  backgroundColor: const Color(0xFF00FFDE),
+                  backgroundImage: NetworkImage(avatarUrl),
+                  onBackgroundImageError: (exception, stackTrace) {
+                    debugPrint('Failed to load image: $exception');
+                  },
+                  child: avatarUrl.isEmpty
+                      ? Text(
+                          name.substring(0, 1).toUpperCase(),
+                          style: const TextStyle(
+                              color: Color(0xFF2280EF),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(isLocked ? Icons.lock_open : Icons.lock,
-                          color: const Color(0xFF2193b0)),
-                      const SizedBox(width: 8),
-                      Text(isLocked ? 'Mở tài khoản' : 'Khóa tài khoản'),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                          color: Color(0xFF333333),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        phone,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF666666),
+                        ),
+                      ),
+                      if (isLocked)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Row(
+                            children: const [
+                              Icon(Icons.lock, size: 16, color: Colors.redAccent),
+                              SizedBox(width: 4),
+                              Text(
+                                'Đã khóa',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.redAccent,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
+                // Nút ba chấm (menu)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Color(0xFF666666)),
+                  onSelected: (String value) {
+                    if (value == 'toggleLock') {
+                      onToggleLock();
+                    }
+                  },
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                    PopupMenuItem<String>(
+                      value: 'toggleLock',
+                      child: Row(
+                        children: [
+                          Icon(isLocked ? Icons.lock_open : Icons.lock,
+                              color: isLocked ? const Color(0xFF2280EF) : Colors.red),
+                          const SizedBox(width: 8),
+                          Text(isLocked ? 'Mở tài khoản' : 'Khóa tài khoản'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

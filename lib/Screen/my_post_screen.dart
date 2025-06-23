@@ -6,32 +6,32 @@ class MyPostScreen extends StatelessWidget {
       title: 'Vật lý đại cương - Cơ nhiệt',
       price: '15,000 VNĐ',
       status: 'Sẵn sàng',
-      imageUrl: 'https://lib.caothang.edu.vn/book_images/16037.jpg', // Ví dụ ảnh sách
+      imageUrl: 'https://lib.caothang.edu.vn/book_images/16037.jpg',
     ),
     Post(
       title: 'Vật lý đại cương - Cơ nhiệt',
       price: '15,000 VNĐ',
       status: 'Đang giao dịch',
-      imageUrl: 'https://lib.caothang.edu.vn/book_images/16037.jpg', // Ví dụ ảnh sách
+      imageUrl: 'https://lib.caothang.edu.vn/book_images/16037.jpg',
     ),
     Post(
       title: 'Vật lý đại cương - Cơ nhiệt',
       price: '15,000 VNĐ',
       status: 'Hoàn thành',
-      imageUrl: 'https://lib.caothang.edu.vn/book_images/16037.jpg', // Ví dụ ảnh sách
+      imageUrl: 'https://lib.caothang.edu.vn/book_images/16037.jpg',
     ),
     Post(
       title: 'Vật lý đại cương - Cơ nhiệt',
       price: '15,000 VNĐ',
       status: 'Hoàn thành',
-      imageUrl: 'https://lib.caothang.edu.vn/book_images/16037.jpg', // Ví dụ ảnh sách
+      imageUrl: 'https://lib.caothang.edu.vn/book_images/16037.jpg',
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F5), // Nền xám nhạt cho toàn bộ màn hình
+      backgroundColor: const Color(0xFFF0F2F5),
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
@@ -42,16 +42,12 @@ class MyPostScreen extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        // Thêm nút quay lại
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white), // Icon mũi tên quay lại màu trắng
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            // Kiểm tra xem có thể pop route hiện tại không
             if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop(); // Quay lại màn hình trước đó
+              Navigator.of(context).pop();
             } else {
-              // Xử lý nếu không có màn hình nào để quay lại (ví dụ: đây là màn hình gốc)
-              // Có thể chuyển hướng đến màn hình chính hoặc đơn giản là không làm gì.
               print('Không có màn hình nào để quay lại.');
             }
           },
@@ -60,19 +56,19 @@ class MyPostScreen extends StatelessWidget {
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Color(0xFF0079CF), // Xanh đậm
-                Color(0xFF00FFDE), // Xanh nhạt
+                Color(0xFF0079CF), 
+                Color(0xFF00FFDE),
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
           ),
         ),
-        backgroundColor: Colors.transparent, // Đảm bảo background là trong suốt để gradient hiển thị
-        elevation: 0, // Bỏ đổ bóng của AppBar
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0), // Padding tổng thể cho ListView
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
         child: ListView.builder(
           itemCount: posts.length,
           itemBuilder: (context, index) {
@@ -103,7 +99,6 @@ class PostCard extends StatelessWidget {
 
   const PostCard({super.key, required this.post});
 
-  // Helper method to get status color
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Sẵn sàng':
@@ -117,7 +112,6 @@ class PostCard extends StatelessWidget {
     }
   }
 
-  // Helper method to get status icon
   IconData _getStatusIcon(String status) {
     switch (status) {
       case 'Sẵn sàng':
@@ -137,25 +131,24 @@ class PostCard extends StatelessWidget {
     final statusIcon = _getStatusIcon(post.status);
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0), // Khoảng cách giữa các card
-      color: Colors.white, // Nền card màu trắng
-      elevation: 4, // Thêm đổ bóng
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      color: Colors.white,
+      elevation: 4,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12), // Bo tròn góc card
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Container( // Thêm Container bao quanh Card để đặt màu nền riêng cho phần nội dung Card
+      child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFF9F9F9), // Màu nền nhẹ nhàng cho từng bài viết
-          borderRadius: BorderRadius.circular(12), // Đảm bảo bo tròn góc khớp với Card
+          color: const Color(0xFFF9F9F9),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12.0), // Padding bên trong card
+          padding: const EdgeInsets.all(12.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Phần ảnh
               ClipRRect(
-                borderRadius: BorderRadius.circular(8), // Bo tròn góc ảnh
+                borderRadius: BorderRadius.circular(8),
                 child: Image.network(
                   post.imageUrl,
                   width: 100,
@@ -173,7 +166,6 @@ class PostCard extends StatelessWidget {
               ),
               const SizedBox(width: 16),
 
-              // Phần thông tin bài viết
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,7 +205,6 @@ class PostCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
 
-              // Nút cài đặt (PopupMenuButton)
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -227,9 +218,7 @@ class PostCard extends StatelessWidget {
                         MaterialPageRoute(builder: (_) => const UpdatePostScreen()),
                       );
                       } else if (value == 'delete') {
-                        // Logic xóa
                       } else if (value == 'change_status') {
-                        // Logic thay đổi trạng thái
                       }
                     },
                     itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
