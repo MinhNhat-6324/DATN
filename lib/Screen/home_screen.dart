@@ -10,7 +10,9 @@ import 'package:front_end/services/chuyen_nganh_service.dart';
 import 'package:front_end/services/loai_san_pham_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String userId; // Thêm biến này
+
+  const HomeScreen({super.key, required this.userId}); // Cập nhật constructor
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();

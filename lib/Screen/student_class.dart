@@ -6,7 +6,7 @@ import 'package:front_end/services/chuyen_nganh_san_pham_service.dart'; // Impor
 import 'home_screen.dart'; // Màn hình chính sau khi hoàn tất
 
 class StudentClassScreen extends StatefulWidget {
-  final String userId; // THÊM THUỘC TÍNH userId ĐỂ NHẬN TỪ MÀN HÌNH OTP
+  final String userId; // Thêm biến này
 
   const StudentClassScreen({super.key, required this.userId}); // CẬP NHẬT CONSTRUCTOR
 
@@ -132,7 +132,7 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
 
     if (_formKey.currentState!.validate()) { // Kiểm tra validation của form
       if (_imageFile == null) {
-        _showMessage('Thiếu ảnh đại diện', 'Vui lòng chọn ảnh thẻ sinh viên.');
+        _showMessage('Thiếu ảnh thẻ sinh viên', 'Vui lòng chọn ảnh thẻ sinh viên để hoàn tất đăng ký.');
         return;
       }
       if (_selectedMajor == null || _selectedMajor!.isEmpty) {
@@ -146,25 +146,22 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
       final chuyenNganh = _selectedMajor!; // Chắc chắn có giá trị do đã kiểm tra
 
       try {
-        // Gửi thông tin chi tiết và ảnh lên backend
-        // SỬ DỤNG widget.userId LÀM ID_SINH_VIEN
-        final responseData = await _registerService.updateStudentProfile(
-          widget.userId, // Truyền userId nhận được
+        await _registerService.updateStudentProfile(
+          widget.userId, // Truyền userId nhận được từ màn hình trước đó
           lop,
           chuyenNganh,
-          _imageFile!, // Gửi File ảnh
+          _imageFile!, // File ảnh thẻ sinh viên (sẽ được xử lý trong service)
         );
 
         _showMessage(
           'Hoàn tất đăng ký',
-          responseData['message'] ?? 'Thông tin của bạn đã được cập nhật thành công!',
+          'Thông tin của bạn đã được cập nhật thành công và đang chờ duyệt!', // Thông báo thành công mặc định
           success: true,
           onOkPressed: () {
             // Điều hướng đến màn hình chính sau khi hoàn tất
-            // Sử dụng pushReplacement để người dùng không thể quay lại màn hình này bằng nút back
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
+              MaterialPageRoute(builder: (context) => HomeScreen(userId: widget.userId)), // Đã sửa lỗi ở đây
             );
           },
         );

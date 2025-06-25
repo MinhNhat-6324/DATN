@@ -1,10 +1,34 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io'; // Import để bắt SocketException
 import 'package:http/http.dart' as http;
-import 'api_config.dart';
+import 'api_config.dart'; // Đảm bảo đường dẫn này đúng
 
 class RegisterService {
-  final String _baseUrl = ApiConfig.baseUrl; 
+  final String _baseUrl = ApiConfig.baseUrl;
+
+  // Hàm trợ giúp để định dạng lỗi validation một cách thân thiện hơn
+  String _formatValidationErrorsForUser(Map<String, dynamic> errors) {
+    if (errors.isEmpty) return 'Dữ liệu đầu vào không hợp lệ.';
+
+    List<String> messages = [];
+    errors.forEach((field, msgs) {
+      if (msgs is List && msgs.isNotEmpty) {
+        messages.add(msgs[0].toString()); // Chỉ lấy thông báo đầu tiên cho mỗi trường
+      }
+    });
+
+    if (messages.contains('The email has already been taken.')) {
+      return 'Email này đã được đăng ký. Vui lòng sử dụng email khác.';
+    }
+
+    // Các lỗi khác có thể được nhóm lại hoặc liệt kê đơn giản
+    if (messages.isNotEmpty) {
+      // Nếu có nhiều lỗi khác, có thể hiển thị một vài lỗi đầu tiên hoặc một thông báo chung
+      return 'Vui lòng kiểm tra lại thông tin nhập liệu: ${messages.join(', ')}.';
+    }
+    return 'Dữ liệu đầu vào không hợp lệ. Vui lòng kiểm tra lại.';
+  }
+
 
   Future<Map<String, dynamic>> sendOtpForRegistration(
     String email,
@@ -36,21 +60,32 @@ class RegisterService {
         if (responseData.containsKey('user_id') && responseData['user_id'] != null) {
           return responseData;
         } else {
-          throw Exception('Phản hồi từ máy chủ không chứa ID người dùng hợp lệ.');
+          throw Exception('Đã xảy ra lỗi. Không thể lấy ID người dùng. Vui lòng liên hệ hỗ trợ.');
         }
-      } else if (response.statusCode == 409) { // Xử lý lỗi 409 Conflict
-        throw Exception(responseData['message'] ?? 'Email này đã được đăng ký.');
+      } else if (response.statusCode == 409) { // Xử lý lỗi 409 Conflict (Email đã tồn tại)
+        // Thông báo cụ thể cho lỗi email đã tồn tại
+        throw Exception('Tài khoản đã tồn tại. Vui lòng đăng nhập hoặc sử dụng email khác.');
+      } else if (response.statusCode == 422) { // Lỗi validation khác (ví dụ: mật khẩu không khớp, min length)
+        String errorMessage = responseData['message'] ?? 'Dữ liệu đầu vào không hợp lệ.';
+        if (responseData.containsKey('errors') && responseData['errors'] is Map) {
+          // Sử dụng hàm trợ giúp để định dạng lỗi thân thiện
+          errorMessage = _formatValidationErrorsForUser(responseData['errors']);
+        }
+        throw Exception(errorMessage);
       } else {
-        // Log phản hồi từ backend để dễ debug hơn
-        print('Backend Error Response: ${response.body}');
-        throw Exception(responseData['message'] ?? 'Lỗi không xác định khi gửi OTP.');
+        // Xử lý các mã lỗi HTTP khác mà backend trả về
+        throw Exception(responseData['message'] ?? 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.');
       }
+    } on SocketException {
+      throw Exception('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.');
+    } on FormatException {
+      throw Exception('Lỗi định dạng dữ liệu từ máy chủ. Vui lòng thử lại sau.');
     } catch (e) {
-      throw Exception('Không thể kết nối đến máy chủ: $e');
+      // Bắt bất kỳ lỗi nào khác không được xử lý cụ thể
+      throw Exception('Đã xảy ra lỗi. Vui lòng thử lại.');
     }
   }
 
-  // Các phương thức verifyOtp, resendOtp, updateStudentProfile giữ nguyên
   Future<Map<String, dynamic>> verifyOtp(String userId, String otpCode) async {
     final url = Uri.parse('$_baseUrl${ApiConfig.verifyOtpEndpoint}'); 
 
@@ -68,22 +103,26 @@ class RegisterService {
 
       if (response.statusCode == 200) {
         return responseData;
-      } else {
-        print('Backend Error Response (Verify OTP): ${response.body}');
-        // Cần xử lý lỗi validation cụ thể nếu backend trả về errors field
-        if (response.statusCode == 422 && responseData.containsKey('errors')) {
-            String errorMsg = responseData['message'] ?? 'Lỗi xác thực OTP không xác định.';
-            if (responseData['errors']['otp_code'] != null) {
-                errorMsg = responseData['errors']['otp_code'][0];
-            } else if (responseData['errors']['user_id'] != null) {
-                errorMsg = responseData['errors']['user_id'][0];
-            }
-            throw Exception(errorMsg);
+      } else if (response.statusCode == 422) {
+        // Cụ thể hóa lỗi OTP
+        String errorMessage = responseData['message'] ?? 'Mã OTP không hợp lệ hoặc đã hết hạn.';
+        if (responseData.containsKey('errors') && responseData['errors'] is Map) {
+          if (responseData['errors'].containsKey('otp_code')) {
+            errorMessage = responseData['errors']['otp_code'][0];
+          } else if (responseData['errors'].containsKey('user_id')) {
+            errorMessage = responseData['errors']['user_id'][0];
+          }
         }
-        throw Exception(responseData['message'] ?? 'Lỗi xác thực OTP không xác định.');
+        throw Exception(errorMessage);
+      } else {
+        throw Exception(responseData['message'] ?? 'Lỗi xác thực OTP không xác định. Vui lòng thử lại.');
       }
+    } on SocketException {
+      throw Exception('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.');
+    } on FormatException {
+      throw Exception('Lỗi định dạng dữ liệu từ máy chủ. Vui lòng thử lại sau.');
     } catch (e) {
-      throw Exception('Không thể kết nối đến máy chủ: $e');
+      throw Exception('Đã xảy ra lỗi. Vui lòng thử lại.');
     }
   }
 
@@ -104,22 +143,25 @@ class RegisterService {
 
       if (response.statusCode == 200) {
         return responseData;
-      } else {
-        print('Backend Error Response (Resend OTP): ${response.body}');
-        // Cần xử lý lỗi validation cụ thể nếu backend trả về errors field
-        if (response.statusCode == 422 && responseData.containsKey('errors')) {
-            String errorMsg = responseData['message'] ?? 'Lỗi gửi lại OTP không xác định.';
-            if (responseData['errors']['user_id'] != null) {
-                errorMsg = responseData['errors']['user_id'][0];
-            } else if (responseData['errors']['email'] != null) {
-                errorMsg = responseData['errors']['email'][0];
-            }
-            throw Exception(errorMsg);
+      } else if (response.statusCode == 422) {
+        String errorMessage = responseData['message'] ?? 'Dữ liệu yêu cầu gửi lại OTP không hợp lệ.';
+        if (responseData.containsKey('errors') && responseData['errors'] is Map) {
+          if (responseData['errors'].containsKey('user_id')) {
+            errorMessage = responseData['errors']['user_id'][0];
+          } else if (responseData['errors'].containsKey('email')) {
+            errorMessage = responseData['errors']['email'][0];
+          }
         }
-        throw Exception(responseData['message'] ?? 'Lỗi gửi lại OTP không xác định.');
+        throw Exception(errorMessage);
+      } else {
+        throw Exception(responseData['message'] ?? 'Lỗi gửi lại OTP không xác định. Vui lòng thử lại.');
       }
+    } on SocketException {
+      throw Exception('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.');
+    } on FormatException {
+      throw Exception('Lỗi định dạng dữ liệu từ máy chủ. Vui lòng thử lại sau.');
     } catch (e) {
-      throw Exception('Không thể kết nối đến máy chủ: $e');
+      throw Exception('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
     }
   }
 
@@ -133,6 +175,17 @@ class RegisterService {
 
     try {
       var request = http.MultipartRequest('POST', url);
+      // Bạn sẽ cần một token xác thực ở đây nếu endpoint này được bảo vệ bởi middleware 'auth:sanctum'
+      // Để truyền token, bạn cần thêm nó vào headers:
+      // final prefs = await SharedPreferences.getInstance();
+      // final token = prefs.getString('auth_token');
+      // if (token != null) {
+      //   request.headers['Authorization'] = 'Bearer $token';
+      // } else {
+      //   throw Exception('Người dùng chưa được xác thực để cập nhật hồ sơ.');
+      // }
+
+
       request.fields['user_id'] = userId;
       request.fields['lop'] = lop;
       request.fields['chuyen_nganh'] = chuyenNganh;
@@ -151,21 +204,25 @@ class RegisterService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return responseData;
-      } else {
-        print('Backend Error Response (Update Profile): ${response.body}');
-        // Cần xử lý lỗi validation cụ thể nếu backend trả về errors field
-        if (response.statusCode == 422 && responseData.containsKey('errors')) {
-            String errorMsg = responseData['message'] ?? 'Lỗi cập nhật thông tin không xác định.';
-            // Lặp qua các lỗi để lấy thông báo chi tiết
-            responseData['errors'].forEach((key, value) {
-                errorMsg += '\n- ${value[0]}';
-            });
-            throw Exception(errorMsg);
+      } else if (response.statusCode == 422) {
+        String errorMessage = responseData['message'] ?? 'Dữ liệu đầu vào không hợp lệ.';
+        if (responseData.containsKey('errors') && responseData['errors'] is Map) {
+          errorMessage = _formatValidationErrorsForUser(responseData['errors']);
         }
-        throw Exception(responseData['message'] ?? 'Lỗi cập nhật thông tin không xác định.');
+        throw Exception(errorMessage);
+      } else if (response.statusCode == 403) { // Lỗi cấm truy cập
+        throw Exception(responseData['message'] ?? 'Bạn không có quyền thực hiện hành động này.');
+      } else if (response.statusCode == 404) { // Không tìm thấy
+        throw Exception(responseData['message'] ?? 'Không tìm thấy tài nguyên. Vui lòng liên hệ hỗ trợ.');
+      } else {
+        throw Exception(responseData['message'] ?? 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.');
       }
+    } on SocketException {
+      throw Exception('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.');
+    } on FormatException {
+      throw Exception('Lỗi định dạng dữ liệu từ máy chủ. Vui lòng thử lại sau.');
     } catch (e) {
-      throw Exception('Không thể kết nối đến máy chủ: $e');
+      throw Exception('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
     }
   }
 }

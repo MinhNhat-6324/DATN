@@ -4,8 +4,6 @@ import 'package:front_end/Screen/post_management_screen.dart';
 import 'package:front_end/Screen/post_screen.dart';
 import 'Screen/start_screen.dart';
 import 'Screen/admin.dart';
-import 'Screen/register_screen.dart';
-import 'Screen/home_screen.dart';
 
 void main() {
   runApp(const SachChuyenTayApp());
@@ -18,7 +16,7 @@ class SachChuyenTayApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
+      home: RegisterScreen(),
     );
   }
 }
