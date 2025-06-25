@@ -206,7 +206,7 @@ class _AdminScreenState extends State<AdminScreen> {
                   _buildFeatureCard(
                     context,
                     icon: Icons.person_add,
-                    label: "Tạo tài khoản cho Admin",
+                    label: "Tạo tài khoản Admin",
                     onPressed: () {
                       Navigator.push(
                         context,
