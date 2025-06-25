@@ -1,0 +1,87 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+class AnhBaiDang {
+  final int? idAnh; // 👈 nullable
+  final int idBaiDang;
+  final String duongDan;
+  final int thuTu;
+
+  AnhBaiDang({
+    this.idAnh, // 👈 optional
+    required this.idBaiDang,
+    required this.duongDan,
+    required this.thuTu,
+  });
+
+  factory AnhBaiDang.fromJson(Map<String, dynamic> json) {
+    return AnhBaiDang(
+      idAnh: json['id_anh'] as int?, // 👈 nullable
+      idBaiDang: json['id_bai_dang'] ?? 0,
+      duongDan: json['duong_dan'] ?? '',
+      thuTu: json['thu_tu'] ?? 1,
+    );
+  }
+}
+
+class BaiDang {
+  final int id;
+  final String tieuDe;
+  final String gia;
+  final int doMoi;
+  final String trangThai;
+  final DateTime ngayDang;
+  final List<AnhBaiDang> anhBaiDang;
+  final String? tenNganh; // 👈 Thêm dòng này
+
+  BaiDang({
+    required this.id,
+    required this.tieuDe,
+    required this.gia,
+    required this.doMoi,
+    required this.trangThai,
+    required this.ngayDang,
+    required this.anhBaiDang,
+    this.tenNganh, // 👈 Constructor
+  });
+
+  factory BaiDang.fromJson(Map<String, dynamic> json) {
+    var danhSachAnh = <AnhBaiDang>[];
+    if (json['anh_bai_dang'] is List) {
+      danhSachAnh = (json['anh_bai_dang'] as List)
+          .map((x) => AnhBaiDang.fromJson(x))
+          .toList();
+    }
+
+    return BaiDang(
+      id: json['id_bai_dang'] ?? 0,
+      tieuDe: json['tieu_de'] ?? '',
+      gia: json['gia'] ?? '',
+      doMoi: json['do_moi'] ?? 0,
+      trangThai: json['trang_thai'] ?? '',
+      ngayDang: DateTime.parse(json['ngay_dang']),
+      anhBaiDang: danhSachAnh,
+      tenNganh: json['chuyen_nganh_san_pham']?['ten_nganh'], // 👈 Lấy tên ngành
+    );
+  }
+}
+
+Future<List<BaiDang>> getBaiDangTheoNganh(int idNganh) async {
+  try {
+    final url = Uri.parse('http://10.0.2.2:8000/api/bai-dang/nganh/$idNganh');
+    final response = await http.get(url);
+    print("RAW JSON: ${response.body}"); // 👈 In ra dữ liệu JSON để kiểm tra
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => BaiDang.fromJson(json)).toList();
+    } else {
+      print('Status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      throw Exception('Không lấy được bài đăng theo ngành');
+    }
+  } catch (e) {
+    print('Lỗi khi gọi API: $e');
+    rethrow;
+  }
+}

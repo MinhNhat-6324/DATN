@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:front_end/services/login_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
+import 'admin.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,8 +14,11 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
+  bool _isLoading = false;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final LoginService _loginService = LoginService();
 
   void _showMessage(String title, String message, {bool success = false}) {
     showDialog(
@@ -27,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Icon(
                 success ? Icons.check_circle_outline : Icons.error_outline,
-                color: success ? Colors.greenAccent : Color(0xFF00FFDE),
+                color: success ? Colors.greenAccent : const Color(0xFF00FFDE),
                 size: 50,
               ),
               const SizedBox(height: 10),
@@ -55,10 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () {
                     Navigator.pop(context);
                     if (success) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const HomeScreen()),
-                      );
+                      // Điều hướng sau khi đăng nhập thành công sẽ thực hiện trong _login()
                     }
                   },
                   child: const Text('OK'),
@@ -71,9 +74,76 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  bool _isPasswordValid(String password) {
-    return RegExp(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#\$%^&*()_+={}\[\]:;<>,.?/~`-]).{8,}$')
-        .hasMatch(password);
+  String? _validateEmail(String? email) {
+    if (email == null || email.isEmpty) {
+      return 'Email không được để trống.';
+    }
+    if (!email.endsWith('@caothang.edu.vn')) {
+      return 'Chỉ chấp nhận email @caothang.edu.vn';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? password) {
+    if (password == null || password.isEmpty) {
+      return 'Mật khẩu không được để trống.';
+    }
+    return null;
+  }
+
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+
+      setState(() => _isLoading = true);
+
+      try {
+        final responseData = await _loginService.login(email, password);
+
+        final data = responseData['data'];
+        final isAdmin = data['isAdmin'] ?? false;
+
+        // Lưu thông tin đăng nhập
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', data['token']);
+        await prefs.setInt('user_id', data['id_tai_khoan']);
+        await prefs.setString('user_email', data['email']);
+        await prefs.setBool('is_admin', isAdmin);
+
+        _showMessage(
+            'Thành công', responseData['message'] ?? 'Đăng nhập thành công!',
+            success: true);
+
+        // Chờ dialog đóng rồi điều hướng
+        Future.delayed(const Duration(milliseconds: 300), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  isAdmin ? const AdminScreen() : const HomeScreen(),
+            ),
+          );
+        });
+      } on Exception catch (e) {
+        String errorMessage;
+        String errorDetail = e.toString().replaceFirst('Exception: ', '');
+        if (errorDetail.contains('Email hoặc mật khẩu không chính xác')) {
+          errorMessage =
+              'Email hoặc mật khẩu không chính xác. Vui lòng thử lại.';
+        } else if (errorDetail.contains('Không thể kết nối đến máy chủ')) {
+          errorMessage =
+              'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng hoặc địa chỉ API.';
+        } else {
+          errorMessage = 'Đã có lỗi xảy ra. ' +
+              errorDetail; // Hoặc chỉ "Đã có lỗi xảy ra. Vui lòng thử lại."
+        }
+
+        _showMessage('Lỗi đăng nhập', errorMessage);
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -107,62 +177,59 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: Colors.blue.shade700.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(30),
               ),
-              child: Column(
-                children: [
-                  _buildInput(label: 'Email đăng nhập', controller: _emailController),
-                  const SizedBox(height: 10),
-                  _buildPasswordInput(),
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        // TODO: forgot password logic
-                      },
-                      child: const Text(
-                        'Quên mật khẩu?',
-                        style: TextStyle(color: Color(0xFF00FFDE)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        String email = _emailController.text.trim();
-                        String password = _passwordController.text;
-
-                        if (!email.endsWith('@caothang.edu.vn')) {
-                          _showMessage('Lỗi', 'Chỉ chấp nhận email @caothang.edu.vn');
-                          return;
-                        }
-
-                        if (!_isPasswordValid(password)) {
-                          _showMessage('Lỗi',
-                              'Mật khẩu phải từ 8 ký tự, gồm chữ, số và ký tự đặc biệt.');
-                          return;
-                        }
-
-                        _showMessage('Thành công', 'Đăng nhập thành công!', success: true);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.cyanAccent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                      ),
-                      child: const Text(
-                        'Đăng nhập',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    _buildEmailInput(),
+                    const SizedBox(height: 10),
+                    _buildPasswordInput(),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          // TODO: Màn hình quên mật khẩu
+                        },
+                        child: const Text(
+                          'Quên mật khẩu?',
+                          style: TextStyle(color: Color(0xFF00FFDE)),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.cyanAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : const Text(
+                                'Đăng nhập',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 30),
@@ -196,24 +263,21 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildInput({
-    required String label,
-    required TextEditingController controller,
-  }) {
+  Widget _buildEmailInput() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
+        const Text(
+          'Email đăng nhập',
+          style: TextStyle(
             color: Color(0xFF00FFDE),
             fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: 5),
-        TextField(
-          controller: controller,
+        TextFormField(
+          controller: _emailController,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             filled: true,
@@ -223,6 +287,8 @@ class _LoginScreenState extends State<LoginScreen> {
               borderSide: BorderSide.none,
             ),
           ),
+          keyboardType: TextInputType.emailAddress,
+          validator: _validateEmail,
         ),
       ],
     );
@@ -241,7 +307,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 5),
-        TextField(
+        TextFormField(
           controller: _passwordController,
           obscureText: _obscurePassword,
           style: const TextStyle(color: Colors.white),
@@ -264,6 +330,7 @@ class _LoginScreenState extends State<LoginScreen> {
               borderSide: BorderSide.none,
             ),
           ),
+          validator: _validatePassword,
         ),
       ],
     );
