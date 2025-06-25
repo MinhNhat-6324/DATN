@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:front_end/services/login_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'register_screen.dart';
-import 'home_screen.dart';
-import 'admin.dart';
+import 'home_screen.dart'; // Đảm bảo import HomeScreen
+import 'admin.dart';       // Đảm bảo import AdminScreen
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -60,9 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   onPressed: () {
                     Navigator.pop(context);
-                    if (success) {
-                      // Điều hướng sau khi đăng nhập thành công sẽ thực hiện trong _login()
-                    }
+                    // Sau khi dialog đóng, logic điều hướng sẽ tiếp tục trong _login() nếu success
                   },
                   child: const Text('OK'),
                 ),
@@ -102,36 +100,52 @@ class _LoginScreenState extends State<LoginScreen> {
         final responseData = await _loginService.login(email, password);
 
         final data = responseData['data'];
-        final isAdmin = data['isAdmin'] ?? false;
+        // Lấy loai_tai_khoan trực tiếp từ dữ liệu phản hồi
+        final int loaiTaiKhoan = data['loai_tai_khoan'] ?? 0; // Mặc định là 0 nếu null
+        final String userId = data['id_tai_khoan'].toString(); // Chắc chắn là String để truyền
 
         // Lưu thông tin đăng nhập
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', data['token']);
-        await prefs.setInt('user_id', data['id_tai_khoan']);
+        await prefs.setString('user_id', userId); // Lưu user ID
         await prefs.setString('user_email', data['email']);
-        await prefs.setBool('is_admin', isAdmin);
+        await prefs.setInt('loai_tai_khoan', loaiTaiKhoan); // Lưu loại tài khoản
 
         _showMessage('Thành công', responseData['message'] ?? 'Đăng nhập thành công!', success: true);
 
         // Chờ dialog đóng rồi điều hướng
         Future.delayed(const Duration(milliseconds: 300), () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => isAdmin ? const AdminScreen() : const HomeScreen(),
-            ),
-          );
+          // Điều hướng dựa trên loai_tai_khoan
+          if (loaiTaiKhoan == 1) { // loai_tai_khoan = 1 là Admin
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AdminScreen(userId: userId), // Truyền userId đến AdminScreen
+              ),
+            );
+          } else { // loai_tai_khoan = 0 là Sinh viên
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => HomeScreen(userId: userId), // Truyền userId đến HomeScreen
+              ),
+            );
+          }
         });
       } on Exception catch (e) {
         String errorMessage;
         String errorDetail = e.toString().replaceFirst('Exception: ', '');
         if (errorDetail.contains('Email hoặc mật khẩu không chính xác')) {
           errorMessage = 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại.';
+        } else if (errorDetail.contains('Tài khoản của bạn đang chờ quản trị viên duyệt')) {
+          errorMessage = 'Tài khoản của bạn đang chờ quản trị viên duyệt. Vui lòng thử lại sau.';
+        } else if (errorDetail.contains('Tài khoản của bạn đã bị khóa')) {
+          errorMessage = 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.';
         } else if (errorDetail.contains('Không thể kết nối đến máy chủ')) {
           errorMessage = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng hoặc địa chỉ API.';
         }
         else {
-          errorMessage = 'Đã có lỗi xảy ra. ' + errorDetail; // Hoặc chỉ "Đã có lỗi xảy ra. Vui lòng thử lại."
+          errorMessage = 'Đã có lỗi xảy ra. ' + errorDetail;
         }
 
         _showMessage('Lỗi đăng nhập', errorMessage);
@@ -139,6 +153,13 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override

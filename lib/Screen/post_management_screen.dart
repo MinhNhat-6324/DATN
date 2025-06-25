@@ -13,37 +13,42 @@ class _PostManagementScreenState extends State<PostManagementScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F1E9), // Light cream background
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2280EF), Color(0xFF00FFDE)], // Blue to Turquoise gradient
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+                automaticallyImplyLeading: false,
+        // AppBar trong suốt để FlexibleSpace có thể tạo nền gradient
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        toolbarHeight: 60, // Tăng chiều cao của AppBar
+        title: const Padding(
+          padding: EdgeInsets.only(top: 0.0), // Đẩy tiêu đề xuống
+          child: Text(
+            "Danh sách báo cáo vi phạm",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
             ),
           ),
         ),
-        elevation: 0,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
-            const Spacer(),
-            const Text(
-              "Danh sách bài đăng vi phạm",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF2280EF), // Xanh đậm
+                Color(0xFF2280EF), // Xanh nhạt
+              ],
+              begin: Alignment.topLeft, // Gradient từ góc trên trái
+              end: Alignment.bottomRight, // Đến góc dưới phải
+            ), 
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 10,
+                offset: Offset(0, 5),
               ),
-            ),
-            const Spacer(flex: 2),
-          ],
+            ],
+          ),
         ),
-        backgroundColor: Colors.transparent, // Make AppBar background transparent to show gradient
       ),
       body: const Padding(
         padding: EdgeInsets.all(16),
@@ -190,28 +195,27 @@ class DeleteButton extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            backgroundColor: const Color(0xFF2193b0), // Matching dialog background
+            backgroundColor: const Color.fromARGB(255, 255, 255, 255), // Matching dialog background
             title: const Text(
               "Xác nhận gỡ",
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center, // Center align title
+              style: const TextStyle(
+              color: Color(0xFF2280EF), fontWeight: FontWeight.bold),
             ),
             content: const Text(
               "Bạn có chắc chắn muốn gỡ bài đăng này không?", // Added confirmation message
-              style: TextStyle(color: Colors.white70),
-              textAlign: TextAlign.center,
+               style: const TextStyle(color: Colors.black87),
             ),
             actionsAlignment: MainAxisAlignment.spaceAround, // Distribute actions evenly
             actions: [
               TextButton(
-                style: TextButton.styleFrom(foregroundColor: Colors.white),
+                style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text("Huỷ", style: TextStyle(fontSize: 16)), // Larger text
+                child: const Text("Hủy"),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF2193b0),
+                  backgroundColor: const Color(0xFF2280EF), // Màu nút theo màu chính của app
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -227,7 +231,7 @@ class DeleteButton extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Đã gỡ bài đăng"),
-              backgroundColor: Color(0xFF00C6FF), // SnackBar matches theme
+              backgroundColor: Color(0xFF2280EF), // SnackBar matches theme
               behavior: SnackBarBehavior.floating, // Floating SnackBar
               duration: Duration(seconds: 2),
             ),

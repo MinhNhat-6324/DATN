@@ -5,7 +5,9 @@ import 'profile_screen.dart';
 import 'product_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String userId; // Thêm biến này
+
+  const HomeScreen({super.key, required this.userId}); // Cập nhật constructor
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
