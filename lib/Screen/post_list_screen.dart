@@ -4,16 +4,19 @@ import 'package:http/http.dart' as http;
 import 'package:front_end/services/bai_dang_service.dart';
 import 'package:front_end/services/buildImage.dart';
 import 'package:front_end/services/chuyen_nganh_service.dart';
+import 'package:front_end/services/loai_san_pham_service.dart';
 import 'product_details_screen.dart';
 
 class PostListScreen extends StatefulWidget {
   final String title;
   final int idNganh;
+  final int? idLoai; // 👈 Thêm loại sản phẩm
 
   const PostListScreen({
     super.key,
     required this.title,
     required this.idNganh,
+    this.idLoai,
   });
 
   @override
@@ -22,22 +25,12 @@ class PostListScreen extends StatefulWidget {
 
 class _PostListScreenState extends State<PostListScreen> {
   late Future<List<BaiDang>> futureBaiDang;
-  late Future<List<Nganh>> futureDanhSachNganh;
-  int selectedIdNganh = 0;
 
   @override
   void initState() {
     super.initState();
-    selectedIdNganh = widget.idNganh;
-    futureBaiDang = getBaiDangTheoNganh(selectedIdNganh);
-    futureDanhSachNganh = getDanhSachNganh();
-  }
-
-  void _chonNganh(Nganh nganh) {
-    setState(() {
-      selectedIdNganh = nganh.id;
-      futureBaiDang = getBaiDangTheoNganh(nganh.id);
-    });
+    futureBaiDang = getBaiDangTheoNganhVaLoai(
+        widget.idNganh, widget.idLoai); // 👈 Gọi API theo ngành và loại
   }
 
   @override
@@ -89,7 +82,7 @@ class _PostListScreenState extends State<PostListScreen> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     } else if (snapshot.hasError) {
-                      return Center(child: Text('Lỗi: ${snapshot.error}'));
+                      return Center(child: Text('Lỗi: \${snapshot.error}'));
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Center(child: Text('Không có bài đăng.'));
                     }
@@ -160,53 +153,16 @@ class _PostListScreenState extends State<PostListScreen> {
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(
-          children: [
-            const Icon(Icons.search, color: Colors.blue),
-            const SizedBox(width: 8),
-            const Expanded(
+          children: const [
+            Icon(Icons.search, color: Colors.blue),
+            SizedBox(width: 8),
+            Expanded(
               child: TextField(
                 decoration: InputDecoration(
                   hintText: "Nhập tên sách muốn tìm",
                   border: InputBorder.none,
                 ),
               ),
-            ),
-            FutureBuilder<List<Nganh>>(
-              future: futureDanhSachNganh,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2));
-                } else if (snapshot.hasError) {
-                  return IconButton(
-                    icon: const Icon(Icons.error, color: Colors.red),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text("Lỗi tải ngành: ${snapshot.error}")),
-                      );
-                    },
-                  );
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Text("Không có ngành");
-                }
-
-                final nganhList = snapshot.data!;
-                return PopupMenuButton<Nganh>(
-                  icon: const Icon(Icons.list, color: Colors.blue),
-                  onSelected: _chonNganh,
-                  itemBuilder: (BuildContext context) {
-                    return nganhList
-                        .map((nganh) => PopupMenuItem<Nganh>(
-                              value: nganh,
-                              child: Text(nganh.tenNganh),
-                            ))
-                        .toList();
-                  },
-                );
-              },
             ),
           ],
         ),

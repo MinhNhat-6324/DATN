@@ -85,3 +85,28 @@ Future<List<BaiDang>> getBaiDangTheoNganh(int idNganh) async {
     rethrow;
   }
 }
+
+Future<List<BaiDang>> getBaiDangTheoNganhVaLoai(
+    int idNganh, int? idLoai) async {
+  try {
+    // 👇 Tùy biến URL dựa trên idLoai có null hay không
+    final url = idLoai == null
+        ? Uri.parse('http://10.0.2.2:8000/api/bai-dang/nganh/$idNganh')
+        : Uri.parse(
+            'http://10.0.2.2:8000/api/bai-dang/nganh/$idNganh/loai/$idLoai');
+
+    final response = await http.get(url);
+    print("JSON ngành + loại: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => BaiDang.fromJson(json)).toList();
+    } else {
+      print('Status code: ${response.statusCode}');
+      throw Exception('Không lấy được bài đăng theo ngành và loại');
+    }
+  } catch (e) {
+    print('Lỗi khi gọi API: $e');
+    rethrow;
+  }
+}
