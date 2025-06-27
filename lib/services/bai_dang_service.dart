@@ -110,3 +110,112 @@ Future<List<BaiDang>> getBaiDangTheoNganhVaLoai(
     rethrow;
   }
 }
+
+Future<List<BaiDang>> getBaiDangTheoTieuDe(String tieuDe) async {
+  try {
+    final encodedTieuDe = Uri.encodeComponent(tieuDe);
+    final url =
+        Uri.parse('http://10.0.2.2:8000/api/bai-dang/tieu-de/$encodedTieuDe');
+
+    final response = await http.get(url);
+    print("JSON theo tiêu đề: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => BaiDang.fromJson(json)).toList();
+    } else {
+      print('Status code: ${response.statusCode}');
+      throw Exception('Không lấy được bài đăng theo tiêu đề');
+    }
+  } catch (e) {
+    print('Lỗi khi gọi API theo tiêu đề: $e');
+    rethrow;
+  }
+}
+
+Future<List<BaiDang>> getBaiDangTheoNganhLoaiTieuDe(
+    int idNganh, int idLoai, String tieuDe) async {
+  try {
+    // Nếu tiêu đề trống, dùng ký hiệu đặc biệt '-' (giống bên Laravel)
+    final safeTieuDe = tieuDe.isEmpty ? '-' : Uri.encodeComponent(tieuDe);
+    final url = Uri.parse(
+        'http://10.0.2.2:8000/api/bai-dang/loc/$idNganh/$idLoai/$safeTieuDe');
+
+    final response = await http.get(url);
+    print("📦 JSON ngành + loại + tiêu đề: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => BaiDang.fromJson(json)).toList();
+    } else {
+      print('⚠️ Status code: ${response.statusCode}');
+      throw Exception('Không lấy được bài đăng theo ngành, loại và tiêu đề');
+    }
+  } catch (e) {
+    print('❌ Lỗi khi gọi API bộ lọc bài đăng: $e');
+    rethrow;
+  }
+}
+
+Future<List<BaiDang>> getBaiDangTheoLoaiVaTieuDe(
+    int idLoai, String tieuDe) async {
+  try {
+    final safeTieuDe =
+        tieuDe.trim().isEmpty ? '-' : Uri.encodeComponent(tieuDe);
+    final url = Uri.parse(
+        'http://10.0.2.2:8000/api/bai-dang/loai/$idLoai/tieu-de/$safeTieuDe');
+
+    final response = await http.get(url);
+    print("📥 JSON loại + tiêu đề: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => BaiDang.fromJson(json)).toList();
+    } else {
+      print('⚠️ Status code: ${response.statusCode}');
+      throw Exception('Không lấy được bài đăng theo loại và tiêu đề');
+    }
+  } catch (e) {
+    print('❌ Lỗi khi gọi API loại + tiêu đề: $e');
+    rethrow;
+  }
+}
+
+Future<List<BaiDang>> getTatCaBaiDang() async {
+  try {
+    final url = Uri.parse('http://10.0.2.2:8000/api/bai-dang');
+    final response = await http.get(url);
+
+    print("📦 JSON tất cả bài đăng: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => BaiDang.fromJson(json)).toList();
+    } else {
+      print('⚠️ Status code: ${response.statusCode}');
+      throw Exception('Không lấy được toàn bộ bài đăng');
+    }
+  } catch (e) {
+    print('❌ Lỗi khi gọi API tất cả bài đăng: $e');
+    rethrow;
+  }
+}
+
+Future<List<BaiDang>> getBaiDangTheoLoai(int idLoai) async {
+  try {
+    final url = Uri.parse('http://10.0.2.2:8000/api/bai-dang/loai/$idLoai');
+    final response = await http.get(url);
+    print("📦 JSON bài đăng theo loại: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => BaiDang.fromJson(json)).toList();
+    } else {
+      print('⚠️ Status code: ${response.statusCode}');
+      throw Exception('Không lấy được bài đăng theo loại');
+    }
+  } catch (e) {
+    print('❌ Lỗi khi gọi API bài đăng theo loại: $e');
+    rethrow;
+  }
+}

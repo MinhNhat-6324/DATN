@@ -10,13 +10,15 @@ import 'product_details_screen.dart';
 class PostListScreen extends StatefulWidget {
   final String title;
   final int idNganh;
-  final int? idLoai; // 👈 Thêm loại sản phẩm
+  final int? idLoai;
+  final String? searchTieuDe;
 
   const PostListScreen({
     super.key,
     required this.title,
     required this.idNganh,
     this.idLoai,
+    this.searchTieuDe,
   });
 
   @override
@@ -25,12 +27,45 @@ class PostListScreen extends StatefulWidget {
 
 class _PostListScreenState extends State<PostListScreen> {
   late Future<List<BaiDang>> futureBaiDang;
+  final TextEditingController _searchController = TextEditingController();
 
+  late int selectedIdNganh;
+  int? selectedIdLoai;
+  String? searchTieuDe;
   @override
   void initState() {
     super.initState();
-    futureBaiDang = getBaiDangTheoNganhVaLoai(
-        widget.idNganh, widget.idLoai); // 👈 Gọi API theo ngành và loại
+    selectedIdNganh = widget.idNganh;
+    selectedIdLoai = widget.idLoai;
+    searchTieuDe = widget.searchTieuDe;
+    _searchController.text = widget.searchTieuDe ?? '';
+
+    if (searchTieuDe != null && searchTieuDe!.isNotEmpty) {
+      futureBaiDang =
+          getBaiDangTheoTieuDe(searchTieuDe!); // 🔍 chỉ lọc theo tiêu đề
+    } else {
+      _loadFilteredBaiDang(); // 🧭 lọc theo ngành + loại nếu không có tiêu đề
+    }
+  }
+
+  void _loadFilteredBaiDang() {
+    setState(() {
+      final hasSearch = searchTieuDe != null && searchTieuDe!.trim().isNotEmpty;
+      if (hasSearch) {
+        // 🔍 Lọc theo cả ngành + loại + tiêu đề
+        futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
+          selectedIdNganh,
+          selectedIdLoai ?? -1,
+          searchTieuDe!.trim(),
+        );
+      } else {
+        // 🧭 Lọc chỉ theo ngành + loại
+        futureBaiDang = getBaiDangTheoNganhVaLoai(
+          selectedIdNganh,
+          selectedIdLoai ?? -1,
+        );
+      }
+    });
   }
 
   @override
@@ -38,10 +73,7 @@ class _PostListScreenState extends State<PostListScreen> {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Color(0xFF0079CF),
-            Color(0xFF00FFDE),
-          ],
+          colors: [Color(0xFF0079CF), Color(0xFF00FFDE)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -55,23 +87,89 @@ class _PostListScreenState extends State<PostListScreen> {
               const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.cyan,
-                      borderRadius: const BorderRadius.all(Radius.circular(20)),
-                    ),
-                    child: const Text(
-                      "Sản phẩm liên quan",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.cyan,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        "Sản phẩm liên quan",
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ),
-                  ),
+                    FutureBuilder<List<LoaiSanPham>>(
+                      future: getDanhSachLoai(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Padding(
+                            padding: EdgeInsets.only(left: 8),
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          );
+                        } else if (snapshot.hasError || !snapshot.hasData) {
+                          return const SizedBox();
+                        }
+
+                        final loaiList = [
+                          LoaiSanPham(id: -1, tenLoai: 'Tất cả'),
+                          ...snapshot.data!,
+                        ];
+
+                        return PopupMenuButton<LoaiSanPham>(
+                          icon: const Icon(Icons.arrow_drop_down,
+                              color: Colors.white),
+                          onSelected: (loai) {
+                            selectedIdLoai = loai.id;
+
+                            final isSearchingTitle = searchTieuDe != null &&
+                                searchTieuDe!.trim().isNotEmpty;
+
+                            if (isSearchingTitle) {
+                              if (selectedIdNganh != -1) {
+                                // ✅ Tìm theo ngành + loại + tiêu đề
+                                futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
+                                  selectedIdNganh,
+                                  selectedIdLoai ?? -1,
+                                  searchTieuDe!.trim(),
+                                );
+                              } else {
+                                // ✅ Tìm theo loại + tiêu đề (không có ngành)
+                                futureBaiDang = getBaiDangTheoLoaiVaTieuDe(
+                                  selectedIdLoai ?? -1,
+                                  searchTieuDe!.trim(),
+                                );
+                              }
+                            } else {
+                              // 🧭 Không có tiêu đề → chỉ lọc theo ngành + loại
+                              futureBaiDang = getBaiDangTheoNganhVaLoai(
+                                selectedIdNganh,
+                                selectedIdLoai ?? -1,
+                              );
+                            }
+
+                            setState(() {});
+                          },
+                          itemBuilder: (context) {
+                            return loaiList
+                                .map((loai) => PopupMenuItem<LoaiSanPham>(
+                                      value: loai,
+                                      child: Text(loai.tenLoai),
+                                    ))
+                                .toList();
+                          },
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),
@@ -153,16 +251,97 @@ class _PostListScreenState extends State<PostListScreen> {
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(
-          children: const [
-            Icon(Icons.search, color: Colors.blue),
-            SizedBox(width: 8),
+          children: [
+            const Icon(Icons.search, color: Colors.blue),
+            const SizedBox(width: 8),
             Expanded(
               child: TextField(
-                decoration: InputDecoration(
+                controller: _searchController,
+                onSubmitted: (value) {
+                  searchTieuDe = value.trim();
+
+                  final hasTitle =
+                      searchTieuDe != null && searchTieuDe!.isNotEmpty;
+                  final hasLoai =
+                      selectedIdLoai != null && selectedIdLoai != -1;
+                  final hasNganh = selectedIdNganh != -1;
+
+                  if (hasTitle) {
+                    if (!hasLoai && !hasNganh) {
+                      futureBaiDang = getBaiDangTheoTieuDe(searchTieuDe!);
+                    } else if (hasLoai && !hasNganh) {
+                      futureBaiDang = getBaiDangTheoLoaiVaTieuDe(
+                        selectedIdLoai!,
+                        searchTieuDe!,
+                      );
+                    } else if (hasLoai && hasNganh) {
+                      futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
+                        selectedIdNganh,
+                        selectedIdLoai!,
+                        searchTieuDe!,
+                      );
+                    } else if (!hasLoai && hasNganh) {
+                      futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
+                        selectedIdNganh,
+                        -1,
+                        searchTieuDe!,
+                      );
+                    }
+                  } else {
+                    if (!hasLoai && !hasNganh) {
+                      futureBaiDang =
+                          getTatCaBaiDang(); // ⚠️ cần tạo hàm này nếu chưa có
+                    } else if (hasLoai && !hasNganh) {
+                      futureBaiDang = getBaiDangTheoLoai(selectedIdLoai!);
+                    } else {
+                      // có ngành → theo ngành + loại
+                      futureBaiDang = getBaiDangTheoNganhVaLoai(
+                        selectedIdNganh,
+                        selectedIdLoai ?? -1,
+                      );
+                    }
+                  }
+
+                  setState(() {});
+                },
+                decoration: const InputDecoration(
                   hintText: "Nhập tên sách muốn tìm",
                   border: InputBorder.none,
                 ),
               ),
+            ),
+            FutureBuilder<List<Nganh>>(
+              future: getDanhSachNganh(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  );
+                } else if (snapshot.hasError || !snapshot.hasData) {
+                  return const SizedBox.shrink();
+                }
+
+                final nganhList =
+                    snapshot.data!.where((nganh) => nganh.id != 6).toList();
+
+                return PopupMenuButton<Nganh>(
+                  icon: const Icon(Icons.list, color: Colors.blue),
+                  onSelected: (nganh) {
+                    selectedIdNganh = nganh.id;
+                    _loadFilteredBaiDang();
+                  },
+                  itemBuilder: (context) {
+                    return nganhList
+                        .map((nganh) => PopupMenuItem<Nganh>(
+                              value: nganh,
+                              child: Text(nganh.tenNganh),
+                            ))
+                        .toList();
+                  },
+                );
+              },
             ),
           ],
         ),

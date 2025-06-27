@@ -88,6 +88,7 @@ class _HomeTabState extends State<HomeTab> {
   LoaiSanPham? selectedLoaiChung;
 
   List<BaiDang> dataChung = [];
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -146,14 +147,49 @@ class _HomeTabState extends State<HomeTab> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.search, color: Colors.blue),
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.blue),
+              onPressed: () {
+                final keyword = _searchController.text.trim();
+                if (keyword.isNotEmpty) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PostListScreen(
+                        title: 'Kết quả cho "$keyword"',
+                        idNganh: -1,
+                        idLoai: -1,
+                        searchTieuDe: keyword,
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
             const SizedBox(width: 8),
-            const Expanded(
+            Expanded(
               child: TextField(
-                decoration: InputDecoration(
+                controller: _searchController,
+                decoration: const InputDecoration(
                   hintText: "Nhập tên sách muốn tìm",
                   border: InputBorder.none,
                 ),
+                onSubmitted: (value) {
+                  final keyword = value.trim();
+                  if (keyword.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PostListScreen(
+                          title: 'Kết quả cho "$keyword"',
+                          idNganh: -1,
+                          idLoai: -1,
+                          searchTieuDe: keyword,
+                        ),
+                      ),
+                    );
+                  }
+                },
               ),
             ),
             FutureBuilder<List<Nganh>>(
