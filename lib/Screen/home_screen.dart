@@ -16,12 +16,20 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
 
-  final List<Widget> screens = [
-    const HomeTab(),
-    PostScreen(),
-    ChatScreen(),
-    ProfileScreen(),
-  ];
+  // Khai báo danh sách màn hình, sử dụng 'late' để khởi tạo sau
+  late final List<Widget> screens;
+
+  @override
+  void initState() {
+    super.initState();
+    // Khởi tạo 'screens' trong initState, nơi 'widget' đã có sẵn
+    screens = [
+      const HomeTab(),
+      PostScreen(),
+      ChatScreen(),
+      ProfileScreen(userId: widget.userId), // Truyền userId vào ProfileScreen
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         type: BottomNavigationBarType.fixed,
         backgroundColor: const Color(0xFF0065F8),
-        selectedItemColor: const Color(0xFF00CAFF),
+        selectedItemColor: const Color.fromARGB(255, 255, 255, 255),
         unselectedItemColor: const Color(0xFF00CAFF),
         selectedLabelStyle: const TextStyle(color: Colors.white),
         unselectedLabelStyle: const TextStyle(color: Colors.white),

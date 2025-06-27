@@ -7,11 +7,12 @@ class ApiConfig {
   static const String verifyOtpEndpoint = '/register/verify-otp';
   static const String resendOtpEndpoint = '/register/resend-otp';
   static const String updateProfileEndpoint = '/user/update-profile';
-  static const String chuyenNganhEndpoint = '/chuyennganh'; // Nếu có
+  static const String chuyenNganhEndpoint = '/chuyennganh';
   static const String accountsEndpoint = '/tai-khoan';
   static const String pendingAccountsEndpoint = '/tai-khoan/pending';
 
-  static const String forgotPasswordEndpoint = '/password/forgot'; // Endpoint để yêu cầu OTP
-  static const String resetPasswordEndpoint = '/password/reset'; 
   static const String registerAdminEndpoint = '/register/admin'; 
+
+  static const String changePasswordEndpoint = '/tai-khoan/change-password';
+
 }

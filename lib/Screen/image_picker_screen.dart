@@ -1,3 +1,4 @@
+// image_picker_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,25 +20,39 @@ class _ImagePickerScreenState extends State<ImagePickerScreen> {
       setState(() {
         _selectedImage = File(pickedFile.path);
       });
-      _showPreviewDialog();
+      _showPreviewDialog(); // Hiển thị dialog preview
+    } else {
+      // Nếu người dùng không chọn ảnh, quay lại màn hình trước với giá trị null
+      if (mounted) {
+        Navigator.pop(context, null);
+      }
     }
   }
 
   void _showPreviewDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: false, // Không cho phép đóng dialog khi nhấn ra ngoài
       builder: (_) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Container(
           padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2193b0), Color(0xFF6dd5ed)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+          decoration: BoxDecoration(
+            // Gradient mới cho dialog
+            gradient: const LinearGradient(
+              colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)], // Màu tím nhạt -> xanh nhạt
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.all(Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                spreadRadius: 3,
+                blurRadius: 7,
+                offset: const Offset(0, 3), // changes position of shadow
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -45,53 +60,77 @@ class _ImagePickerScreenState extends State<ImagePickerScreen> {
               const Text(
                 "Xác nhận ảnh đại diện",
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Colors.black87, // Màu chữ tối hơn
                 ),
               ),
               const SizedBox(height: 20),
               if (_selectedImage != null)
                 CircleAvatar(
-                  radius: 60,
+                  radius: 70, // Tăng kích thước ảnh preview
+                  backgroundColor: Colors.white,
                   backgroundImage: FileImage(_selectedImage!),
+                  child: _selectedImage == null ? const Icon(Icons.person, size: 60, color: Colors.grey) : null,
                 ),
               const SizedBox(height: 16),
               const Text(
                 "Bạn có muốn sử dụng ảnh này không?",
-                style: TextStyle(color: Colors.white, fontSize: 15),
+                style: TextStyle(color: Colors.black54, fontSize: 16), // Màu chữ tối hơn
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 25),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  TextButton(
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("Huỷ"),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Color(0xFF2193b0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent, // Nút hủy màu đỏ
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15), // Bo góc cho nút
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 5, // Đổ bóng cho nút
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context); // Đóng dialog preview
+                        // Sau đó quay lại màn hình ProfileScreen với giá trị null (hủy chọn ảnh)
+                        if (mounted) {
+                          Navigator.pop(context, null);
+                        }
+                      },
+                      child: const Text(
+                        "Huỷ",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Đã cập nhật ảnh đại diện"),
-                          backgroundColor: Color(0xFF00C6FF),
+                  ),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent, // Nút xác nhận màu xanh
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
                         ),
-                      );
-                    },
-                    child: const Text("Xác nhận"),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 5,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context); // Đóng dialog preview
+                        // Trả về đường dẫn của ảnh đã chọn cho màn hình trước đó (ProfileScreen)
+                        if (mounted) {
+                          Navigator.pop(context, _selectedImage!.path);
+                        }
+                      },
+                      child: const Text(
+                        "Xác nhận",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ),
                   ),
                 ],
               )
@@ -102,36 +141,59 @@ class _ImagePickerScreenState extends State<ImagePickerScreen> {
     );
   }
 
-  Widget _buildButton({
+  // Hàm xây dựng nút chọn ảnh (Camera/Thư viện)
+  Widget _buildSelectionButton({
     required IconData icon,
     required String label,
     required VoidCallback onPressed,
+    required Color startColor,
+    required Color endColor,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
       width: double.infinity,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 3,
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: const BorderSide(color: Color(0xFF00C6FF), width: 1.2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18), // Bo góc lớn hơn cho nút
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            spreadRadius: 2,
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
+        ],
+        gradient: LinearGradient(
+          colors: [startColor, endColor],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(children: [
-              Icon(icon, size: 28),
-              const SizedBox(width: 12),
-              Text(label, style: const TextStyle(fontSize: 16)),
-            ]),
-            const Icon(Icons.arrow_forward_ios),
-          ],
+      ),
+      child: Material(
+        color: Colors.transparent, // Để gradient hiện ra
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(children: [
+                  Icon(icon, size: 30, color: Colors.white), // Icon lớn hơn, màu trắng
+                  const SizedBox(width: 15),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ]),
+                const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -140,64 +202,58 @@ class _ImagePickerScreenState extends State<ImagePickerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2280EF), Color(0xFF00FFDE)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
-        elevation: 0,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
-            const Spacer(),
-            const Text(
-              "Chọn ảnh",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-            const Spacer(flex: 2),
-          ],
-        ),
-        backgroundColor: Colors.transparent,
-      ),
       body: Container(
+        // Nền gradient toàn màn hình
         decoration: const BoxDecoration(
-          color: Color(0xFF00C6FF),
+          gradient: LinearGradient(
+            colors: [Color(0xFF6dd5ed), Color(0xFF2193b0)], // Gradient từ xanh nhạt đến xanh đậm
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 25), // Tăng padding ngang
             child: Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(30), // Tăng padding bên trong
               decoration: BoxDecoration(
-                color: Colors.blue[700],
-                borderRadius: BorderRadius.circular(24),
+                color: Colors.white.withOpacity(0.9), // Nền trắng hơi trong suốt
+                borderRadius: BorderRadius.circular(30), // Bo góc nhiều hơn
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    spreadRadius: 5,
+                    blurRadius: 15,
+                    offset: const Offset(0, 8), // Đổ bóng mạnh hơn
+                  ),
+                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildButton(
-                    icon: Icons.camera_alt,
-                    label: "Chụp từ camera",
-                    onPressed: () => _pickImage(ImageSource.camera),
+                  const Text(
+                    "Cập nhật ảnh của bạn",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2193b0), // Màu chữ phù hợp với gradient nền
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  _buildButton(
-                    icon: Icons.image,
-                    label: "Chọn ảnh từ máy",
+                  const SizedBox(height: 30),
+                  _buildSelectionButton(
+                    icon: Icons.camera_alt,
+                    label: "Chụp từ Camera",
+                    onPressed: () => _pickImage(ImageSource.camera),
+                    startColor: const Color(0xFF00C6FF),
+                    endColor: const Color(0xFF0072FF),
+                  ),
+                  _buildSelectionButton(
+                    icon: Icons.photo_library, // Icon thư viện ảnh
+                    label: "Chọn từ Thư viện",
                     onPressed: () => _pickImage(ImageSource.gallery),
+                    startColor: const Color(0xFFFEE140),
+                    endColor: const Color(0xFFFA709A), // Gradient màu hồng cam
                   ),
                 ],
               ),

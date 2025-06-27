@@ -16,7 +16,7 @@ class SachChuyenTayApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: StartScreen(),
+      home: LoginScreen(),
     );
   }
 }
