@@ -48,7 +48,7 @@ class TaiKhoanService {
       queryString += '&trang_thai=$status'; // Đảm bảo tên tham số khớp với backend của bạn
     }
 
-    final url = Uri.parse('$_baseUrl${ApiConfig.accountsEndpoint}$queryString');
+    final url = Uri.parse('$_baseUrl${ApiConfig.listAccountsEndpoint}$queryString');
 
     // IN RA URL ĐỂ DEBUG
     debugPrint('Fetching accounts from URL: $url');
@@ -132,7 +132,7 @@ class TaiKhoanService {
   }
 
   // Phương thức lấy thông tin chi tiết một tài khoản bằng ID
-  Future<Map<String, dynamic>> getAccountById(String id) async {
+   Future<Map<String, dynamic>> getAccountById(String id) async {
     final token = await _getToken();
     final url = Uri.parse('$_baseUrl${ApiConfig.accountsEndpoint}/$id');
 
@@ -520,10 +520,10 @@ class TaiKhoanService {
     }
   }
 
-  // Phương thức để thay đổi mật khẩu (giữ nguyên)
+  // Phương thức để thay đổi mật khẩu
   Future<Map<String, dynamic>> changePassword(String userId, String currentPassword, String newPassword) async {
     final token = await _getToken();
-    final url = Uri.parse('$_baseUrl${ApiConfig.changePasswordEndpoint}'); // Bạn cần định nghĩa endpoint này
+    final url = Uri.parse('$_baseUrl${ApiConfig.accountsEndpoint}/$userId/change-password');
 
 
     debugPrint('Change Password Request URL: $url');
@@ -538,7 +538,6 @@ class TaiKhoanService {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
-          'user_id': userId,
           'current_password': currentPassword,
           'new_password': newPassword,
           'new_password_confirmation': newPassword, // Cần cho Laravel 'confirmed' rule

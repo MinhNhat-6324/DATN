@@ -25,7 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)), // Bo tròn góc
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15)), // Bo tròn góc
         backgroundColor: Colors.white, // Nền trắng dịu mắt
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -34,7 +35,9 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Icon(
                 success ? Icons.check_circle_outline : Icons.error_outline,
-                color: success ? Colors.green.shade600 : Colors.red.shade600, // Màu xanh/đỏ dịu hơn
+                color: success
+                    ? Colors.green.shade600
+                    : Colors.red.shade600, // Màu xanh/đỏ dịu hơn
                 size: 50,
               ),
               const SizedBox(height: 10),
@@ -57,7 +60,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 child: TextButton(
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF2280EF), // Màu xanh chủ đạo cho nút OK
+                    foregroundColor:
+                        const Color(0xFF2280EF), // Màu xanh chủ đạo cho nút OK
                     textStyle: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   onPressed: () {
@@ -129,18 +133,22 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setInt('loai_tai_khoan', loaiTaiKhoan);
 
         // Hiển thị thông báo thành công
-        _showMessage('Thành công', responseData['message'] ?? 'Đăng nhập thành công!', success: true);
+        _showMessage(
+            'Thành công', responseData['message'] ?? 'Đăng nhập thành công!',
+            success: true);
 
         // Chờ dialog đóng rồi điều hướng
         Future.delayed(const Duration(milliseconds: 300), () {
-          if (loaiTaiKhoan == 1) { // Admin
+          if (loaiTaiKhoan == 1) {
+            // Admin
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                 builder: (_) => AdminScreen(userId: userId),
               ),
             );
-          } else { // Sinh viên
+          } else {
+            // Sinh viên
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -153,19 +161,25 @@ class _LoginScreenState extends State<LoginScreen> {
         String errorMessage = e.toString().replaceFirst('Exception: ', '');
         // Xử lý các thông báo lỗi cụ thể từ backend
         if (errorMessage.contains('Email hoặc mật khẩu không chính xác')) {
-          errorMessage = 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại.';
-        } else if (errorMessage.contains('Tài khoản của bạn đang chờ quản trị viên duyệt')) {
-          errorMessage = 'Tài khoản của bạn đang chờ quản trị viên duyệt. Vui lòng thử lại sau.';
+          errorMessage =
+              'Email hoặc mật khẩu không chính xác. Vui lòng thử lại.';
+        } else if (errorMessage
+            .contains('Tài khoản của bạn đang chờ quản trị viên duyệt')) {
+          errorMessage =
+              'Tài khoản của bạn đang chờ quản trị viên duyệt. Vui lòng thử lại sau.';
         } else if (errorMessage.contains('Tài khoản của bạn đã bị khóa')) {
-          errorMessage = 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.';
+          errorMessage =
+              'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.';
         } else if (errorMessage.contains('Không thể kết nối đến máy chủ')) {
-          errorMessage = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng hoặc địa chỉ API.';
+          errorMessage =
+              'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng hoặc địa chỉ API.';
         }
         // Thêm các kiểm tra lỗi khác nếu có thông báo lỗi đặc biệt từ backend
 
         _showMessage('Lỗi đăng nhập', errorMessage);
       } finally {
-        if (mounted) { // Đảm bảo widget vẫn còn trong cây widget trước khi gọi setState
+        if (mounted) {
+          // Đảm bảo widget vẫn còn trong cây widget trước khi gọi setState
           setState(() => _isLoading = false); // Kết thúc loading
         }
       }
@@ -210,7 +224,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: Colors.blue.shade700.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(30),
               ),
-              child: Form( // Khôi phục Form widget
+              child: Form(
+                // Khôi phục Form widget
                 key: _formKey, // Gán GlobalKey vào Form
                 child: Column(
                   children: [
@@ -229,7 +244,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       validator: _validatePassword, // Gán validator
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                          _obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                           color: Colors.white,
                         ),
                         onPressed: () {
@@ -256,7 +273,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _isLoading ? null : _login, // Gắn hàm _login()
+                        onPressed:
+                            _isLoading ? null : _login, // Gắn hàm _login()
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.cyanAccent,
                           shape: RoundedRectangleBorder(
@@ -270,7 +288,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
                                 ),
                               )
                             : const Text(
@@ -338,7 +357,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 5),
-        TextFormField( // Sử dụng TextFormField
+        TextFormField(
+          // Sử dụng TextFormField
           controller: controller,
           obscureText: obscureText,
           style: const TextStyle(color: Colors.white),
@@ -352,12 +372,15 @@ class _LoginScreenState extends State<LoginScreen> {
               borderRadius: BorderRadius.circular(20),
               borderSide: BorderSide.none,
             ),
-            errorStyle: const TextStyle(color: Colors.redAccent, fontSize: 12), // Style lỗi
-            errorBorder: OutlineInputBorder( // Border lỗi
+            errorStyle: const TextStyle(
+                color: Colors.redAccent, fontSize: 12), // Style lỗi
+            errorBorder: OutlineInputBorder(
+              // Border lỗi
               borderRadius: BorderRadius.circular(20),
               borderSide: const BorderSide(color: Colors.red, width: 1.5),
             ),
-            focusedErrorBorder: OutlineInputBorder( // Border lỗi khi focus
+            focusedErrorBorder: OutlineInputBorder(
+              // Border lỗi khi focus
               borderRadius: BorderRadius.circular(20),
               borderSide: const BorderSide(color: Colors.red, width: 2),
             ),

@@ -1,26 +1,37 @@
 import 'package:flutter/material.dart';
 import 'report_form_screen.dart';
+import 'package:front_end/services/bai_dang_service.dart';
+import 'package:front_end/services/buildImage.dart';
+
 class ProductDetailsScreen extends StatefulWidget {
-  const ProductDetailsScreen({super.key});
+  final BaiDang baiDang;
+  const ProductDetailsScreen({super.key, required this.baiDang});
 
   @override
   State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
 }
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
+  String? selectedImageUrl;
+
   @override
   Widget build(BuildContext context) {
+    final baiDang = widget.baiDang;
+    final defaultImage = baiDang.anhBaiDang.isNotEmpty
+        ? buildImageUrl(baiDang.anhBaiDang[0].duongDan)
+        : "https://via.placeholder.com/150";
+    final imageUrl = selectedImageUrl ?? defaultImage;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF0079CF),
-              Color(0xFF00FFDE),
+              Color(0xFF0079CF), // Xanh đậm
+              Color(0xFF00FFDE), // Xanh nhạt
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            stops: [0.0, 0.4],
           ),
         ),
         child: SingleChildScrollView(
@@ -53,15 +64,17 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const ReportFormScreen()),
+                            builder: (context) => const ReportFormScreen(),
+                          ),
                         );
                       }
                     },
                   )
                 ],
               ),
+              // ẢNH CHÍNH
               Container(
-                width: MediaQuery.of(context).size.width * 0.7, 
+                width: MediaQuery.of(context).size.width * 0.7,
                 height: MediaQuery.of(context).size.width * 0.7 * (4 / 3),
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
@@ -78,25 +91,23 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Image.network(
-                    'https://lib.caothang.edu.vn/book_images/16037.jpg',
+                    imageUrl,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Center(child: Icon(Icons.image, size: 80, color: Colors.grey)),
+                    errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.image, size: 80, color: Colors.grey)),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
 
+              // DANH SÁCH ẢNH
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.9),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.grey.shade300,
-                    width: 1,
-                  ),
+                  border: Border.all(color: Colors.grey.shade300, width: 1),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
@@ -108,15 +119,23 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: List.generate(
-                      5, // Tăng số lượng ảnh mẫu để thấy hiệu ứng cuộn
-                      (index) => buildSmallImage(
-                          'https://lib.caothang.edu.vn/book_images/16037.jpg'),
-                    ),
+                    children: baiDang.anhBaiDang.map((anh) {
+                      final url = buildImageUrl(anh.duongDan);
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedImageUrl = url;
+                          });
+                        },
+                        child: buildSmallImage(url),
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
+
               const SizedBox(height: 24),
+              // THÔNG TIN SẢN PHẨM
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 padding: const EdgeInsets.all(20),
@@ -134,40 +153,50 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Vật Lý Đại Cương',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
-                        color: Color(0xFF0079CF),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      '15.000 VNĐ',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            baiDang.tieuDe,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              color: Color(0xFF0079CF),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${baiDang.gia} VNĐ',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildInfoChip(
-                            Icons.check_circle_outline, 'Cũ 75%', Colors.green),
-                        _buildInfoChip(
-                            Icons.category, 'Sách/ Chung', Colors.blueGrey),
+                        _buildInfoChip(Icons.check_circle_outline,
+                            'Độ mới ${baiDang.doMoi}%', Colors.green),
+                        _buildInfoChip(Icons.category, '${baiDang.tenNganh}',
+                            Colors.blueGrey),
                       ],
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 30),
+
+              // NÚT LIÊN HỆ
               ElevatedButton(
-                onPressed: () {
-                },
+                onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(
@@ -178,10 +207,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 child: Ink(
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF0079CF),
-                        Color(0xFF00FFDE),
-                      ],
+                      colors: [Color(0xFF0079CF), Color(0xFF00FFDE)],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                     ),
@@ -194,9 +220,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     child: const Text(
                       'Liên hệ trực tiếp',
                       style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
                 ),
@@ -232,23 +259,24 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Widget buildSmallImage(String imageUrl) {
+    final isSelected = selectedImageUrl == imageUrl;
     return Container(
       width: 90,
       height: 120,
       margin: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12), 
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.grey.shade300,
-          width: 1,
+          color: isSelected ? Colors.blueAccent : Colors.grey.shade300,
+          width: isSelected ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
             blurRadius: 5,
             offset: const Offset(0, 3),
-          )
+          ),
         ],
       ),
       child: ClipRRect(
@@ -289,7 +317,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  Widget _buildContactIcon(IconData icon, VoidCallback onPressed, String label) {
+  Widget _buildContactIcon(
+      IconData icon, VoidCallback onPressed, String label) {
     return Column(
       children: [
         InkWell(
@@ -308,7 +337,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ),
               ],
             ),
-            child: Icon(icon, color: Color(0xFF0079CF), size: 30),
+            child: Icon(icon, color: const Color(0xFF0079CF), size: 30),
           ),
         ),
         const SizedBox(height: 8),
