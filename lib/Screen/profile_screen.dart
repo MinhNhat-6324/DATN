@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:front_end/Screen/login_screen.dart';
 import 'package:front_end/Screen/change_password_screen.dart';
+import 'notification_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userId;
@@ -530,7 +531,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             trailing:
                                 const Icon(Icons.arrow_forward_ios, size: 16),
                             onTap: () {
-                              // TODO: Điều hướng đến trang thông báo
+                              Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => NotificationScreen(userId: widget.userId),
+                            ),
+                          );
                             },
                           ),
                         ),

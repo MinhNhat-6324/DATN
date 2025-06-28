@@ -169,14 +169,14 @@ class TaiKhoanService {
     }
   }
 
-  // Phương thức tạo tài khoản mới (thường dùng cho Admin tạo, khác với đăng ký của người dùng)
+  // Phương thức tạo tài khoản mới (khác với đăng ký của người dùng)
   Future<Map<String, dynamic>> createAccount({
     required String email,
     required String hoTen,
     required String matKhau,
     bool? gioiTinh,
     String? anhDaiDien, // Đây là chuỗi đường dẫn, không phải file
-    String? sdt,
+    required String sdt,
     bool? trangThai,
     bool? loaiTaiKhoan,
   }) async {

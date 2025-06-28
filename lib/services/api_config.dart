@@ -16,4 +16,6 @@ class ApiConfig {
   static const String thongBaoTaiKhoanEndpoint = '/thongbao/tai-khoan';
   
   static const String thongBaoTheoNguoiDungEndpoint = '/thongbao/nguoidung';
+
+  static const String thongBaoEndpoint = '/thongbao';
 }
