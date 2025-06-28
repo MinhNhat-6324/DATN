@@ -124,6 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final data = responseData['data'];
         final int loaiTaiKhoan = data['loai_tai_khoan'] ?? 0;
         final String userId = data['id_tai_khoan'].toString();
+        //final int idNganh = data['id_nganh']; // 👈 Lấy id_nganh từ response
 
         // Lưu thông tin đăng nhập vào SharedPreferences
         final prefs = await SharedPreferences.getInstance();

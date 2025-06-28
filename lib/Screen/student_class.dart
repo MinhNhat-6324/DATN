@@ -8,7 +8,8 @@ import 'home_screen.dart'; // Màn hình chính sau khi hoàn tất
 class StudentClassScreen extends StatefulWidget {
   final String userId; // Thêm biến này
 
-  const StudentClassScreen({super.key, required this.userId}); // CẬP NHẬT CONSTRUCTOR
+  const StudentClassScreen(
+      {super.key, required this.userId}); // CẬP NHẬT CONSTRUCTOR
 
   @override
   State<StudentClassScreen> createState() => _StudentClassScreenState();
@@ -23,8 +24,10 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
 
   List<String> _majorItems = []; // Danh sách chuyên ngành sẽ được tải từ API
   bool _isLoadingMajors = true; // Trạng thái loading cho chuyên ngành
-  final ChuyenNganhSanPhamService _chuyenNganhSanPhamService = ChuyenNganhSanPhamService(); // Khởi tạo service tải chuyên ngành
-  final RegisterService _registerService = RegisterService(); // Khởi tạo RegisterService để cập nhật hồ sơ
+  final ChuyenNganhSanPhamService _chuyenNganhSanPhamService =
+      ChuyenNganhSanPhamService(); // Khởi tạo service tải chuyên ngành
+  final RegisterService _registerService =
+      RegisterService(); // Khởi tạo RegisterService để cập nhật hồ sơ
 
   @override
   void initState() {
@@ -41,7 +44,8 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
   // Hàm tải danh sách chuyên ngành từ API
   Future<void> _fetchMajors() async {
     try {
-      final List<String> fetchedMajors = await _chuyenNganhSanPhamService.fetchChuyenNganhNames();
+      final List<String> fetchedMajors =
+          await _chuyenNganhSanPhamService.fetchChuyenNganhNames();
       setState(() {
         _majorItems = fetchedMajors;
         // Đặt giá trị mặc định cho _selectedMajor nếu có dữ liệu
@@ -59,7 +63,9 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
         _selectedMajor = null; // Đặt về null để không có lựa chọn nào
       });
       // Hiển thị thông báo lỗi cho người dùng
-      _showMessage('Lỗi tải chuyên ngành', 'Không thể tải danh sách chuyên ngành. Vui lòng thử lại. Chi tiết: ${e.toString().replaceFirst('Exception: ', '')}', success: false);
+      _showMessage('Lỗi tải chuyên ngành',
+          'Không thể tải danh sách chuyên ngành. Vui lòng thử lại. Chi tiết: ${e.toString().replaceFirst('Exception: ', '')}',
+          success: false);
     }
   }
 
@@ -73,7 +79,8 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
   }
 
   // Hàm hiển thị thông báo lỗi/thành công
-  void _showMessage(String title, String message, {bool success = false, VoidCallback? onOkPressed}) {
+  void _showMessage(String title, String message,
+      {bool success = false, VoidCallback? onOkPressed}) {
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -130,9 +137,11 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
   Future<void> _saveStudentDetails() async {
     FocusScope.of(context).unfocus(); // Ẩn bàn phím
 
-    if (_formKey.currentState!.validate()) { // Kiểm tra validation của form
+    if (_formKey.currentState!.validate()) {
+      // Kiểm tra validation của form
       if (_imageFile == null) {
-        _showMessage('Thiếu ảnh thẻ sinh viên', 'Vui lòng chọn ảnh thẻ sinh viên để hoàn tất đăng ký.');
+        _showMessage('Thiếu ảnh thẻ sinh viên',
+            'Vui lòng chọn ảnh thẻ sinh viên để hoàn tất đăng ký.');
         return;
       }
       if (_selectedMajor == null || _selectedMajor!.isEmpty) {
@@ -143,7 +152,8 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
       setState(() => _isLoading = true); // Bắt đầu loading
 
       final lop = _classController.text.trim();
-      final chuyenNganh = _selectedMajor!; // Chắc chắn có giá trị do đã kiểm tra
+      final chuyenNganh =
+          _selectedMajor!; // Chắc chắn có giá trị do đã kiểm tra
 
       try {
         await _registerService.updateStudentProfile(
@@ -161,7 +171,9 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
             // Điều hướng đến màn hình chính sau khi hoàn tất
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => HomeScreen(userId: widget.userId)), // Đã sửa lỗi ở đây
+              MaterialPageRoute(
+                  builder: (context) =>
+                      HomeScreen(userId: widget.userId)), // Đã sửa lỗi ở đây
             );
           },
         );
@@ -234,11 +246,14 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
                         color: const Color(0xFF4300FF),
                         borderRadius: BorderRadius.circular(20),
                         image: _imageFile != null
-                            ? DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover)
+                            ? DecorationImage(
+                                image: FileImage(_imageFile!),
+                                fit: BoxFit.cover)
                             : null,
                       ),
                       child: _imageFile == null
-                          ? const Icon(Icons.camera_alt, color: Colors.white, size: 40)
+                          ? const Icon(Icons.camera_alt,
+                              color: Colors.white, size: 40)
                           : null,
                     ),
                   ),
@@ -253,7 +268,8 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
 
                   // Logic hiển thị chuyên ngành
                   _isLoadingMajors
-                      ? const CircularProgressIndicator(color: Color(0xFF00FFDE)) // Hiển thị loading
+                      ? const CircularProgressIndicator(
+                          color: Color(0xFF00FFDE)) // Hiển thị loading
                       : _majorItems.isEmpty
                           ? const Text(
                               'Không có chuyên ngành để hiển thị. Vui lòng kiểm tra kết nối hoặc cấu hình API.',
@@ -264,14 +280,17 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
                               label: 'Chuyên ngành',
                               value: _selectedMajor, // Sử dụng giá trị đã chọn
                               items: _majorItems, // Sử dụng danh sách từ API
-                              onChanged: (val) => setState(() => _selectedMajor = val),
+                              onChanged: (val) =>
+                                  setState(() => _selectedMajor = val),
                             ),
                   const SizedBox(height: 20), // Khoảng cách sau dropdown
 
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _saveStudentDetails, // Gọi _saveStudentDetails
+                      onPressed: _isLoading
+                          ? null
+                          : _saveStudentDetails, // Gọi _saveStudentDetails
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.cyanAccent,
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -281,20 +300,21 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
                       ),
                       child: _isLoading
                           ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                          : const Text(
-                                'Hoàn tất đăng ký',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
+                            )
+                          : const Text(
+                              'Hoàn tất đăng ký',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -325,7 +345,8 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
               fontWeight: FontWeight.w500,
             )),
         const SizedBox(height: 4),
-        TextFormField( // Đã đổi sang TextFormField để dùng validator
+        TextFormField(
+          // Đã đổi sang TextFormField để dùng validator
           controller: controller,
           style: const TextStyle(color: Colors.white),
           keyboardType: keyboardType,
@@ -339,13 +360,17 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
               borderRadius: BorderRadius.circular(20),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
-            errorStyle: const TextStyle(color: Colors.redAccent), // Style cho lỗi
-            errorBorder: OutlineInputBorder( // Border khi có lỗi
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+            errorStyle:
+                const TextStyle(color: Colors.redAccent), // Style cho lỗi
+            errorBorder: OutlineInputBorder(
+              // Border khi có lỗi
               borderRadius: BorderRadius.circular(20),
               borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
             ),
-            focusedErrorBorder: OutlineInputBorder( // Border khi có lỗi và focus
+            focusedErrorBorder: OutlineInputBorder(
+              // Border khi có lỗi và focus
               borderRadius: BorderRadius.circular(20),
               borderSide: const BorderSide(color: Colors.red, width: 2),
             ),
@@ -387,10 +412,13 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
               items: items.map((item) {
                 return DropdownMenuItem<String>(
                   value: item,
-                  child: Text(item, style: const TextStyle(color: Colors.white)),
+                  child:
+                      Text(item, style: const TextStyle(color: Colors.white)),
                 );
               }).toList(),
-              onChanged: items.isEmpty ? null : onChanged, // Vô hiệu hóa khi danh sách rỗng
+              onChanged: items.isEmpty
+                  ? null
+                  : onChanged, // Vô hiệu hóa khi danh sách rỗng
             ),
           ),
         ),

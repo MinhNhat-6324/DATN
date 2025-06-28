@@ -8,6 +8,7 @@ import 'package:front_end/services/buildImage.dart';
 import 'post_list_screen.dart';
 import 'package:front_end/services/chuyen_nganh_service.dart';
 import 'package:front_end/services/loai_san_pham_service.dart';
+import 'package:front_end/services/sinh_vien.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userId;
@@ -93,11 +94,14 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void initState() {
     super.initState();
+    futureBaiDangNganh = Future.value([]);
     selectedLoaiChung = LoaiSanPham(id: -1, tenLoai: 'Tất cả');
     futureDanhSachNganh = getDanhSachNganh();
     futureLoaiList = getDanhSachLoai();
-    _fetchBaiDangChung();
+
     _fetchBaiDangNganh();
+    _fetchNganhTheoUser();
+    _fetchBaiDangChung();
   }
 
   void _fetchBaiDangChung() {
@@ -110,7 +114,9 @@ class _HomeTabState extends State<HomeTab> {
 
   void _fetchBaiDangNganh() {
     final loaiId = selectedLoai?.id ?? -1;
-    futureBaiDangNganh = getBaiDangTheoNganhVaLoai(selectedIdNganh, loaiId);
+    setState(() {
+      futureBaiDangNganh = getBaiDangTheoNganhVaLoai(selectedIdNganh, loaiId);
+    });
   }
 
   void _chonNganh(Nganh nganh) {
@@ -118,27 +124,144 @@ class _HomeTabState extends State<HomeTab> {
       selectedTenNganh = nganh.tenNganh;
       selectedIdNganh = nganh.id;
       selectedLoai = LoaiSanPham(id: -1, tenLoai: 'Tất cả');
-      _fetchBaiDangNganh();
     });
+    _fetchBaiDangNganh();
   }
 
   void _chonLoai(LoaiSanPham loai) {
-    setState(() {
-      selectedLoai = loai;
-      _fetchBaiDangNganh();
-    });
+    setState(() => selectedLoai = loai);
+    _fetchBaiDangNganh();
   }
 
   void _chonLoaiChung(LoaiSanPham loai) {
-    setState(() {
-      selectedLoaiChung = loai;
-      _fetchBaiDangChung();
-    });
+    setState(() => selectedLoaiChung = loai);
+    _fetchBaiDangChung();
   }
 
-  Widget _buildSearchBar(BuildContext context) {
+  void _fetchNganhTheoUser() async {
+    try {
+      final userId = int.tryParse(widget.userId);
+      if (userId == null) return;
+
+      final sinhVien = await fetchSinhVienById(userId);
+      if (sinhVien?.chuyenNganh == null) return;
+
+      final dsNganh = await getDanhSachNganh();
+      final nganh = dsNganh.firstWhere(
+        (n) => n.id == sinhVien!.chuyenNganh,
+        orElse: () => Nganh(id: sinhVien!.chuyenNganh!, tenNganh: "Không rõ"),
+      );
+
+      setState(() {
+        selectedIdNganh = nganh.id;
+        selectedTenNganh = nganh.tenNganh;
+        selectedLoai = LoaiSanPham(id: -1, tenLoai: 'Tất cả');
+      });
+      _fetchBaiDangNganh();
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return SafeArea(
+      child: Column(
+        children: [
+          _buildSearchBar(context, screenWidth),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.025),
+              children: [
+                _buildCategorySection(
+                  context: context,
+                  title: "Sách chung",
+                  color: Colors.cyan,
+                  screenWidth: screenWidth,
+                  items: dataChung.take(4).map((baiDang) {
+                    final duongDan = baiDang.anhBaiDang.isNotEmpty
+                        ? baiDang.anhBaiDang[0].duongDan
+                        : '';
+                    final imageUrl = buildImageUrl(duongDan).isNotEmpty
+                        ? buildImageUrl(duongDan)
+                        : "https://via.placeholder.com/150";
+                    return _bookItem(context, baiDang, imageUrl, screenWidth);
+                  }).toList(),
+                  onLoaiSelected: _chonLoaiChung,
+                  showPlaceholder: dataChung.isEmpty,
+                  onViewMore: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PostListScreen(
+                          title: "Sách chung",
+                          idNganh: 6,
+                          idLoai: selectedLoaiChung?.id ?? -1,
+                          searchTieuDe: null,
+                          userId: widget.userId, // ✅ truyền thêm userId
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                FutureBuilder<List<BaiDang>>(
+                  future: futureBaiDangNganh,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox();
+                    } else if (snapshot.hasError) {
+                      return Center(
+                          child: Text("Lỗi bài đăng: ${snapshot.error}"));
+                    }
+
+                    final baiDangNganh = snapshot.data?.take(4).toList() ?? [];
+
+                    return _buildCategorySection(
+                      context: context,
+                      title: "$selectedTenNganh",
+                      color: Colors.indigo,
+                      screenWidth: screenWidth,
+                      items: baiDangNganh.map((baiDang) {
+                        final duongDan = baiDang.anhBaiDang.isNotEmpty
+                            ? baiDang.anhBaiDang[0].duongDan
+                            : '';
+                        final imageUrl = buildImageUrl(duongDan).isNotEmpty
+                            ? buildImageUrl(duongDan)
+                            : "https://via.placeholder.com/150";
+                        return _bookItem(
+                            context, baiDang, imageUrl, screenWidth);
+                      }).toList(),
+                      onLoaiSelected: _chonLoai,
+                      showPlaceholder: baiDangNganh.isEmpty,
+                      onViewMore: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PostListScreen(
+                              title: "Ngành $selectedTenNganh",
+                              idNganh: selectedIdNganh,
+                              idLoai: selectedLoai?.id ?? -1,
+                              searchTieuDe: null,
+                              userId: widget.userId, // ✅ truyền thêm userId
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(BuildContext context, double screenWidth) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding:
+          EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: 16),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
@@ -157,9 +280,10 @@ class _HomeTabState extends State<HomeTab> {
                     MaterialPageRoute(
                       builder: (context) => PostListScreen(
                         title: 'Kết quả cho "$keyword"',
-                        idNganh: -1,
+                        idNganh: selectedIdNganh,
                         idLoai: -1,
                         searchTieuDe: keyword,
+                        userId: widget.userId, // ✅ truyền thêm userId
                       ),
                     ),
                   );
@@ -174,63 +298,26 @@ class _HomeTabState extends State<HomeTab> {
                   hintText: "Nhập tên sách muốn tìm",
                   border: InputBorder.none,
                 ),
-                onSubmitted: (value) {
-                  final keyword = value.trim();
-                  if (keyword.isNotEmpty) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PostListScreen(
-                          title: 'Kết quả cho "$keyword"',
-                          idNganh: -1,
-                          idLoai: -1,
-                          searchTieuDe: keyword,
-                        ),
-                      ),
-                    );
-                  }
-                },
               ),
             ),
             FutureBuilder<List<Nganh>>(
               future: futureDanhSachNganh,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  );
-                } else if (snapshot.hasError) {
-                  return IconButton(
-                    icon: const Icon(Icons.error, color: Colors.red),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text("Lỗi tải ngành: ${snapshot.error}")),
-                      );
-                    },
-                  );
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Text("Không có ngành");
-                }
-
+                if (!snapshot.hasData) return const SizedBox();
                 final nganhList =
                     snapshot.data!.where((nganh) => nganh.id != 6).toList();
+
                 return PopupMenuButton<Nganh>(
-                  icon: const Icon(Icons.list, color: Colors.blue),
-                  onSelected: _chonNganh,
-                  itemBuilder: (BuildContext context) {
-                    return nganhList
-                        .map((nganh) => PopupMenuItem<Nganh>(
-                              value: nganh,
-                              child: Text(nganh.tenNganh),
-                            ))
-                        .toList();
+                  icon: const Icon(Icons.school, color: Colors.blue),
+                  onSelected: (nganh) {
+                    _chonNganh(nganh); // cập nhật ngành và load lại dữ liệu
                   },
+                  itemBuilder: (context) => nganhList
+                      .map((nganh) => PopupMenuItem<Nganh>(
+                            value: nganh,
+                            child: Text(nganh.tenNganh),
+                          ))
+                      .toList(),
                 );
               },
             ),
@@ -240,248 +327,172 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        children: [
-          _buildSearchBar(context),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              children: [
-                _buildCategorySection(
-                  context: context,
-                  title: "Sách chung",
-                  color: Colors.cyan,
-                  items: dataChung.take(4).map((baiDang) {
-                    final duongDan = baiDang.anhBaiDang.isNotEmpty
-                        ? baiDang.anhBaiDang[0].duongDan
-                        : '';
-                    final imageUrl = buildImageUrl(duongDan).isNotEmpty
-                        ? buildImageUrl(duongDan)
-                        : "https://via.placeholder.com/150";
-                    return _bookItem(context, baiDang, imageUrl);
-                  }).toList(),
-                  onLoaiSelected: _chonLoaiChung,
-                  showPlaceholder: dataChung.isEmpty,
-                  onViewMore: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PostListScreen(
-                          title: "Sách chung",
-                          idNganh: 6,
-                          idLoai: selectedLoaiChung?.id ?? -1,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                FutureBuilder<List<BaiDang>>(
-                  future: futureBaiDangNganh,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(
-                          child: Text("Lỗi bài đăng: ${snapshot.error}"));
-                    }
-
-                    final baiDangNganh = snapshot.data?.take(4).toList() ?? [];
-
-                    return _buildCategorySection(
-                      context: context,
-                      title: "Ngành $selectedTenNganh",
-                      color: Colors.indigo,
-                      items: baiDangNganh.map((baiDang) {
-                        final duongDan = baiDang.anhBaiDang.isNotEmpty
-                            ? baiDang.anhBaiDang[0].duongDan
-                            : '';
-                        final imageUrl = buildImageUrl(duongDan).isNotEmpty
-                            ? buildImageUrl(duongDan)
-                            : "https://via.placeholder.com/150";
-                        return _bookItem(context, baiDang, imageUrl);
-                      }).toList(),
-                      onLoaiSelected: _chonLoai,
-                      showPlaceholder: baiDangNganh.isEmpty,
-                      onViewMore: () {
-                        print(
-                            "🔍 Xem thêm ngành: $selectedTenNganh | idNganh: $selectedIdNganh | idLoai: ${selectedLoai?.id ?? -1}");
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PostListScreen(
-                              title: "Ngành $selectedTenNganh",
-                              idNganh: selectedIdNganh,
-                              idLoai: selectedLoai?.id ?? -1,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
+  Widget _bookItem(BuildContext context, BaiDang baiDang, String imageUrl,
+      double screenWidth) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailsScreen(
+              baiDang: baiDang,
+              idNguoiBaoCao:
+                  int.parse(widget.userId), // ✅ Truyền thêm ID người báo cáo
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-Widget _buildCategorySection({
-  required BuildContext context,
-  required String title,
-  required Color color,
-  required List<Widget> items,
-  Function(LoaiSanPham)? onLoaiSelected,
-  bool showPlaceholder = false,
-  VoidCallback? onViewMore,
-}) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        );
+      },
+      child: Container(
+        width: screenWidth * 0.35,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(8),
+        child: Column(
           children: [
-            Row(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.broken_image),
                 ),
-                FutureBuilder<List<LoaiSanPham>>(
-                  future: getDanhSachLoai(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      );
-                    } else if (snapshot.hasError || !snapshot.hasData) {
-                      return const SizedBox.shrink();
-                    }
-
-                    final loaiList = [
-                      LoaiSanPham(id: -1, tenLoai: 'Tất cả'),
-                      ...snapshot.data!
-                    ];
-
-                    return PopupMenuButton<LoaiSanPham>(
-                      icon: const Icon(Icons.arrow_drop_down,
-                          color: Colors.white),
-                      onSelected: onLoaiSelected,
-                      itemBuilder: (context) => loaiList
-                          .map((loai) => PopupMenuItem<LoaiSanPham>(
-                                value: loai,
-                                child: Text(loai.tenLoai),
-                              ))
-                          .toList(),
-                    );
-                  },
-                ),
-              ],
+              ),
             ),
-            TextButton(
-              onPressed: onViewMore,
-              child: const Text("Xem thêm →",
-                  style: TextStyle(color: Colors.white)),
+            const SizedBox(height: 6),
+            Text(
+              baiDang.tieuDe,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              "${baiDang.gia} VND",
+              style: const TextStyle(color: Colors.grey),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
       ),
-      const SizedBox(height: 8),
-      if (showPlaceholder)
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Text(
-              "Không có bài đăng nào trong mục này",
-              style:
-                  TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
-            ),
-          ),
-        )
-      else
-        SizedBox(
-          height: 180,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: items
-                .map((e) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: e,
-                    ))
-                .toList(),
-          ),
-        ),
-      const SizedBox(height: 10),
-    ],
-  );
-}
+    );
+  }
 
-Widget _bookItem(BuildContext context, BaiDang baiDang, String imageUrl) {
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ProductDetailsScreen(baiDang: baiDang),
+  Widget _buildCategorySection({
+    required BuildContext context,
+    required String title,
+    required Color color,
+    required List<Widget> items,
+    required double screenWidth,
+    Function(LoaiSanPham)? onLoaiSelected,
+    bool showPlaceholder = false,
+    VoidCallback? onViewMore,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    FutureBuilder<List<LoaiSanPham>>(
+                      future: getDanhSachLoai(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          );
+                        } else if (snapshot.hasError || !snapshot.hasData) {
+                          return const SizedBox.shrink();
+                        }
+
+                        final loaiList = [
+                          LoaiSanPham(id: -1, tenLoai: 'Tất cả'),
+                          ...snapshot.data!
+                        ];
+
+                        return PopupMenuButton<LoaiSanPham>(
+                          icon: const Icon(Icons.arrow_drop_down,
+                              color: Colors.white),
+                          onSelected: onLoaiSelected,
+                          itemBuilder: (context) => loaiList
+                              .map((loai) => PopupMenuItem<LoaiSanPham>(
+                                    value: loai,
+                                    child: Text(loai.tenLoai),
+                                  ))
+                              .toList(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: onViewMore,
+                child: const Text("Xem thêm →",
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
         ),
-      );
-    },
-    child: Container(
-      width: 120,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.broken_image),
+        const SizedBox(height: 8),
+        if (showPlaceholder)
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Center(
+              child: Text(
+                "Không có bài đăng nào trong mục này",
+                style: TextStyle(
+                    color: Colors.white70, fontStyle: FontStyle.italic),
               ),
             ),
+          )
+        else
+          SizedBox(
+            height: 180,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: items
+                  .map((e) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: e,
+                      ))
+                  .toList(),
+            ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            baiDang.tieuDe,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          Text(
-            "${baiDang.gia} VND",
-            style: const TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
-    ),
-  );
+        const SizedBox(height: 10),
+      ],
+    );
+  }
 }

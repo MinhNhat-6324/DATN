@@ -12,6 +12,7 @@ class PostListScreen extends StatefulWidget {
   final int idNganh;
   final int? idLoai;
   final String? searchTieuDe;
+  final String userId; // ✅ Thêm dòng này
 
   const PostListScreen({
     super.key,
@@ -19,6 +20,7 @@ class PostListScreen extends StatefulWidget {
     required this.idNganh,
     this.idLoai,
     this.searchTieuDe,
+    required this.userId, // ✅ Thêm dòng này
   });
 
   @override
@@ -32,19 +34,25 @@ class _PostListScreenState extends State<PostListScreen> {
   late int selectedIdNganh;
   int? selectedIdLoai;
   String? searchTieuDe;
+
   @override
   void initState() {
     super.initState();
     selectedIdNganh = widget.idNganh;
-    selectedIdLoai = widget.idLoai;
+    selectedIdLoai = widget.idLoai ?? -1; // luôn đảm bảo có giá trị
     searchTieuDe = widget.searchTieuDe;
     _searchController.text = widget.searchTieuDe ?? '';
 
-    if (searchTieuDe != null && searchTieuDe!.isNotEmpty) {
-      futureBaiDang =
-          getBaiDangTheoTieuDe(searchTieuDe!); // 🔍 chỉ lọc theo tiêu đề
+    final hasSearch = searchTieuDe != null && searchTieuDe!.trim().isNotEmpty;
+
+    if (hasSearch) {
+      futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
+        selectedIdNganh,
+        selectedIdLoai ?? -1,
+        searchTieuDe!,
+      );
     } else {
-      _loadFilteredBaiDang(); // 🧭 lọc theo ngành + loại nếu không có tiêu đề
+      _loadFilteredBaiDang();
     }
   }
 
@@ -52,14 +60,12 @@ class _PostListScreenState extends State<PostListScreen> {
     setState(() {
       final hasSearch = searchTieuDe != null && searchTieuDe!.trim().isNotEmpty;
       if (hasSearch) {
-        // 🔍 Lọc theo cả ngành + loại + tiêu đề
         futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
           selectedIdNganh,
           selectedIdLoai ?? -1,
           searchTieuDe!.trim(),
         );
       } else {
-        // 🧭 Lọc chỉ theo ngành + loại
         futureBaiDang = getBaiDangTheoNganhVaLoai(
           selectedIdNganh,
           selectedIdLoai ?? -1,
@@ -70,50 +76,51 @@ class _PostListScreenState extends State<PostListScreen> {
 
   void _onSearch() {
     searchTieuDe = _searchController.text.trim();
-
     final hasTitle = searchTieuDe != null && searchTieuDe!.isNotEmpty;
     final hasLoai = selectedIdLoai != null && selectedIdLoai != -1;
     final hasNganh = selectedIdNganh != -1;
 
-    if (hasTitle) {
-      if (!hasLoai && !hasNganh) {
-        futureBaiDang = getBaiDangTheoTieuDe(searchTieuDe!);
-      } else if (hasLoai && !hasNganh) {
-        futureBaiDang = getBaiDangTheoLoaiVaTieuDe(
-          selectedIdLoai!,
-          searchTieuDe!,
-        );
-      } else if (hasLoai && hasNganh) {
-        futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
-          selectedIdNganh,
-          selectedIdLoai!,
-          searchTieuDe!,
-        );
-      } else if (!hasLoai && hasNganh) {
-        futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
-          selectedIdNganh,
-          -1,
-          searchTieuDe!,
-        );
-      }
-    } else {
-      if (!hasLoai && !hasNganh) {
-        futureBaiDang = getTatCaBaiDang();
-      } else if (hasLoai && !hasNganh) {
-        futureBaiDang = getBaiDangTheoLoai(selectedIdLoai!);
+    setState(() {
+      if (hasTitle) {
+        if (!hasLoai && !hasNganh) {
+          futureBaiDang = getBaiDangTheoTieuDe(searchTieuDe!);
+        } else if (hasLoai && !hasNganh) {
+          futureBaiDang = getBaiDangTheoLoaiVaTieuDe(
+            selectedIdLoai!,
+            searchTieuDe!,
+          );
+        } else if (hasLoai && hasNganh) {
+          futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
+            selectedIdNganh,
+            selectedIdLoai!,
+            searchTieuDe!,
+          );
+        } else if (!hasLoai && hasNganh) {
+          futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
+            selectedIdNganh,
+            -1,
+            searchTieuDe!,
+          );
+        }
       } else {
-        futureBaiDang = getBaiDangTheoNganhVaLoai(
-          selectedIdNganh,
-          selectedIdLoai ?? -1,
-        );
+        if (!hasLoai && !hasNganh) {
+          futureBaiDang = getTatCaBaiDang();
+        } else if (hasLoai && !hasNganh) {
+          futureBaiDang = getBaiDangTheoLoai(selectedIdLoai!);
+        } else {
+          futureBaiDang = getBaiDangTheoNganhVaLoai(
+            selectedIdNganh,
+            selectedIdLoai ?? -1,
+          );
+        }
       }
-    }
-
-    setState(() {});
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -132,6 +139,7 @@ class _PostListScreenState extends State<PostListScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start, // Giữ sát trái
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -143,21 +151,22 @@ class _PostListScreenState extends State<PostListScreen> {
                       child: const Text(
                         "Sản phẩm liên quan",
                         style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
+                    const SizedBox(
+                        width: 8), // Khoảng cách nhỏ giữa Text và Icon dropdown
                     FutureBuilder<List<LoaiSanPham>>(
                       future: getDanhSachLoai(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return const Padding(
-                            padding: EdgeInsets.only(left: 8),
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
+                          return const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           );
                         } else if (snapshot.hasError || !snapshot.hasData) {
                           return const SizedBox();
@@ -173,7 +182,7 @@ class _PostListScreenState extends State<PostListScreen> {
                               color: Colors.white),
                           onSelected: (loai) {
                             selectedIdLoai = loai.id;
-                            _onSearch(); // 🔍 xử lý tìm kiếm y như icon
+                            _onSearch();
                           },
                           itemBuilder: (context) {
                             return loaiList
@@ -208,12 +217,11 @@ class _PostListScreenState extends State<PostListScreen> {
                       padding: const EdgeInsets.all(8.0),
                       child: GridView.builder(
                         itemCount: baiDangList.length,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: size.width > 600 ? 3 : 2,
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 10,
-                          childAspectRatio: 0.6,
+                          childAspectRatio: size.width > 600 ? 0.75 : 0.6,
                         ),
                         itemBuilder: (context, index) {
                           final baiDang = baiDangList[index];
@@ -330,79 +338,104 @@ class _PostListScreenState extends State<PostListScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ProductDetailsScreen(baiDang: baiDang),
+              builder: (context) => ProductDetailsScreen(
+                baiDang: baiDang,
+                idNguoiBaoCao:
+                    int.parse(widget.userId), // ✅ truyền vào từ widget.userId
+              ),
             ),
           );
         },
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFE6F2FF), Color.fromARGB(255, 247, 237, 220)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.blue.shade100, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.network(
-                  imageUrl,
-                  height: 180,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.broken_image),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final fontSizeBase = constraints.maxWidth * 0.07;
+            final fontSizePrice = fontSizeBase * 0.9;
+
+            return Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFE6F2FF), Color(0xFFF7EDDC)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.blue.shade100, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 10),
-                    Text(
-                      baiDang.tenNganh ?? "Chưa rõ ngành",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Hình ảnh cao hơn
+                  ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: Image.network(
+                      imageUrl,
+                      height: constraints.maxHeight * 0.5,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.broken_image, size: 48),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      baiDang.tieuDe,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Text bên dưới (dùng Expanded để không tràn)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            baiDang.tenNganh ?? "Chưa rõ ngành",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: fontSizeBase,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            baiDang.tieuDe,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: fontSizeBase + 2,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            "${baiDang.gia} VND",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.red.shade700,
+                              fontSize: fontSizePrice,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "${baiDang.gia} VND",
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                  ],
-                ),
+                  ),
+
+                  const SizedBox(height: 8),
+                ],
               ),
-              const SizedBox(height: 8),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

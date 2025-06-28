@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:front_end/Screen/home_screen.dart';
+import 'package:front_end/Screen/my_post_screen.dart';
 import 'package:front_end/Screen/post_list_screen.dart';
 import 'package:front_end/Screen/post_management_screen.dart';
 import 'package:front_end/Screen/post_screen.dart';
@@ -19,7 +20,7 @@ class SachChuyenTayApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginScreen(),
+      home: MyPostScreen(),
     );
   }
 }
