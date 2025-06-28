@@ -68,6 +68,50 @@ class _PostListScreenState extends State<PostListScreen> {
     });
   }
 
+  void _onSearch() {
+    searchTieuDe = _searchController.text.trim();
+
+    final hasTitle = searchTieuDe != null && searchTieuDe!.isNotEmpty;
+    final hasLoai = selectedIdLoai != null && selectedIdLoai != -1;
+    final hasNganh = selectedIdNganh != -1;
+
+    if (hasTitle) {
+      if (!hasLoai && !hasNganh) {
+        futureBaiDang = getBaiDangTheoTieuDe(searchTieuDe!);
+      } else if (hasLoai && !hasNganh) {
+        futureBaiDang = getBaiDangTheoLoaiVaTieuDe(
+          selectedIdLoai!,
+          searchTieuDe!,
+        );
+      } else if (hasLoai && hasNganh) {
+        futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
+          selectedIdNganh,
+          selectedIdLoai!,
+          searchTieuDe!,
+        );
+      } else if (!hasLoai && hasNganh) {
+        futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
+          selectedIdNganh,
+          -1,
+          searchTieuDe!,
+        );
+      }
+    } else {
+      if (!hasLoai && !hasNganh) {
+        futureBaiDang = getTatCaBaiDang();
+      } else if (hasLoai && !hasNganh) {
+        futureBaiDang = getBaiDangTheoLoai(selectedIdLoai!);
+      } else {
+        futureBaiDang = getBaiDangTheoNganhVaLoai(
+          selectedIdNganh,
+          selectedIdLoai ?? -1,
+        );
+      }
+    }
+
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -129,34 +173,7 @@ class _PostListScreenState extends State<PostListScreen> {
                               color: Colors.white),
                           onSelected: (loai) {
                             selectedIdLoai = loai.id;
-
-                            final isSearchingTitle = searchTieuDe != null &&
-                                searchTieuDe!.trim().isNotEmpty;
-
-                            if (isSearchingTitle) {
-                              if (selectedIdNganh != -1) {
-                                // ✅ Tìm theo ngành + loại + tiêu đề
-                                futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
-                                  selectedIdNganh,
-                                  selectedIdLoai ?? -1,
-                                  searchTieuDe!.trim(),
-                                );
-                              } else {
-                                // ✅ Tìm theo loại + tiêu đề (không có ngành)
-                                futureBaiDang = getBaiDangTheoLoaiVaTieuDe(
-                                  selectedIdLoai ?? -1,
-                                  searchTieuDe!.trim(),
-                                );
-                              }
-                            } else {
-                              // 🧭 Không có tiêu đề → chỉ lọc theo ngành + loại
-                              futureBaiDang = getBaiDangTheoNganhVaLoai(
-                                selectedIdNganh,
-                                selectedIdLoai ?? -1,
-                              );
-                            }
-
-                            setState(() {});
+                            _onSearch(); // 🔍 xử lý tìm kiếm y như icon
                           },
                           itemBuilder: (context) {
                             return loaiList
@@ -252,58 +269,15 @@ class _PostListScreenState extends State<PostListScreen> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.search, color: Colors.blue),
+            InkWell(
+              onTap: _onSearch,
+              child: const Icon(Icons.search, color: Colors.blue),
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
                 controller: _searchController,
-                onSubmitted: (value) {
-                  searchTieuDe = value.trim();
-
-                  final hasTitle =
-                      searchTieuDe != null && searchTieuDe!.isNotEmpty;
-                  final hasLoai =
-                      selectedIdLoai != null && selectedIdLoai != -1;
-                  final hasNganh = selectedIdNganh != -1;
-
-                  if (hasTitle) {
-                    if (!hasLoai && !hasNganh) {
-                      futureBaiDang = getBaiDangTheoTieuDe(searchTieuDe!);
-                    } else if (hasLoai && !hasNganh) {
-                      futureBaiDang = getBaiDangTheoLoaiVaTieuDe(
-                        selectedIdLoai!,
-                        searchTieuDe!,
-                      );
-                    } else if (hasLoai && hasNganh) {
-                      futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
-                        selectedIdNganh,
-                        selectedIdLoai!,
-                        searchTieuDe!,
-                      );
-                    } else if (!hasLoai && hasNganh) {
-                      futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
-                        selectedIdNganh,
-                        -1,
-                        searchTieuDe!,
-                      );
-                    }
-                  } else {
-                    if (!hasLoai && !hasNganh) {
-                      futureBaiDang =
-                          getTatCaBaiDang(); // ⚠️ cần tạo hàm này nếu chưa có
-                    } else if (hasLoai && !hasNganh) {
-                      futureBaiDang = getBaiDangTheoLoai(selectedIdLoai!);
-                    } else {
-                      // có ngành → theo ngành + loại
-                      futureBaiDang = getBaiDangTheoNganhVaLoai(
-                        selectedIdNganh,
-                        selectedIdLoai ?? -1,
-                      );
-                    }
-                  }
-
-                  setState(() {});
-                },
+                onSubmitted: (_) => _onSearch(),
                 decoration: const InputDecoration(
                   hintText: "Nhập tên sách muốn tìm",
                   border: InputBorder.none,
@@ -323,14 +297,13 @@ class _PostListScreenState extends State<PostListScreen> {
                   return const SizedBox.shrink();
                 }
 
-                final nganhList =
-                    snapshot.data!.where((nganh) => nganh.id != 6).toList();
+                final nganhList = snapshot.data!;
 
                 return PopupMenuButton<Nganh>(
                   icon: const Icon(Icons.list, color: Colors.blue),
                   onSelected: (nganh) {
                     selectedIdNganh = nganh.id;
-                    _loadFilteredBaiDang();
+                    _onSearch();
                   },
                   itemBuilder: (context) {
                     return nganhList
