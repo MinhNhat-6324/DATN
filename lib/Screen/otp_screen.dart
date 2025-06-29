@@ -120,9 +120,14 @@ class _OtpScreenState extends State<OtpScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true); // Bắt đầu loading
 
-      final otpCode = _otpController.text.trim();
+      
 
       try {
+
+        if (!mounted) return;
+        
+        final otpCode = _otpController.text.trim();
+
         final responseData = await _registerService.verifyOtp(widget.userId, otpCode);
 
         _showMessage(

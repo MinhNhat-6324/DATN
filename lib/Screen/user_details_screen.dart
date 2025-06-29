@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:front_end/services/tai_khoan_service.dart';
+import 'package:front_end/services/thong_bao_service.dart'; // Import service thông báo
 import 'package:flutter/foundation.dart'; // Import for debugPrint
 
 class UserDetailsScreen extends StatefulWidget {
@@ -13,6 +14,7 @@ class UserDetailsScreen extends StatefulWidget {
 
 class _UserDetailsScreenState extends State<UserDetailsScreen> {
   final TaiKhoanService _taiKhoanService = TaiKhoanService();
+  final ThongBaoService _thongBaoService = ThongBaoService(); // Khởi tạo ThongBaoService
   Map<String, dynamic>? _userDetails;
   bool _isLoading = true;
   String? _errorMessage;
@@ -84,6 +86,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     final String actionDescription;
     final String confirmMessage;
     final String confirmButtonText;
+    final int currentTrangThaiBeforeUpdate = _userDetails!['trang_thai'] ?? 0; // Lấy trạng thái hiện tại trước khi thay đổi
 
     switch (targetStatus) {
       case 0: // Chuyển về Chờ duyệt
@@ -92,7 +95,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
         confirmButtonText = "Chuyển";
         break;
       case 1: // Kích hoạt / Mở khóa
-        if ((_userDetails!['trang_thai'] ?? 0) == 0) {
+        if (currentTrangThaiBeforeUpdate == 0) {
           actionDescription = "kích hoạt";
           confirmMessage = "Bạn có chắc chắn muốn kích hoạt tài khoản của ${_userDetails!['ho_ten'] ?? 'người dùng này'}?";
           confirmButtonText = "Kích hoạt";
@@ -163,15 +166,31 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
           _userDetails!['trang_thai'] = targetStatus; 
         });
 
-        // Tùy chỉnh thông báo thành công dựa trên hành động
+        // GỬI THÔNG BÁO VÀO DB THÔNG QUA ThongBaoService
+        // Lấy id_tai_khoan. Đảm bảo nó là int hoặc chuyển đổi về int.
+        final int? idTaiKhoan = _userDetails!['id_tai_khoan'] is int
+            ? _userDetails!['id_tai_khoan']
+            : int.tryParse(widget.userId); // Dùng widget.userId nếu id_tai_khoan trong _userDetails không chắc chắn là int
+
+        if (idTaiKhoan != null) {
+          await _thongBaoService.guiThongBaoTaiKhoan(
+            idTaiKhoan: idTaiKhoan,
+            trangThai: targetStatus, // Gửi trạng thái mới để service tự tạo nội dung
+          );
+          debugPrint('Đã gửi thông báo trạng thái tài khoản cho ID: $idTaiKhoan, trạng thái: $targetStatus');
+        } else {
+          debugPrint('WARNING: Không thể gửi thông báo vì id_tai_khoan không hợp lệ.');
+        }
+
+        // Tùy chỉnh thông báo thành công dựa trên hành động và TRẠNG THÁI TRƯỚC ĐÓ
         String successMessage;
         switch (targetStatus) {
           case 0:
             successMessage = "Đã chuyển tài khoản của ${_userDetails!['ho_ten'] ?? 'người dùng này'} về trạng thái chờ duyệt thành công!";
             break;
           case 1:
-            // Kiểm tra trạng thái cũ để phân biệt "kích hoạt" và "mở khóa"
-            if ( (_userDetails!['trang_thai'] ?? 0) == 0 ) { // Nếu trạng thái trước đó là 0 (chờ duyệt)
+            // Dựa vào trạng thái cũ để tạo thông báo chính xác
+            if (currentTrangThaiBeforeUpdate == 0) { // Nếu trạng thái trước đó là 0 (chờ duyệt)
                 successMessage = "Đã kích hoạt tài khoản của ${_userDetails!['ho_ten'] ?? 'người dùng này'} thành công!";
             } else { // Nếu trạng thái trước đó là 2 (bị khóa)
                 successMessage = "Đã mở khóa tài khoản của ${_userDetails!['ho_ten'] ?? 'người dùng này'} thành công!";

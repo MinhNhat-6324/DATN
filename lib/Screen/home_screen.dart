@@ -40,7 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
             HomeTab(userId: widget.userId),
             const PostScreen(),
             const ChatScreen(),
-            const ProfileScreen(),
+            ProfileScreen(
+              userId: widget.userId,
+            ),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(

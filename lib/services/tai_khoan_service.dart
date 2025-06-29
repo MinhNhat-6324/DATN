@@ -48,7 +48,7 @@ class TaiKhoanService {
       queryString += '&trang_thai=$status'; // Đảm bảo tên tham số khớp với backend của bạn
     }
 
-    final url = Uri.parse('$_baseUrl${ApiConfig.accountsEndpoint}$queryString');
+    final url = Uri.parse('$_baseUrl${ApiConfig.listAccountsEndpoint}$queryString');
 
     // IN RA URL ĐỂ DEBUG
     debugPrint('Fetching accounts from URL: $url');
@@ -132,7 +132,7 @@ class TaiKhoanService {
   }
 
   // Phương thức lấy thông tin chi tiết một tài khoản bằng ID
-  Future<Map<String, dynamic>> getAccountById(String id) async {
+   Future<Map<String, dynamic>> getAccountById(String id) async {
     final token = await _getToken();
     final url = Uri.parse('$_baseUrl${ApiConfig.accountsEndpoint}/$id');
 
@@ -169,14 +169,14 @@ class TaiKhoanService {
     }
   }
 
-  // Phương thức tạo tài khoản mới (thường dùng cho Admin tạo, khác với đăng ký của người dùng)
+  // Phương thức tạo tài khoản mới (khác với đăng ký của người dùng)
   Future<Map<String, dynamic>> createAccount({
     required String email,
     required String hoTen,
     required String matKhau,
     bool? gioiTinh,
     String? anhDaiDien, // Đây là chuỗi đường dẫn, không phải file
-    String? sdt,
+    required String sdt,
     bool? trangThai,
     bool? loaiTaiKhoan,
   }) async {
@@ -225,7 +225,10 @@ class TaiKhoanService {
   // Phương thức để cập nhật hồ sơ sinh viên (hoàn tất đăng ký)
   // Gửi thông tin Lop, ChuyenNganh, và File ảnh thẻ sinh viên
   Future<Map<String, dynamic>> updateStudentProfile(
-      String userId, String lop, String chuyenNganh, File studentCardImageFile) async {
+      String userId,
+      String lop,
+      int chuyenNganhId, // ĐÃ SỬA: Thay đổi kiểu dữ liệu từ String sang int
+      File studentCardImageFile) async {
     final token = await _getToken();
     final url = Uri.parse('$_baseUrl${ApiConfig.accountsEndpoint}/$userId');
 
@@ -237,7 +240,7 @@ class TaiKhoanService {
         })
         ..fields['_method'] = 'PUT' // Hoặc 'PATCH' tùy vào cấu hình route Laravel của bạn
         ..fields['sinh_vien[lop]'] = lop
-        ..fields['sinh_vien[chuyen_nganh]'] = chuyenNganh;
+        ..fields['sinh_vien[chuyen_nganh_id]'] = chuyenNganhId.toString(); // ĐÃ SỬA: Chuyển int sang String và dùng tên trường là chuyen_nganh_id
 
       // Thêm file ảnh thẻ sinh viên
       request.files.add(await http.MultipartFile.fromPath(
@@ -247,7 +250,7 @@ class TaiKhoanService {
       ));
 
       debugPrint('Sending student profile update for User ID: $userId');
-      debugPrint('Lop: $lop, ChuyenNganh: $chuyenNganh');
+      debugPrint('Lop: $lop, ChuyenNganh ID: $chuyenNganhId'); // Log ID thay vì tên chuyên ngành
       debugPrint('Student Card File Path: ${studentCardImageFile.path}');
       debugPrint('Target URL: $url');
       debugPrint('Request Fields: ${request.fields}');
@@ -408,7 +411,7 @@ class TaiKhoanService {
     }
   }
 
-   // NEW: Phương thức đăng ký tài khoản Admin
+    // Phương thức đăng ký tài khoản Admin
   Future<Map<String, dynamic>> registerAdminAccount({
     required String email,
     required String hoTen,
@@ -462,6 +465,106 @@ class TaiKhoanService {
     } catch (e) {
       debugPrint('Error registering admin account: $e');
       throw Exception('Lỗi khi đăng ký tài khoản quản trị: $e');
+    }
+  }
+
+    // Phương thức để cập nhật ảnh đại diện người dùng
+  Future<Map<String, dynamic>> updateProfilePicture(
+      String userId, File profileImageFile) async {
+    final token = await _getToken();
+    final url = Uri.parse('$_baseUrl${ApiConfig.accountsEndpoint}/$userId');
+
+    try {
+      var request = http.MultipartRequest('POST', url)
+        ..headers.addAll({
+          'Authorization': 'Bearer $token',
+        })
+        ..fields['_method'] = 'PUT'; // Sử dụng PUT method cho update
+
+      // Thêm file ảnh đại diện
+      request.files.add(await http.MultipartFile.fromPath(
+        'anh_dai_dien_file', // Tên trường file mà Laravel Controller mong đợi cho ảnh đại diện
+        profileImageFile.path,
+        filename: profileImageFile.path.split('/').last,
+      ));
+
+      debugPrint('Sending profile picture update for User ID: $userId');
+      debugPrint('Profile Image File Path: ${profileImageFile.path}');
+      debugPrint('Target URL: $url');
+      debugPrint('Request Fields: ${request.fields}');
+      debugPrint('Request Files: ${request.files.map((f) => f.filename).toList()}');
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return responseData;
+      } else if (response.statusCode == 422) { // Validation error
+        throw Exception(responseData['message'] ?? 'Dữ liệu ảnh không hợp lệ.\n${_formatValidationErrors(responseData['errors'] ?? {})}.');
+      } else if (response.statusCode == 401) {
+        throw Exception('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      } else if (response.statusCode == 404) {
+        throw Exception(responseData['message'] ?? 'Không tìm thấy tài khoản để cập nhật ảnh đại diện.');
+      } else {
+        debugPrint('Backend Error Response (Update Profile Picture): ${response.body}');
+        throw Exception(responseData['message'] ?? 'Đã xảy ra lỗi không xác định khi cập nhật ảnh đại diện.');
+      }
+    } on SocketException {
+      throw Exception('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.');
+    } on FormatException {
+      throw Exception('Lỗi định dạng dữ liệu từ máy chủ. Vui lòng thử lại sau.');
+    } catch (e) {
+      debugPrint('Unexpected error in updateProfilePicture: $e');
+      throw Exception('Đã xảy ra lỗi không mong muốn: ${e.toString().replaceFirst('Exception: ', '')}.');
+    }
+  }
+
+  // Phương thức để thay đổi mật khẩu
+  Future<Map<String, dynamic>> changePassword(String userId, String currentPassword, String newPassword) async {
+    final token = await _getToken();
+    final url = Uri.parse('$_baseUrl${ApiConfig.accountsEndpoint}/$userId/change-password');
+
+
+    debugPrint('Change Password Request URL: $url');
+    debugPrint('Token retrieved by _getToken(): $token'); // Kiểm tra xem token có giá trị không
+    debugPrint('Headers being sent: {Content-Type: application/json, Authorization: Bearer $token}');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'current_password': currentPassword,
+          'new_password': newPassword,
+          'new_password_confirmation': newPassword, // Cần cho Laravel 'confirmed' rule
+        }),
+      );
+
+      final responseData = jsonDecode(response.body);
+      debugPrint('Change Password Response: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return responseData;
+      } else if (response.statusCode == 422) { // Validation error (invalid current password, new password rules, etc.)
+        throw Exception(responseData['message'] ?? 'Dữ liệu không hợp lệ.\n${_formatValidationErrors(responseData['errors'] ?? {})}.');
+      } else if (response.statusCode == 401) {
+        throw Exception('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      } else if (response.statusCode == 403) { // Forbidden, if the user_id doesn't match authenticated user
+        throw Exception(responseData['message'] ?? 'Bạn không có quyền thực hiện hành động này.');
+      } else {
+        throw Exception(responseData['message'] ?? 'Đã xảy ra lỗi khi thay đổi mật khẩu.');
+      }
+    } on SocketException {
+      throw Exception('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.');
+    } on FormatException {
+      throw Exception('Lỗi định dạng dữ liệu từ máy chủ. Vui lòng thử lại sau.');
+    } catch (e) {
+      debugPrint('Unexpected error in changePassword: $e');
+      throw Exception('Đã xảy ra lỗi không mong muốn khi thay đổi mật khẩu: ${e.toString().replaceFirst('Exception: ', '')}.');
     }
   }
 }

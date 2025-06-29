@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'update_post_screen.dart';
 class MyPostScreen extends StatelessWidget {
+  
   final List<Post> posts = [
     Post(
       title: 'Vật lý đại cương - Cơ nhiệt',

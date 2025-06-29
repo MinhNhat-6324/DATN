@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:front_end/services/register_service.dart';
 import 'otp_screen.dart'; // Màn hình OTP
-
+import 'login_screen.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -479,7 +479,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.pop(context); // Quay về màn hình đăng nhập
+                          Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()),
+                      );
                         },
                         child: const Text(
                           'Đăng nhập',

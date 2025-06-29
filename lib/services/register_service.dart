@@ -1,7 +1,10 @@
 import 'dart:convert';
-import 'dart:io'; // Import để bắt SocketException
+import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'api_config.dart'; // Đảm bảo đường dẫn này đúng
+import 'package:flutter/foundation.dart'; // Import để sử dụng debugPrint
+import 'package:shared_preferences/shared_preferences.dart'; // Import nếu bạn cần lưu/lấy token
+
+import 'api_config.dart';
 
 class RegisterService {
   final String _baseUrl = ApiConfig.baseUrl;
@@ -13,22 +16,28 @@ class RegisterService {
     List<String> messages = [];
     errors.forEach((field, msgs) {
       if (msgs is List && msgs.isNotEmpty) {
-        messages.add(msgs[0].toString()); // Chỉ lấy thông báo đầu tiên cho mỗi trường
+        // Lấy thông báo đầu tiên và dịch/làm đẹp nếu cần
+        String msg = msgs[0].toString();
+        if (field == 'email' && msg.contains('has already been taken')) {
+          msg = 'Email này đã được đăng ký.';
+        } else if (field == 'mat_khau' && msg.contains('The mat khau confirmation does not match')) {
+          msg = 'Mật khẩu xác nhận không khớp.';
+        }
+        messages.add(msg);
       }
     });
 
-    if (messages.contains('The email has already been taken.')) {
-      return 'Email này đã được đăng ký. Vui lòng sử dụng email khác.';
-    }
-
-    // Các lỗi khác có thể được nhóm lại hoặc liệt kê đơn giản
-    if (messages.isNotEmpty) {
-      // Nếu có nhiều lỗi khác, có thể hiển thị một vài lỗi đầu tiên hoặc một thông báo chung
-      return 'Vui lòng kiểm tra lại thông tin nhập liệu: ${messages.join(', ')}.';
-    }
-    return 'Dữ liệu đầu vào không hợp lệ. Vui lòng kiểm tra lại.';
+    if (messages.isEmpty) return 'Dữ liệu đầu vào không hợp lệ. Vui lòng kiểm tra lại.';
+    return 'Vui lòng kiểm tra lại thông tin nhập liệu: ${messages.join(', ')}. ';
   }
 
+  // Hàm trợ giúp để lấy token
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
+
+  // ... Các phương thức sendOtpForRegistration, verifyOtp, resendOtp giữ nguyên ...
 
   Future<Map<String, dynamic>> sendOtpForRegistration(
     String email,
@@ -62,18 +71,15 @@ class RegisterService {
         } else {
           throw Exception('Đã xảy ra lỗi. Không thể lấy ID người dùng. Vui lòng liên hệ hỗ trợ.');
         }
-      } else if (response.statusCode == 409) { // Xử lý lỗi 409 Conflict (Email đã tồn tại)
-        // Thông báo cụ thể cho lỗi email đã tồn tại
+      } else if (response.statusCode == 409) {
         throw Exception('Tài khoản đã tồn tại. Vui lòng đăng nhập hoặc sử dụng email khác.');
-      } else if (response.statusCode == 422) { // Lỗi validation khác (ví dụ: mật khẩu không khớp, min length)
+      } else if (response.statusCode == 422) {
         String errorMessage = responseData['message'] ?? 'Dữ liệu đầu vào không hợp lệ.';
         if (responseData.containsKey('errors') && responseData['errors'] is Map) {
-          // Sử dụng hàm trợ giúp để định dạng lỗi thân thiện
           errorMessage = _formatValidationErrorsForUser(responseData['errors']);
         }
         throw Exception(errorMessage);
       } else {
-        // Xử lý các mã lỗi HTTP khác mà backend trả về
         throw Exception(responseData['message'] ?? 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.');
       }
     } on SocketException {
@@ -81,7 +87,6 @@ class RegisterService {
     } on FormatException {
       throw Exception('Lỗi định dạng dữ liệu từ máy chủ. Vui lòng thử lại sau.');
     } catch (e) {
-      // Bắt bất kỳ lỗi nào khác không được xử lý cụ thể
       throw Exception('Đã xảy ra lỗi. Vui lòng thử lại.');
     }
   }
@@ -104,7 +109,6 @@ class RegisterService {
       if (response.statusCode == 200) {
         return responseData;
       } else if (response.statusCode == 422) {
-        // Cụ thể hóa lỗi OTP
         String errorMessage = responseData['message'] ?? 'Mã OTP không hợp lệ hoặc đã hết hạn.';
         if (responseData.containsKey('errors') && responseData['errors'] is Map) {
           if (responseData['errors'].containsKey('otp_code')) {
@@ -168,35 +172,46 @@ class RegisterService {
   Future<Map<String, dynamic>> updateStudentProfile(
     String userId,
     String lop,
-    String chuyenNganh,
-    File imageFile,
+    int chuyenNganhId, // ĐÃ SỬA: Thay đổi kiểu dữ liệu thành int
+    File studentCardImageFile, // Đổi tên biến cho rõ ràng
   ) async {
     final url = Uri.parse('$_baseUrl${ApiConfig.updateProfileEndpoint}'); 
 
     try {
-      var request = http.MultipartRequest('POST', url);
-      // Bạn sẽ cần một token xác thực ở đây nếu endpoint này được bảo vệ bởi middleware 'auth:sanctum'
-      // Để truyền token, bạn cần thêm nó vào headers:
-      // final prefs = await SharedPreferences.getInstance();
-      // final token = prefs.getString('auth_token');
-      // if (token != null) {
-      //   request.headers['Authorization'] = 'Bearer $token';
-      // } else {
-      //   throw Exception('Người dùng chưa được xác thực để cập nhật hồ sơ.');
-      // }
+      var request = http.MultipartRequest('POST', url); // Laravel mong đợi POST cho Multipart
 
+      // THÊM TOKEN XÁC THỰC
+      final token = await _getToken();
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      } else {
+        throw Exception('Người dùng chưa được xác thực để cập nhật hồ sơ.');
+      }
+      
+      // THÊM _method: PUT/PATCH nếu Laravel route mong đợi PUT/PATCH nhưng nhận POST cho multipart
+      // request.fields['_method'] = 'PUT'; 
 
       request.fields['user_id'] = userId;
       request.fields['lop'] = lop;
-      request.fields['chuyen_nganh'] = chuyenNganh;
+      // ĐÃ SỬA: Gửi id của chuyên ngành dưới dạng chuỗi
+      request.fields['chuyen_nganh_id'] = chuyenNganhId.toString(); 
 
+      // ĐÃ SỬA: Tên trường file phải khớp với tên trong Laravel Controller
       request.files.add(
         await http.MultipartFile.fromPath(
-          'anh_dai_dien',
-          imageFile.path,
-          filename: imageFile.path.split('/').last,
+          'anh_the_sinh_vien_file', // TÊN TRƯỜNG PHẢI KHỚP VỚI LARAVEL CONTROLLER
+          studentCardImageFile.path,
+          filename: studentCardImageFile.path.split('/').last,
         ),
       );
+
+      debugPrint('Sending student profile update for User ID: $userId');
+      debugPrint('Lop: $lop, ChuyenNganh ID: $chuyenNganhId');
+      debugPrint('Student Card File Path: ${studentCardImageFile.path}');
+      debugPrint('Target URL: $url');
+      debugPrint('Request Fields: ${request.fields}');
+      debugPrint('Request Files: ${request.files.map((f) => f.filename).toList()}');
+
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -210,9 +225,11 @@ class RegisterService {
           errorMessage = _formatValidationErrorsForUser(responseData['errors']);
         }
         throw Exception(errorMessage);
-      } else if (response.statusCode == 403) { // Lỗi cấm truy cập
+      } else if (response.statusCode == 401) { // Unauthorized, token hết hạn hoặc không hợp lệ
+        throw Exception('Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.');
+      } else if (response.statusCode == 403) {
         throw Exception(responseData['message'] ?? 'Bạn không có quyền thực hiện hành động này.');
-      } else if (response.statusCode == 404) { // Không tìm thấy
+      } else if (response.statusCode == 404) {
         throw Exception(responseData['message'] ?? 'Không tìm thấy tài nguyên. Vui lòng liên hệ hỗ trợ.');
       } else {
         throw Exception(responseData['message'] ?? 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.');
@@ -222,7 +239,9 @@ class RegisterService {
     } on FormatException {
       throw Exception('Lỗi định dạng dữ liệu từ máy chủ. Vui lòng thử lại sau.');
     } catch (e) {
-      throw Exception('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
+      // debugPrint là tốt để gỡ lỗi trong quá trình phát triển, nhưng không nên đưa vào production log quá nhiều
+      debugPrint('Unexpected error in updateStudentProfile (Flutter): $e');
+      throw Exception('Đã xảy ra lỗi không mong muốn: ${e.toString().replaceFirst('Exception: ', '')}.');
     }
   }
 }

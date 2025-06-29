@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
+import 'dart:io';
 
 class AnhBaiDang {
   final int? idAnh; // 👈 nullable
@@ -217,5 +220,49 @@ Future<List<BaiDang>> getBaiDangTheoLoai(int idLoai) async {
   } catch (e) {
     print('❌ Lỗi khi gọi API bài đăng theo loại: $e');
     rethrow;
+  }
+}
+
+Future<bool> postBaiDang({
+  required int idTaiKhoan,
+  required String tieuDe,
+  required int gia,
+  required int doMoi,
+  required int idLoai,
+  required int idNganh,
+  required List<File> hinhAnh,
+}) async {
+  try {
+    final uri = Uri.parse("http://10.0.2.2:8000/api/bai-dang");
+    final request = http.MultipartRequest('POST', uri);
+
+    request.fields['id_tai_khoan'] = idTaiKhoan.toString();
+    request.fields['tieu_de'] = tieuDe;
+    request.fields['gia'] = gia.toString();
+    request.fields['do_moi'] = doMoi.toString();
+    request.fields['id_loai'] = idLoai.toString();
+    request.fields['id_nganh'] = idNganh.toString();
+
+    for (int i = 0; i < hinhAnh.length; i++) {
+      final file = hinhAnh[i];
+      final mimeType =
+          lookupMimeType(file.path)?.split('/') ?? ['image', 'jpeg'];
+
+      request.files.add(await http.MultipartFile.fromPath(
+        'hinh_anh[$i]',
+        file.path,
+        contentType: MediaType(mimeType[0], mimeType[1]),
+      ));
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    print("📤 POST bài đăng: ${response.statusCode} - ${response.body}");
+
+    return response.statusCode == 201;
+  } catch (e) {
+    print("❌ Lỗi khi gửi bài đăng: $e");
+    return false;
   }
 }

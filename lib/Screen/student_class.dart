@@ -1,33 +1,37 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:front_end/services/register_service.dart'; // Import RegisterService
+import 'package:front_end/services/tai_khoan_service.dart'; // Đổi từ RegisterService sang TaiKhoanService
 import 'package:front_end/services/chuyen_nganh_san_pham_service.dart'; // Import service để tải chuyên ngành
+import 'package:front_end/model/chuyen_nganh_item.dart';
 import 'home_screen.dart'; // Màn hình chính sau khi hoàn tất
 
 class StudentClassScreen extends StatefulWidget {
-  final String userId; // Thêm biến này
+  final String userId;
 
-  const StudentClassScreen(
-      {super.key, required this.userId}); // CẬP NHẬT CONSTRUCTOR
+  const StudentClassScreen({super.key, required this.userId});
 
   @override
   State<StudentClassScreen> createState() => _StudentClassScreenState();
 }
 
 class _StudentClassScreenState extends State<StudentClassScreen> {
-  final _formKey = GlobalKey<FormState>(); // Thêm GlobalKey cho Form
+  final _formKey = GlobalKey<FormState>();
   final _classController = TextEditingController();
-  String? _selectedMajor; // Ban đầu để null, sẽ được gán sau khi tải dữ liệu
+  // THAY ĐỔI: _selectedMajor giờ là một đối tượng ChuyenNganhItem?
+  ChuyenNganhItem? _selectedMajor;
   File? _imageFile;
-  bool _isLoading = false; // Trạng thái loading cho nút hoàn tất đăng ký
+  bool _isLoading = false;
 
-  List<String> _majorItems = []; // Danh sách chuyên ngành sẽ được tải từ API
-  bool _isLoadingMajors = true; // Trạng thái loading cho chuyên ngành
+  // THAY ĐỔI: _majorItems giờ là List<ChuyenNganhItem>
+  List<ChuyenNganhItem> _majorItems = [];
+  bool _isLoadingMajors = true;
+
   final ChuyenNganhSanPhamService _chuyenNganhSanPhamService =
-      ChuyenNganhSanPhamService(); // Khởi tạo service tải chuyên ngành
-  final RegisterService _registerService =
-      RegisterService(); // Khởi tạo RegisterService để cập nhật hồ sơ
+      ChuyenNganhSanPhamService();
+  // Đảm bảo đây là TaiKhoanService và nó có updateStudentProfile
+  final TaiKhoanService _taiKhoanService =
+      TaiKhoanService(); // ĐÃ ĐỔI TỪ RegisterService SANG TaiKhoanService
 
   @override
   void initState() {
@@ -44,8 +48,9 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
   // Hàm tải danh sách chuyên ngành từ API
   Future<void> _fetchMajors() async {
     try {
-      final List<String> fetchedMajors =
-          await _chuyenNganhSanPhamService.fetchChuyenNganhNames();
+      // THAY ĐỔI: Gọi fetchAllChuyenNganh và nhận List<ChuyenNganhItem>
+      final List<ChuyenNganhItem> fetchedMajors =
+          await _chuyenNganhSanPhamService.fetchAllChuyenNganh();
       setState(() {
         _majorItems = fetchedMajors;
         // Đặt giá trị mặc định cho _selectedMajor nếu có dữ liệu
@@ -78,7 +83,7 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
     }
   }
 
-  // Hàm hiển thị thông báo lỗi/thành công
+  // Hàm hiển thị thông báo lỗi/thành công (giữ nguyên)
   void _showMessage(String title, String message,
       {bool success = false, VoidCallback? onOkPressed}) {
     showDialog(
@@ -121,7 +126,7 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
                   ),
                   onPressed: () {
                     Navigator.pop(context);
-                    onOkPressed?.call(); // Gọi callback nếu có
+                    onOkPressed?.call();
                   },
                   child: const Text('OK'),
                 ),
@@ -135,7 +140,7 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
 
   // Hàm xử lý khi người dùng nhấn "Hoàn tất đăng ký"
   Future<void> _saveStudentDetails() async {
-    FocusScope.of(context).unfocus(); // Ẩn bàn phím
+    FocusScope.of(context).unfocus();
 
     if (_formKey.currentState!.validate()) {
       // Kiểm tra validation của form
@@ -144,7 +149,8 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
             'Vui lòng chọn ảnh thẻ sinh viên để hoàn tất đăng ký.');
         return;
       }
-      if (_selectedMajor == null || _selectedMajor!.isEmpty) {
+      // THAY ĐỔI: Kiểm tra null cho đối tượng ChuyenNganhItem
+      if (_selectedMajor == null) {
         _showMessage('Thiếu chuyên ngành', 'Vui lòng chọn chuyên ngành.');
         return;
       }
@@ -152,14 +158,17 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
       setState(() => _isLoading = true); // Bắt đầu loading
 
       final lop = _classController.text.trim();
-      final chuyenNganh =
-          _selectedMajor!; // Chắc chắn có giá trị do đã kiểm tra
+      // THAY ĐỔI: Lấy ID của chuyên ngành đã chọn
+      final idNganhToSend = _selectedMajor!.id;
+
+      debugPrint('Giá trị chuyenNganhId gửi đi: $idNganhToSend');
 
       try {
-        await _registerService.updateStudentProfile(
+        // THAY ĐỔI: Gọi _taiKhoanService và truyền ID ngành (int)
+        await _taiKhoanService.updateStudentProfile(
           widget.userId, // Truyền userId nhận được từ màn hình trước đó
           lop,
-          chuyenNganh,
+          idNganhToSend, // Truyền ID ngành
           _imageFile!, // File ảnh thẻ sinh viên (sẽ được xử lý trong service)
         );
 
@@ -172,8 +181,7 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                  builder: (context) =>
-                      HomeScreen(userId: widget.userId)), // Đã sửa lỗi ở đây
+                  builder: (context) => HomeScreen(userId: widget.userId)),
             );
           },
         );
@@ -227,7 +235,7 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Phần chọn ảnh đại diện
+                  // Phần chọn ảnh đại diện (giữ nguyên)
                   const Text(
                     'Ảnh chụp thẻ sinh viên',
                     style: TextStyle(
@@ -259,14 +267,15 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
                   ),
                   const SizedBox(height: 20),
 
+                  // Input Tên lớp (giữ nguyên)
                   _buildInput(
                     label: 'Tên lớp',
                     controller: _classController,
                     validator: (val) => _validateRequired(val, 'Tên lớp'),
                   ),
-                  const SizedBox(height: 20), // Khoảng cách sau input
+                  const SizedBox(height: 20),
 
-                  // Logic hiển thị chuyên ngành
+                  // Logic hiển thị chuyên ngành (CẬP NHẬT)
                   _isLoadingMajors
                       ? const CircularProgressIndicator(
                           color: Color(0xFF00FFDE)) // Hiển thị loading
@@ -278,19 +287,21 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
                             )
                           : _buildDropdown(
                               label: 'Chuyên ngành',
-                              value: _selectedMajor, // Sử dụng giá trị đã chọn
-                              items: _majorItems, // Sử dụng danh sách từ API
-                              onChanged: (val) =>
-                                  setState(() => _selectedMajor = val),
+                              value:
+                                  _selectedMajor, // SỬ DỤNG ĐỐI TƯỢNG ChuyenNganhItem
+                              items:
+                                  _majorItems, // SỬ DỤNG List<ChuyenNganhItem>
+                              onChanged: (ChuyenNganhItem? val) => setState(
+                                  () => _selectedMajor =
+                                      val), // Nhận đối tượng ChuyenNganhItem
                             ),
-                  const SizedBox(height: 20), // Khoảng cách sau dropdown
+                  const SizedBox(height: 20),
 
+                  // Nút "Hoàn tất đăng ký" (giữ nguyên logic)
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isLoading
-                          ? null
-                          : _saveStudentDetails, // Gọi _saveStudentDetails
+                      onPressed: _isLoading ? null : _saveStudentDetails,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.cyanAccent,
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -327,7 +338,7 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
     );
   }
 
-  // Hàm _buildInput này được sửa để dùng TextFormField và validator
+  // Hàm _buildInput (giữ nguyên)
   Widget _buildInput({
     required String label,
     required TextEditingController controller,
@@ -346,11 +357,10 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
             )),
         const SizedBox(height: 4),
         TextFormField(
-          // Đã đổi sang TextFormField để dùng validator
           controller: controller,
           style: const TextStyle(color: Colors.white),
           keyboardType: keyboardType,
-          validator: validator, // Gán validator
+          validator: validator,
           decoration: InputDecoration(
             prefixText: prefixText,
             prefixStyle: const TextStyle(color: Colors.white),
@@ -362,15 +372,12 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
             ),
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
-            errorStyle:
-                const TextStyle(color: Colors.redAccent), // Style cho lỗi
+            errorStyle: const TextStyle(color: Colors.redAccent),
             errorBorder: OutlineInputBorder(
-              // Border khi có lỗi
               borderRadius: BorderRadius.circular(20),
               borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              // Border khi có lỗi và focus
               borderRadius: BorderRadius.circular(20),
               borderSide: const BorderSide(color: Colors.red, width: 2),
             ),
@@ -380,12 +387,12 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
     );
   }
 
-  // Hàm _buildDropdown này đã có sẵn, chỉ cần đảm bảo dùng đúng
+  // Hàm _buildDropdown (CẬP NHẬT để sử dụng ChuyenNganhItem)
   Widget _buildDropdown({
     required String label,
-    required String? value,
-    required List<String> items,
-    required Function(String?) onChanged,
+    required ChuyenNganhItem? value, // KIỂU DỮ LIỆU ĐÃ THAY ĐỔI
+    required List<ChuyenNganhItem> items, // KIỂU DỮ LIỆU ĐÃ THAY ĐỔI
+    required Function(ChuyenNganhItem?) onChanged, // KIỂU DỮ LIỆU ĐÃ THAY ĐỔI
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,21 +411,24 @@ class _StudentClassScreenState extends State<StudentClassScreen> {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
+            // THAY ĐỔI: Kiểu của DropdownButton là ChuyenNganhItem
+            child: DropdownButton<ChuyenNganhItem>(
               dropdownColor: const Color(0xFF4300FF),
               isExpanded: true,
               value: value,
               icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+              // THAY ĐỔI: items.map bây giờ tạo DropdownMenuItem<ChuyenNganhItem>
               items: items.map((item) {
-                return DropdownMenuItem<String>(
-                  value: item,
-                  child:
-                      Text(item, style: const TextStyle(color: Colors.white)),
+                return DropdownMenuItem<ChuyenNganhItem>(
+                  value: item, // Giá trị của item là đối tượng ChuyenNganhItem
+                  child: Text(item.name,
+                      style: const TextStyle(
+                          color:
+                              Colors.white)), // Hiển thị tên ngành (item.name)
                 );
               }).toList(),
-              onChanged: items.isEmpty
-                  ? null
-                  : onChanged, // Vô hiệu hóa khi danh sách rỗng
+              // THAY ĐỔI: onChanged nhận ChuyenNganhItem?
+              onChanged: items.isEmpty ? null : onChanged,
             ),
           ),
         ),
