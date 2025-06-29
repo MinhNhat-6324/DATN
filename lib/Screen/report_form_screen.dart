@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front_end/services/bao_cao.dart'; // Đảm bảo file đúng tên
+import 'package:front_end/model/bao_cao.dart'; // Đảm bảo file đúng tên
 
 class ReportFormScreen extends StatefulWidget {
   final int idBaiDang;

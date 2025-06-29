@@ -5,10 +5,7 @@ class LoaiSanPham {
   final int id;
   final String tenLoai;
 
-  LoaiSanPham({
-    required this.id,
-    required this.tenLoai,
-  });
+  LoaiSanPham({required this.id, required this.tenLoai});
 
   factory LoaiSanPham.fromJson(Map<String, dynamic> json) {
     return LoaiSanPham(
@@ -23,6 +20,16 @@ class LoaiSanPham {
       'ten_loai': tenLoai,
     };
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LoaiSanPham &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 Future<List<LoaiSanPham>> getDanhSachLoai() async {

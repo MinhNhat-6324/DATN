@@ -5,13 +5,13 @@ import 'package:http_parser/http_parser.dart';
 import 'dart:io';
 
 class AnhBaiDang {
-  final int? idAnh; // 👈 nullable
+  final int? idAnh;
   final int idBaiDang;
   final String duongDan;
   final int thuTu;
 
   AnhBaiDang({
-    this.idAnh, // 👈 optional
+    this.idAnh,
     required this.idBaiDang,
     required this.duongDan,
     required this.thuTu,
@@ -19,7 +19,7 @@ class AnhBaiDang {
 
   factory AnhBaiDang.fromJson(Map<String, dynamic> json) {
     return AnhBaiDang(
-      idAnh: json['id_anh'] as int?, // 👈 nullable
+      idAnh: json['id_anh'] as int?,
       idBaiDang: json['id_bai_dang'] ?? 0,
       duongDan: json['duong_dan'] ?? '',
       thuTu: json['thu_tu'] ?? 1,
@@ -35,7 +35,7 @@ class BaiDang {
   final String trangThai;
   final DateTime ngayDang;
   final List<AnhBaiDang> anhBaiDang;
-  final String? tenNganh; // 👈 Thêm dòng này
+  final String? tenNganh;
 
   BaiDang({
     required this.id,
@@ -45,7 +45,7 @@ class BaiDang {
     required this.trangThai,
     required this.ngayDang,
     required this.anhBaiDang,
-    this.tenNganh, // 👈 Constructor
+    this.tenNganh,
   });
 
   factory BaiDang.fromJson(Map<String, dynamic> json) {
@@ -59,12 +59,12 @@ class BaiDang {
     return BaiDang(
       id: json['id_bai_dang'] ?? 0,
       tieuDe: json['tieu_de'] ?? '',
-      gia: json['gia'] ?? '',
+      gia: json['gia'].toString(),
       doMoi: json['do_moi'] ?? 0,
       trangThai: json['trang_thai'] ?? '',
       ngayDang: DateTime.parse(json['ngay_dang']),
       anhBaiDang: danhSachAnh,
-      tenNganh: json['chuyen_nganh_san_pham']?['ten_nganh'], // 👈 Lấy tên ngành
+      tenNganh: json['chuyen_nganh_san_pham']?['ten_nganh'],
     );
   }
 }
@@ -258,7 +258,13 @@ Future<bool> postBaiDang({
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
 
-    print("📤 POST bài đăng: ${response.statusCode} - ${response.body}");
+    print(
+        "\uD83D\uDCE4 POST bài đăng: ${response.statusCode} - ${response.body}");
+
+    if (response.statusCode != 201) {
+      print('⚠️ Đăng bài thất bại! Mã lỗi: ${response.statusCode}');
+      print('⚠️ Nội dung lỗi: ${response.body}');
+    }
 
     return response.statusCode == 201;
   } catch (e) {

@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:front_end/services/bai_dang_service.dart';
+import 'package:front_end/model/bai_dang_service.dart';
 import 'package:front_end/services/buildImage.dart';
-import 'package:front_end/services/chuyen_nganh_service.dart';
-import 'package:front_end/services/loai_san_pham_service.dart';
+import 'package:front_end/model/chuyen_nganh_service.dart';
+import 'package:front_end/model/loai_san_pham_service.dart';
 import 'product_details_screen.dart';
 
 class PostListScreen extends StatefulWidget {

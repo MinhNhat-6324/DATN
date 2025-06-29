@@ -13,6 +13,14 @@ class Nganh {
       tenNganh: json['ten_nganh'] ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Nganh && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 Future<List<Nganh>> getDanhSachNganh() async {

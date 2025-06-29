@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'report_form_screen.dart';
-import 'package:front_end/services/bai_dang_service.dart';
+import 'package:front_end/model/bai_dang_service.dart';
 import 'package:front_end/services/buildImage.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
