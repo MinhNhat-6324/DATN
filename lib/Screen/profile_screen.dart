@@ -73,11 +73,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SnackBar(
               content: const Text(
                 'Cập nhật ảnh đại diện thành công!',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
               margin: const EdgeInsets.all(10),
             ),
           );
@@ -89,11 +91,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SnackBar(
               content: Text(
                 'Lỗi cập nhật ảnh đại diện: ${e.toString().replaceFirst('Exception: ', '')}',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
               ),
               backgroundColor: Colors.redAccent,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
               margin: const EdgeInsets.all(10),
             ),
           );
@@ -109,15 +113,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final TextEditingController phoneController =
         TextEditingController(text: _userData?['so_dien_thoai'] ?? '');
 
-    bool dialogIsLoading = false; 
+    bool dialogIsLoading = false;
 
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder( 
+        return StatefulBuilder(
           builder: (context, setStateInDialog) {
             return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               backgroundColor: Colors.transparent,
               child: Container(
                 decoration: BoxDecoration(
@@ -140,8 +145,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         hintStyle: const TextStyle(color: Colors.black54),
                         filled: true,
                         fillColor: Colors.white,
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -150,7 +155,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
                     dialogIsLoading
-                        ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                        ? const Center(
+                            child:
+                                CircularProgressIndicator(color: Colors.white))
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
@@ -172,7 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 onPressed: () async {
                                   final newPhone = phoneController.text.trim();
                                   if (newPhone.isNotEmpty) {
-                                    setStateInDialog(() { 
+                                    setStateInDialog(() {
                                       dialogIsLoading = true;
                                     });
                                     try {
@@ -182,15 +189,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       );
                                       await _fetchUserData();
                                       if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
                                           SnackBar(
                                             content: const Text(
                                               'Cập nhật số điện thoại thành công!',
-                                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold),
                                             ),
                                             backgroundColor: Colors.green,
                                             behavior: SnackBarBehavior.floating,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
                                             margin: const EdgeInsets.all(10),
                                           ),
                                         );
@@ -199,15 +211,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     } catch (e) {
                                       debugPrint('Error updating phone: $e');
                                       if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
                                           SnackBar(
                                             content: Text(
                                               'Lỗi cập nhật số điện thoại: ${e.toString().replaceFirst('Exception: ', '')}',
-                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold),
                                             ),
                                             backgroundColor: Colors.redAccent,
                                             behavior: SnackBarBehavior.floating,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
                                             margin: const EdgeInsets.all(10),
                                           ),
                                         );
@@ -221,15 +238,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     }
                                   } else {
                                     if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         SnackBar(
                                           content: Text(
                                             'Số điện thoại không được để trống!',
-                                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold),
                                           ),
                                           backgroundColor: Colors.orange,
                                           behavior: SnackBarBehavior.floating,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
                                           margin: EdgeInsets.all(10),
                                         ),
                                       );
@@ -285,11 +307,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SnackBar(
             content: const Text(
               'Đăng xuất thành công!',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             backgroundColor: Colors.blue,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             margin: const EdgeInsets.all(10),
           ),
         );
@@ -301,11 +325,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SnackBar(
             content: Text(
               'Có lỗi xảy ra khi đăng xuất: ${e.toString().replaceFirst('Exception: ', '')}',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold),
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             margin: const EdgeInsets.all(10),
           ),
         );
@@ -319,7 +345,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           backgroundColor: Colors.white,
           title: const Text(
             'Xác nhận đăng xuất',
@@ -357,7 +384,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 elevation: 5,
               ),
               child: const Text(
@@ -384,7 +412,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: const Color(0xFF00C6FF),
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: Colors.white,))
+            ? const Center(
+                child: CircularProgressIndicator(
+                color: Colors.white,
+              ))
             : _errorMessage != null
                 ? Center(
                     child: Padding(
@@ -392,8 +423,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Text(
                         _errorMessage!,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 16),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
                   )
@@ -420,8 +451,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
                                   ),
                                   backgroundColor: Colors.white,
-                                  onBackgroundImageError: (exception, stackTrace) {
-                                    debugPrint('Error loading profile image: $exception');
+                                  onBackgroundImageError:
+                                      (exception, stackTrace) {
+                                    debugPrint(
+                                        'Error loading profile image: $exception');
                                   },
                                 ),
                                 const SizedBox(width: 20),
@@ -477,20 +510,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               // SỬA DÒNG NÀY ĐỂ TRUY CẬP ĐÚNG TÊN CHUYÊN NGÀNH
                               _InfoRow(
                                   icon: Icons.school,
-                                  text: _userData?['sinh_vien']?['chuyen_nganh'] ?? // Cập nhật cách truy cập
+                                  text: _userData?['sinh_vien']?[
+                                          'chuyen_nganh'] ?? // Cập nhật cách truy cập
                                       'Chưa cập nhật'),
                               _InfoRow(
                                   icon: Icons.transgender,
-                                  text: _getGenderString(_userData?['gioi_tinh'])),
+                                  text: _getGenderString(
+                                      _userData?['gioi_tinh'])),
                               _InfoRow(
                                   icon: Icons.email,
                                   text: _userData?['email'] ?? 'Đang tải...'),
                               _InfoRow(
-                                  icon: Icons.phone_android,
-                                  text: _userData?['so_dien_thoai'] ??
-                                      'Chưa cập nhật',
-                                  showEdit: true,
-                                  onEditPressed: () => _showEditPhoneDialog(context),
+                                icon: Icons.phone_android,
+                                text: _userData?['so_dien_thoai'] ??
+                                    'Chưa cập nhật',
+                                showEdit: true,
+                                onEditPressed: () =>
+                                    _showEditPhoneDialog(context),
                               ),
                             ],
                           ),
@@ -501,21 +537,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Container(
                           margin: const EdgeInsets.symmetric(horizontal: 20),
                           child: ListTile(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            tileColor: const Color(0xFFF6F1E9),
-                            leading:
-                                const Icon(Icons.article, color: Colors.black87),
-                            title: const Text('Bài viết của tôi'),
-                            trailing:
-                                const Icon(Icons.arrow_forward_ios, size: 16),
-                            onTap: () {
-                              Navigator.push(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              tileColor: const Color(0xFFF6F1E9),
+                              leading: const Icon(Icons.article,
+                                  color: Colors.black87),
+                              title: const Text('Bài viết của tôi'),
+                              trailing:
+                                  const Icon(Icons.arrow_forward_ios, size: 16),
+                              onTap: () {
+                                Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => MyPostScreen()));
-                            },
-                          ),
+                                    builder: (context) =>
+                                        MyPostScreen(userId: widget.userId),
+                                  ),
+                                );
+                              }),
                         ),
 
                         const SizedBox(height: 10),
@@ -532,11 +570,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 const Icon(Icons.arrow_forward_ios, size: 16),
                             onTap: () {
                               Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => NotificationScreen(userId: widget.userId),
-                            ),
-                          );
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      NotificationScreen(userId: widget.userId),
+                                ),
+                              );
                             },
                           ),
                         ),
@@ -548,7 +587,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                             tileColor: const Color(0xFFF6F1E9),
-                            leading: const Icon(Icons.lock, color: Colors.black87),
+                            leading:
+                                const Icon(Icons.lock, color: Colors.black87),
                             title: const Text(
                               'Đổi mật khẩu',
                               style: TextStyle(
@@ -557,14 +597,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             trailing:
                                 const Icon(Icons.arrow_forward_ios, size: 16),
-                            onTap:() {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ChangePasswordScreen(userId: widget.userId),
-                                  ),
-                                );
-                              }, 
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChangePasswordScreen(
+                                      userId: widget.userId),
+                                ),
+                              );
+                            },
                           ),
                         ),
 
@@ -576,7 +617,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                             tileColor: const Color(0xFFF6F1E9),
-                            leading: const Icon(Icons.logout, color: Colors.black87),
+                            leading:
+                                const Icon(Icons.logout, color: Colors.black87),
                             title: const Text(
                               'Đăng xuất',
                               style: TextStyle(
