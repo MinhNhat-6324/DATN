@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:front_end/model/bai_dang_service.dart';
 import 'package:front_end/model/chuyen_nganh_service.dart';
 import 'package:front_end/model/loai_san_pham_service.dart';
+import 'package:front_end/services/tai_khoan_service.dart'; // ✅
 
 class PostScreen extends StatefulWidget {
   final String userId;
@@ -31,6 +32,51 @@ class _PostScreenState extends State<PostScreen> {
   final List<File> _capturedImages = [];
   final ImagePicker _picker = ImagePicker();
 
+  bool _coTheDangBai = false; // ✅
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDropdownData();
+    _kiemTraTrangThaiTaiKhoan(); // ✅
+  }
+
+  Future<void> _kiemTraTrangThaiTaiKhoan() async {
+    try {
+      final taiKhoanData =
+          await TaiKhoanService().getAccountById(widget.userId);
+      debugPrint('Dữ liệu tài khoản: $taiKhoanData');
+
+      final trangThai =
+          int.tryParse(taiKhoanData['trang_thai'].toString()) ?? 0;
+      debugPrint('Trạng thái tài khoản: $trangThai');
+
+      setState(() {
+        _coTheDangBai = trangThai == 1;
+      });
+    } catch (e) {
+      debugPrint('Lỗi kiểm tra trạng thái tài khoản: $e');
+      setState(() {
+        _coTheDangBai = false;
+      });
+    }
+  }
+
+  Future<void> _loadDropdownData() async {
+    try {
+      final nganhData = await getDanhSachNganh();
+      final loaiData = await getDanhSachLoai();
+      setState(() {
+        danhSachNganh = nganhData;
+        danhSachLoai = loaiData;
+        _selectedNganh = danhSachNganh.isNotEmpty ? danhSachNganh[0] : null;
+        _selectedLoai = danhSachLoai.isNotEmpty ? danhSachLoai[0] : null;
+      });
+    } catch (e) {
+      debugPrint('Lỗi khi load ngành/loại: $e');
+    }
+  }
+
   Future<void> _takePhoto() async {
     try {
       final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
@@ -52,30 +98,6 @@ class _PostScreenState extends State<PostScreen> {
       }
     } catch (e) {
       debugPrint('Lỗi khi truy cập camera: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không thể truy cập camera: $e')),
-      );
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDropdownData();
-  }
-
-  Future<void> _loadDropdownData() async {
-    try {
-      final nganhData = await getDanhSachNganh();
-      final loaiData = await getDanhSachLoai();
-      setState(() {
-        danhSachNganh = nganhData;
-        danhSachLoai = loaiData;
-        _selectedNganh = danhSachNganh.isNotEmpty ? danhSachNganh[0] : null;
-        _selectedLoai = danhSachLoai.isNotEmpty ? danhSachLoai[0] : null;
-      });
-    } catch (e) {
-      debugPrint('Lỗi khi load ngành/loại: $e');
     }
   }
 
@@ -146,9 +168,8 @@ class _PostScreenState extends State<PostScreen> {
                 value: _selectedNganh,
                 items: danhSachNganh,
                 getLabel: (nganh) => nganh.tenNganh,
-                onChanged: (Nganh? newValue) {
-                  setState(() => _selectedNganh = newValue);
-                },
+                onChanged: (Nganh? newValue) =>
+                    setState(() => _selectedNganh = newValue),
               ),
               const SizedBox(height: 16),
               _buildSectionTitle('Loại sản phẩm'),
@@ -157,9 +178,8 @@ class _PostScreenState extends State<PostScreen> {
                 value: _selectedLoai,
                 items: danhSachLoai,
                 getLabel: (loai) => loai.tenLoai,
-                onChanged: (LoaiSanPham? newValue) {
-                  setState(() => _selectedLoai = newValue);
-                },
+                onChanged: (LoaiSanPham? newValue) =>
+                    setState(() => _selectedLoai = newValue),
               ),
               const SizedBox(height: 16),
               _buildSectionTitle('Giá tiền'),
@@ -190,18 +210,15 @@ class _PostScreenState extends State<PostScreen> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.file(
-                          _capturedImages[index],
-                          fit: BoxFit.cover,
-                        ),
+                        child: Image.file(_capturedImages[index],
+                            fit: BoxFit.cover),
                       ),
                       Positioned(
                         top: 4,
                         right: 4,
                         child: GestureDetector(
-                          onTap: () {
-                            setState(() => _capturedImages.removeAt(index));
-                          },
+                          onTap: () =>
+                              setState(() => _capturedImages.removeAt(index)),
                           child: Container(
                             decoration: BoxDecoration(
                               color: Colors.black54,
@@ -237,8 +254,7 @@ class _PostScreenState extends State<PostScreen> {
                       padding: const EdgeInsets.symmetric(
                           vertical: 12, horizontal: 24),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                          borderRadius: BorderRadius.circular(8)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -262,12 +278,22 @@ class _PostScreenState extends State<PostScreen> {
                   onPressed: () async {
                     if (!_formKey.currentState!.validate()) return;
 
+                    if (!_coTheDangBai) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              '❌ Tài khoản của bạn hiện không được phép đăng bài.'),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                      return;
+                    }
+
                     final title = titleController.text.trim();
                     final price =
                         int.tryParse(priceController.text.trim()) ?? 0;
                     final doMoi =
                         int.tryParse(conditionController.text.trim()) ?? 100;
-
                     final idLoai = _selectedLoai?.id ?? 1;
                     final idNganh = _selectedNganh?.id ?? 1;
                     final idTaiKhoan = int.tryParse(widget.userId) ?? 1;
@@ -308,17 +334,14 @@ class _PostScreenState extends State<PostScreen> {
                     backgroundColor: const Color(0xFF0056D2),
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                        borderRadius: BorderRadius.circular(10)),
                     elevation: 5,
                   ),
-                  child: const Text(
-                    'Đăng bài',
-                    style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  child: const Text('Đăng bài',
+                      style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -336,17 +359,7 @@ class _PostScreenState extends State<PostScreen> {
     List<TextInputFormatter>? inputFormatters,
   }) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 2)),
-        ],
-      ),
+      decoration: _boxDecoration(),
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
@@ -354,9 +367,7 @@ class _PostScreenState extends State<PostScreen> {
         decoration: InputDecoration(
           hintText: hintText,
           suffixText: suffixText,
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none),
+          border: _inputBorder(),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           filled: true,
@@ -372,25 +383,13 @@ class _PostScreenState extends State<PostScreen> {
     String? Function(String?)? validator,
   }) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 2)),
-        ],
-      ),
+      decoration: _boxDecoration(),
       child: TextFormField(
         controller: controller,
         validator: validator,
         decoration: InputDecoration(
           hintText: hintText,
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none),
+          border: _inputBorder(),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           filled: true,
@@ -408,23 +407,11 @@ class _PostScreenState extends State<PostScreen> {
     required ValueChanged<T?> onChanged,
   }) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 2)),
-        ],
-      ),
+      decoration: _boxDecoration(),
       child: DropdownButtonFormField<T>(
         value: value,
         decoration: InputDecoration(
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none),
+          border: _inputBorder(),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           filled: true,
@@ -441,11 +428,28 @@ class _PostScreenState extends State<PostScreen> {
     );
   }
 
+  BoxDecoration _boxDecoration() => BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: const Offset(0, 2)),
+        ],
+      );
+
+  OutlineInputBorder _inputBorder() => OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide.none,
+      );
+
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-          fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF333333)),
-    );
+    return Text(title,
+        style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF333333)));
   }
 }
