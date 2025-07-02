@@ -107,8 +107,13 @@ class RegisterService {
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        final token = responseData['token'];
+        if (token != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', token);
+        }
         return responseData;
-      } else if (response.statusCode == 422) {
+    }else if (response.statusCode == 422) {
         String errorMessage = responseData['message'] ?? 'Mã OTP không hợp lệ hoặc đã hết hạn.';
         if (responseData.containsKey('errors') && responseData['errors'] is Map) {
           if (responseData['errors'].containsKey('otp_code')) {

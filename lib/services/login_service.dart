@@ -1,7 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:front_end/services/api_config.dart'; // Import cấu hình API
-
 class LoginService {
   // Phương thức đăng nhập 
   Future<Map<String, dynamic>> login(String email, String password) async {
