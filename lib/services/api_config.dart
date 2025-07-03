@@ -18,4 +18,14 @@ class ApiConfig {
   static const String thongBaoTheoNguoiDungEndpoint = '/thongbao/nguoidung';
 
   static const String thongBaoEndpoint = '/thongbao';
+
+  static const String baoCaoEndpoint = '/bao-cao';
+  static const String guiBaoCaoEndpoint= '/bao-cao/bai-dang';
+  static String goBaiDangEndpoint(int baoCaoId) => '/bao-cao/$baoCaoId/go-bai-dang';
+  static String tuChoiBaoCaoEndpoint(int baoCaoId) => '/bao-cao/$baoCaoId/tu-choi';
+
+   // --- Các Endpoint cho chức năng Quên mật khẩu ---
+  static const String forgotPasswordRequestEndpoint = '/password/forgot'; // Gửi OTP
+  static const String verifyResetOtpEndpoint = '/password/verify-reset-otp'; // Xác thực OTP
+  static const String resetPasswordEndpoint = '/password/reset'; // Đặt lại mật khẩu mới
 }

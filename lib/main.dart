@@ -1,9 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:front_end/Screen/home_screen.dart';
-import 'package:front_end/Screen/my_post_screen.dart';
-import 'package:front_end/Screen/post_list_screen.dart';
-import 'package:front_end/Screen/post_management_screen.dart';
-import 'package:front_end/Screen/post_screen.dart';
 import 'Screen/start_screen.dart';
 import 'Screen/admin.dart';
 import 'Screen/login_screen.dart';
