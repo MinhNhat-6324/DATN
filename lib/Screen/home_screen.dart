@@ -3,12 +3,12 @@ import 'post_screen.dart';
 import 'chat_screen.dart';
 import 'profile_screen.dart';
 import 'product_details_screen.dart';
-import 'package:front_end/services/bai_dang_service.dart';
+import 'package:front_end/model/bai_dang_service.dart';
 import 'package:front_end/services/buildImage.dart';
 import 'post_list_screen.dart';
-import 'package:front_end/services/chuyen_nganh_service.dart';
-import 'package:front_end/services/loai_san_pham_service.dart';
-import 'package:front_end/services/sinh_vien.dart';
+import 'package:front_end/model/chuyen_nganh_service.dart';
+import 'package:front_end/model/loai_san_pham_service.dart';
+import 'package:front_end/model/sinh_vien.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userId;
@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
           index: currentIndex,
           children: [
             HomeTab(userId: widget.userId),
-            const PostScreen(),
+            PostScreen(userId: widget.userId), // ✅ đã truyền userId
             const ChatScreen(),
             ProfileScreen(
               userId: widget.userId,

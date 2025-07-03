@@ -35,8 +35,8 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   void dispose() {
-    _otpController.dispose();
-    _timer?.cancel(); // Hủy timer khi màn hình bị hủy
+    _timer?.cancel();
+    _otpController.dispose(); // <== QUAN TRỌNG!
     super.dispose();
   }
 

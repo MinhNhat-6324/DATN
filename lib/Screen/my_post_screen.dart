@@ -1,33 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'update_post_screen.dart';
-class MyPostScreen extends StatelessWidget {
-  
-  final List<Post> posts = [
-    Post(
-      title: 'Vật lý đại cương - Cơ nhiệt',
-      price: '15,000 VNĐ',
-      status: 'Sẵn sàng',
-      imageUrl: 'https://lib.caothang.edu.vn/book_images/16037.jpg',
-    ),
-    Post(
-      title: 'Vật lý đại cương - Cơ nhiệt',
-      price: '15,000 VNĐ',
-      status: 'Đang giao dịch',
-      imageUrl: 'https://lib.caothang.edu.vn/book_images/16037.jpg',
-    ),
-    Post(
-      title: 'Vật lý đại cương - Cơ nhiệt',
-      price: '15,000 VNĐ',
-      status: 'Hoàn thành',
-      imageUrl: 'https://lib.caothang.edu.vn/book_images/16037.jpg',
-    ),
-    Post(
-      title: 'Vật lý đại cương - Cơ nhiệt',
-      price: '15,000 VNĐ',
-      status: 'Hoàn thành',
-      imageUrl: 'https://lib.caothang.edu.vn/book_images/16037.jpg',
-    ),
-  ];
+import 'package:front_end/model/bai_dang_service.dart';
+import 'package:front_end/Screen/product_details_screen.dart';
+import 'package:front_end/services/buildImage.dart';
+
+class MyPostScreen extends StatefulWidget {
+  final String userId;
+
+  const MyPostScreen({super.key, required this.userId});
+
+  @override
+  State<MyPostScreen> createState() => _MyPostScreenState();
+}
+
+class _MyPostScreenState extends State<MyPostScreen> {
+  late Future<List<BaiDang>> _futurePosts;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPosts();
+  }
+
+  void _loadPosts() {
+    _futurePosts = getBaiDangTheoNguoiDung(int.parse(widget.userId));
+  }
+
+  void _refreshAfterUpdate() {
+    setState(() {
+      _loadPosts();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,28 +42,16 @@ class MyPostScreen extends StatelessWidget {
         title: const Text(
           'Bài viết của tôi',
           style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+              fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            } else {
-              print('Không có màn hình nào để quay lại.');
-            }
-          },
+          onPressed: () => Navigator.of(context).pop(),
         ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFF0079CF), 
-                Color(0xFF00FFDE),
-              ],
+              colors: [Color(0xFF0079CF), Color(0xFF00FFDE)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -68,45 +60,66 @@ class MyPostScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-        child: ListView.builder(
-          itemCount: posts.length,
-          itemBuilder: (context, index) {
-            return PostCard(post: posts[index]);
-          },
-        ),
+      body: FutureBuilder<List<BaiDang>>(
+        future: _futurePosts,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+                child: CircularProgressIndicator(color: Colors.blue));
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Lỗi: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Không có bài đăng nào.'));
+          } else {
+            final posts = snapshot.data!;
+
+            for (var post in posts) {
+              if (post.anhBaiDang.isNotEmpty) {
+                final imageUrl = buildImageUrl(post.anhBaiDang[0].duongDan);
+                precacheImage(CachedNetworkImageProvider(imageUrl), context);
+              }
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: posts.length,
+              itemBuilder: (context, index) {
+                return PostCard(
+                  post: posts[index],
+                  userId: widget.userId,
+                  onPostUpdated: _refreshAfterUpdate,
+                );
+              },
+            );
+          }
+        },
       ),
     );
   }
 }
 
-class Post {
-  final String title;
-  final String price;
-  final String status;
-  final String imageUrl;
-
-  Post({
-    required this.title,
-    required this.price,
-    required this.status,
-    required this.imageUrl,
-  });
-}
-
 class PostCard extends StatelessWidget {
-  final Post post;
+  final BaiDang post;
+  final String userId;
+  final VoidCallback onPostUpdated;
 
-  const PostCard({super.key, required this.post});
+  const PostCard({
+    super.key,
+    required this.post,
+    required this.userId,
+    required this.onPostUpdated,
+  });
 
   Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Sẵn sàng':
+    switch (status.toLowerCase()) {
+      case 'sẵn sàng':
+      case 'san_sang':
         return Colors.green.shade600;
-      case 'Đang giao dịch':
+      case 'đang giao dịch':
+      case 'dang_giao_dich':
         return Colors.orange.shade700;
-      case 'Hoàn thành':
+      case 'hoàn thành':
+      case 'hoan_thanh':
         return Colors.blue.shade700;
       default:
         return Colors.grey.shade600;
@@ -114,12 +127,15 @@ class PostCard extends StatelessWidget {
   }
 
   IconData _getStatusIcon(String status) {
-    switch (status) {
-      case 'Sẵn sàng':
+    switch (status.toLowerCase()) {
+      case 'sẵn sàng':
+      case 'san_sang':
         return Icons.check_circle;
-      case 'Đang giao dịch':
+      case 'đang giao dịch':
+      case 'dang_giao_dich':
         return Icons.compare_arrows;
-      case 'Hoàn thành':
+      case 'hoàn thành':
+      case 'hoan_thanh':
         return Icons.done_all;
       default:
         return Icons.info_outline;
@@ -128,137 +144,192 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = _getStatusColor(post.status);
-    final statusIcon = _getStatusIcon(post.status);
+    final String imageUrl = post.anhBaiDang.isNotEmpty
+        ? buildImageUrl(post.anhBaiDang[0].duongDan)
+        : 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png';
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      color: Colors.white,
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9F9F9),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  post.imageUrl,
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
+    final statusColor = _getStatusColor(post.trangThai);
+    final statusIcon = _getStatusIcon(post.trangThai);
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProductDetailsScreen(
+              baiDang: post,
+              idNguoiBaoCao: int.parse(userId),
+            ),
+          ),
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 8.0),
+        color: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9F9F9),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
                       width: 100,
                       height: 100,
                       color: Colors.grey[200],
-                      child: Icon(Icons.broken_image, color: Colors.grey[400], size: 40),
-                    );
-                  },
+                      child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2)),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      width: 100,
+                      height: 100,
+                      color: Colors.grey[200],
+                      child: Icon(Icons.broken_image,
+                          color: Colors.grey[400], size: 40),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      post.title,
-                      style: const TextStyle(
-                        color: Color(0xFF333333),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        post.tieuDe,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 17),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      post.price,
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(statusIcon, color: statusColor, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          post.status,
-                          style: TextStyle(color: statusColor, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert, color: Colors.grey[600]),
-                    onSelected: (String value) {
-                      print('Bạn đã chọn: $value cho bài viết ${post.title}');
-                      if (value == 'edit') {
-                         Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const UpdatePostScreen()),
-                      );
-                      } else if (value == 'delete') {
-                      } else if (value == 'change_status') {
-                      }
-                    },
-                    itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                      const PopupMenuItem<String>(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, color: Color(0xFF0079CF)),
-                            SizedBox(width: 8),
-                            Text('Chỉnh sửa'),
-                          ],
+                      const SizedBox(height: 8),
+                      Text(
+                        '${post.gia} VNĐ',
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
-                      const PopupMenuItem<String>(
-                        value: 'change_status',
-                        child: Row(
-                          children: [
-                            Icon(Icons.published_with_changes, color: Colors.orange),
-                            SizedBox(width: 8),
-                            Text('Đổi trạng thái'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem<String>(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_outline, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Xóa bài viết'),
-                          ],
-                        ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(statusIcon, color: statusColor, size: 18),
+                          const SizedBox(width: 6),
+                          Text(post.trangThai,
+                              style: TextStyle(color: statusColor)),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(width: 8),
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                  onSelected: (value) async {
+                    if (value == 'edit') {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => UpdatePostScreen(
+                            idNguoiDung: int.parse(userId),
+                            baiDang: post,
+                          ),
+                        ),
+                      );
+                      onPostUpdated();
+                    } else if (value == 'delete') {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Xác nhận xóa'),
+                          content: const Text(
+                              'Bạn có chắc muốn xóa bài viết này không?'),
+                          actions: [
+                            TextButton(
+                              child: const Text('Hủy'),
+                              onPressed: () => Navigator.of(context).pop(false),
+                            ),
+                            TextButton(
+                              child: const Text('Xóa',
+                                  style: TextStyle(color: Colors.red)),
+                              onPressed: () => Navigator.of(context).pop(true),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true) {
+                        final success = await deleteBaiDang(post.id);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(success
+                                ? 'Đã xóa bài viết thành công'
+                                : 'Xóa thất bại. Vui lòng thử lại'),
+                            backgroundColor:
+                                success ? Colors.green : Colors.red,
+                          ));
+                          if (success) onPostUpdated();
+                        }
+                      }
+                    } else if (value == 'change_status') {
+                      String current = post.trangThai.toLowerCase();
+                      String newStatus =
+                          current == 'san_sang' ? 'dang_giao_dich' : 'san_sang';
+
+                      final success =
+                          await doiTrangThaiBaiDang(post.id, newStatus);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(success
+                              ? 'Đã đổi trạng thái sang "${newStatus == 'san_sang' ? 'Sẵn sàng' : 'Đang giao dịch'}"'
+                              : 'Đổi trạng thái thất bại'),
+                          backgroundColor: success ? Colors.green : Colors.red,
+                        ));
+                        if (success) onPostUpdated();
+                      }
+                    }
+                  },
+                  itemBuilder: (_) => <PopupMenuEntry<String>>[
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(children: [
+                        Icon(Icons.edit),
+                        SizedBox(width: 8),
+                        Text('Chỉnh sửa')
+                      ]),
+                    ),
+                    const PopupMenuItem(
+                      value: 'change_status',
+                      child: Row(children: [
+                        Icon(Icons.published_with_changes),
+                        SizedBox(width: 8),
+                        Text('Đổi trạng thái')
+                      ]),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(children: [
+                        Icon(Icons.delete_outline),
+                        SizedBox(width: 8),
+                        Text('Xóa bài viết')
+                      ]),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
