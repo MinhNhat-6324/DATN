@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             HomeTab(userId: widget.userId),
             PostScreen(userId: widget.userId), // ✅ đã truyền userId
-            const ChatScreen(),
+            ChatScreen(userId: int.parse(widget.userId)),
             ProfileScreen(
               userId: widget.userId,
             ),
