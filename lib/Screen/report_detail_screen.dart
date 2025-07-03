@@ -28,6 +28,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   final ChuyenNganhSanPhamService _chuyenNganhService = ChuyenNganhSanPhamService(); // Instance của service
 
   late BaoCao _currentBaoCao; // Sử dụng late để khởi tạo trong initState
+  bool _isProcessingAction = false; // <<< THÊM: Biến trạng thái để quản lý loading khi xử lý báo cáo >>>
 
   @override
   void initState() {
@@ -103,75 +104,76 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
   // <<<<<< HÀM XỬ LÝ KHI NHẤN NÚT "GỠ BÀI ĐĂNG" >>>>>>
   Future<void> _handleGoBaiDang() async {
-    // Chỉ cho phép xử lý nếu báo cáo đang chờ
-    if (_currentBaoCao.trangThai != 'dang_cho') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Báo cáo này đã được xử lý.')),
-      );
+    // Ngăn chặn nhiều lần nhấn và xử lý nếu báo cáo đã được xử lý
+    if (_isProcessingAction || _currentBaoCao.trangThai != 'dang_cho') {
+      if (_currentBaoCao.trangThai != 'dang_cho') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Báo cáo này đã được xử lý.')),
+        );
+      }
       return;
     }
 
+    // Cập nhật logic pop của dialog: "Hủy" trả về false, "Xác nhận" trả về true
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-           title: Text(
-          "Xác nhận gỡ bài đăng",
-          style: const TextStyle(
-              color: Color(0xFF2280EF), fontWeight: FontWeight.bold),
-        ),
-          content: const Text('Bạn có chắc chắn muốn gỡ bài đăng này không?',style: const TextStyle(color: Colors.black87)),
+          title: const Text(
+            "Xác nhận gỡ bài đăng",
+            style: TextStyle(color: Color(0xFF2280EF), fontWeight: FontWeight.bold),
+          ),
+          content: const Text('Bạn có chắc chắn muốn gỡ bài đăng này không?', style: TextStyle(color: Colors.black87)),
           actions: <Widget>[
             TextButton(
               style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
-              onPressed: () => Navigator.of(context).pop(true),
+              onPressed: () => Navigator.of(context).pop(false), // <<< SỬA: Hủy trả về false >>>
               child: const Text('Hủy'),
             ),
-           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2280EF),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2280EF),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 5,
               ),
-              elevation: 5,
+              onPressed: () => Navigator.of(context).pop(true), // <<< ĐÚNG: Xác nhận trả về true >>>
+              child: const Text("Xác nhận"),
             ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text("Xác nhận"),)
           ],
         );
       },
     );
 
-    if (confirm == true) {
+    if (confirm == true) { // Chỉ thực hiện nếu người dùng xác nhận
+      setState(() {
+        _isProcessingAction = true; // Bắt đầu loading
+      });
       try {
-        // Gọi API để gỡ bài đăng và duyệt báo cáo
         bool success = await goBaiDangBaoCao(_currentBaoCao.id);
 
         if (success) {
           // Cập nhật trạng thái báo cáo và trạng thái bài đăng trên UI
-          // Tạo một đối tượng BaoCao mới với trạng thái cập nhật
           setState(() {
-            _currentBaoCao = BaoCao(
-              id: _currentBaoCao.id,
-              maBaiDang: _currentBaoCao.maBaiDang,
-              idTaiKhoanBaoCao: _currentBaoCao.idTaiKhoanBaoCao,
-              lyDo: _currentBaoCao.lyDo,
-              moTaThem: _currentBaoCao.moTaThem,
-              thoiGianBaoCao: _currentBaoCao.thoiGianBaoCao,
+            _currentBaoCao = _currentBaoCao.copyWith(
               trangThai: 'da_xu_ly', // Trạng thái báo cáo chuyển sang "da__xu_ly"
               baiDang: _currentBaoCao.baiDang?.copyWith(trangThai: 'vi_pham'), // Cập nhật trạng thái bài đăng
-              nguoiBaoCao: _currentBaoCao.nguoiBaoCao,
             );
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: const Text('Bài đăng đã được gỡ!',
-            style: TextStyle(color: Colors.white),),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 2),),
+            SnackBar(
+              content: const Text(
+                'Bài đăng đã được gỡ!',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 2),
+            ),
           );
           // Quay về màn hình trước đó, có thể truyền kết quả về nếu cần
           Navigator.pop(context, true); // True để báo hiệu có thay đổi
@@ -185,81 +187,86 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Đã xảy ra lỗi: ${e.toString()}')),
         );
+      } finally {
+        setState(() {
+          _isProcessingAction = false; // Kết thúc loading
+        });
       }
     }
   }
 
   // <<<<<< HÀM XỬ LÝ KHI NHẤN NÚT "TỪ CHỐI BÁO CÁO" >>>>>>
   Future<void> _handleTuChoiBaoCao() async {
-    // Chỉ cho phép xử lý nếu báo cáo đang chờ
-    if (_currentBaoCao.trangThai != 'dang_cho') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Báo cáo này đã được xử lý.')),
-      );
+    // Ngăn chặn nhiều lần nhấn và xử lý nếu báo cáo đã được xử lý
+    if (_isProcessingAction || _currentBaoCao.trangThai != 'dang_cho') {
+      if (_currentBaoCao.trangThai != 'dang_cho') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Báo cáo này đã được xử lý.')),
+        );
+      }
       return;
     }
 
+    // Cập nhật logic pop của dialog: "Hủy" trả về false, "Xác nhận" trả về true
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(
-          "Xác nhận từ chối báo cáo",
-          style: const TextStyle(
-              color: Color(0xFF2280EF), fontWeight: FontWeight.bold),
-        ),
-          content: const Text('Bạn có chắc chắn muốn từ chối báo cáo này không?',style: const TextStyle(color: Colors.black87),),
+          title: const Text(
+            "Xác nhận từ chối báo cáo",
+            style: TextStyle(color: Color(0xFF2280EF), fontWeight: FontWeight.bold),
+          ),
+          content: const Text('Bạn có chắc chắn muốn từ chối báo cáo này không?', style: TextStyle(color: Colors.black87)),
           actions: <Widget>[
             TextButton(
               style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
-              onPressed: () => Navigator.of(context).pop(true),
+              onPressed: () => Navigator.of(context).pop(false), // <<< SỬA: Hủy trả về false >>>
               child: const Text('Hủy'),
             ),
-           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2280EF),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2280EF),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 5,
               ),
-              elevation: 5,
+              onPressed: () => Navigator.of(context).pop(true), // <<< ĐÚNG: Xác nhận trả về true >>>
+              child: const Text("Xác nhận"),
             ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text("Xác nhận"),
-          ),
           ],
         );
       },
     );
 
-    if (confirm == true) {
+    if (confirm == true) { // Chỉ thực hiện nếu người dùng xác nhận
+      setState(() {
+        _isProcessingAction = true; // Bắt đầu loading
+      });
       try {
-        // Gọi API để từ chối báo cáo
         bool success = await tuChoiBaoCao(_currentBaoCao.id);
 
         if (success) {
           // Cập nhật trạng thái báo cáo trên UI
           setState(() {
-            _currentBaoCao = BaoCao(
-              id: _currentBaoCao.id,
-              maBaiDang: _currentBaoCao.maBaiDang,
-              idTaiKhoanBaoCao: _currentBaoCao.idTaiKhoanBaoCao,
-              lyDo: _currentBaoCao.lyDo,
-              moTaThem: _currentBaoCao.moTaThem,
-              thoiGianBaoCao: _currentBaoCao.thoiGianBaoCao,
+            _currentBaoCao = _currentBaoCao.copyWith(
               trangThai: 'da_xu_ly', // Trạng thái báo cáo chuyển sang "da_xu_ly"
-              baiDang: _currentBaoCao.baiDang, // Bài đăng giữ nguyên
-              nguoiBaoCao: _currentBaoCao.nguoiBaoCao,
+              // Bai đăng giữ nguyên
             );
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: const Text('Đã từ chối báo cáo!',
-            style: TextStyle(color: Colors.white),),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 2),),
+            SnackBar(
+              content: const Text(
+                'Đã từ chối báo cáo!',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 2),
+            ),
           );
           // Quay về màn hình trước đó
           Navigator.pop(context, true); // True để báo hiệu có thay đổi
@@ -273,6 +280,10 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Đã xảy ra lỗi: ${e.toString()}')),
         );
+      } finally {
+        setState(() {
+          _isProcessingAction = false; // Kết thúc loading
+        });
       }
     }
   }
@@ -313,129 +324,143 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: size.height * 0.03),
-              _buildMainImage(currentMainImageUrl, size),
-              SizedBox(height: size.height * 0.03),
-              if (baiDang != null && baiDang.anhBaiDang != null && baiDang.anhBaiDang!.isNotEmpty)
-                _buildImageGallery(baiDang.anhBaiDang!),
-              SizedBox(height: size.height * 0.03),
-
-              // 1. Thẻ thông tin bài đăng bị báo cáo
-              if (baiDang != null)
-                _buildInfoCard(
-                  title: 'Thông tin bài đăng bị báo cáo',
-                  children: [
-                    _buildInfoRow('Tiêu đề:', baiDang.tieuDe ?? 'Không có'),
-                    _buildInfoRow(
-                      'Giá:',
-                      baiDang.gia != null
-                          ? '${NumberFormat('#,##0').format(double.parse(baiDang.gia!))} VNĐ'
-                          : 'Không có',
-                    ),
-                    _buildInfoRow('Độ mới:', baiDang.doMoi != null
-                        ? '${baiDang.doMoi}%'
-                        : 'Không rõ'),
-                    _buildInfoRow(
-                      'Loại:',
-                      _getLoaiName(baiDang.idLoai),
-                    ),
-                    _buildInfoRow(
-                      'Ngành:',
-                      _getNganhName(baiDang.idNganh),
-                    ),
-                    _buildInfoRow(
-                      'Ngày đăng:',
-                      baiDang.ngayDang != null
-                          ? DateFormat('dd/MM/yyyy').format(
-                              DateTime.parse(baiDang.ngayDang!).toLocal(),
-                            )
-                          : 'Không rõ',
-                    ),
-                  ],
-                ),
-              if (baiDang == null)
-                _buildInfoCard(
-                  title: 'Thông tin bài đăng bị báo cáo',
-                  children: [
-                    _buildInfoRow('Bài đăng:', 'Bài đăng đã bị xóa hoặc không tìm thấy.'),
-                  ],
-                ),
-
-              const SizedBox(height: 20),
-              // 3. Thẻ thông tin báo cáo
-              _buildInfoCard(
-                title: 'Thông tin báo cáo',
+        child: Stack( // Sử dụng Stack để overlay loading indicator
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  _buildInfoRow('Lý do:', baoCao.lyDo ?? 'Không có'),
-                  _buildInfoRow('Mô tả thêm:', baoCao.moTaThem ?? 'Không có'),
-                  _buildInfoRow(
-                    'Thời gian:',
-                    baoCao.thoiGianBaoCao != null
-                        ? DateFormat('dd/MM/yyyy').format(
-                            DateTime.parse(baoCao.thoiGianBaoCao!).toLocal(),
-                          )
-                        : 'Không rõ',
-                  ),
-                  _buildStatusRow(baoCao.trangThai),
-                ],
-              ),
-              const SizedBox(height: 40),
+                  SizedBox(height: size.height * 0.03),
+                  _buildMainImage(currentMainImageUrl, size),
+                  SizedBox(height: size.height * 0.03),
+                  if (baiDang != null && baiDang.anhBaiDang != null && baiDang.anhBaiDang!.isNotEmpty)
+                    _buildImageGallery(baiDang.anhBaiDang!),
+                  SizedBox(height: size.height * 0.03),
 
-              // <<<<<< PHẦN HIỂN THỊ NÚT XỬ LÝ TRẠNG THÁI >>>>>>
-              if (canProcessReport) // Chỉ hiển thị các nút khi báo cáo đang chờ
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
+                  // 1. Thẻ thông tin bài đăng bị báo cáo
+                  if (baiDang != null)
+                    _buildInfoCard(
+                      title: 'Thông tin bài đăng bị báo cáo',
+                      children: [
+                        _buildInfoRow('Tiêu đề:', baiDang.tieuDe ?? 'Không có'),
+                        _buildInfoRow(
+                          'Giá:',
+                          baiDang.gia != null
+                              ? '${NumberFormat('#,##0').format(double.parse(baiDang.gia!))} VNĐ'
+                              : 'Không có',
+                        ),
+                        _buildInfoRow('Độ mới:', baiDang.doMoi != null
+                            ? '${baiDang.doMoi}%'
+                            : 'Không rõ'),
+                        _buildInfoRow(
+                          'Loại:',
+                          _getLoaiName(baiDang.idLoai),
+                        ),
+                        _buildInfoRow(
+                          'Ngành:',
+                          _getNganhName(baiDang.idNganh),
+                        ),
+                        _buildInfoRow(
+                          'Ngày đăng:',
+                          baiDang.ngayDang != null
+                              ? DateFormat('dd/MM/yyyy').format(
+                                  DateTime.parse(baiDang.ngayDang!).toLocal(),
+                                )
+                              : 'Không rõ',
+                        ),
+                      ],
+                    ),
+                  if (baiDang == null)
+                    _buildInfoCard(
+                      title: 'Thông tin bài đăng bị báo cáo',
+                      children: [
+                        _buildInfoRow('Bài đăng:', 'Bài đăng đã bị xóa hoặc không tìm thấy.'),
+                      ],
+                    ),
+
+                  const SizedBox(height: 20),
+                  // 3. Thẻ thông tin báo cáo
+                  _buildInfoCard(
+                    title: 'Thông tin báo cáo',
                     children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _handleGoBaiDang,
-                          icon: const Icon(Icons.delete_forever_outlined, color: Colors.white),
-                          label: const Text(
-                            'Gỡ bài đăng',
-                            style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade600, // Màu đỏ cho hành động gỡ
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 5,
-                          ),
-                        ),
+                      _buildInfoRow('Lý do:', baoCao.lyDo ?? 'Không có'),
+                      _buildInfoRow('Mô tả thêm:', baoCao.moTaThem ?? 'Không có'),
+                      _buildInfoRow(
+                        'Thời gian:',
+                        baoCao.thoiGianBaoCao != null
+                            ? DateFormat('dd/MM/yyyy').format(
+                                  DateTime.parse(baoCao.thoiGianBaoCao!).toLocal(),
+                                )
+                            : 'Không rõ',
                       ),
-                      const SizedBox(height: 15),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _handleTuChoiBaoCao,
-                          icon: const Icon(Icons.check_circle_outline, color: Colors.white),
-                          label: const Text(
-                            'Từ chối báo cáo',
-                            style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade600, // Màu xanh cho hành động từ chối
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 5,
-                          ),
-                        ),
-                      ),
+                      _buildStatusRow(baoCao.trangThai),
                     ],
                   ),
+                  const SizedBox(height: 40),
+
+                  // <<<<<< PHẦN HIỂN THỊ NÚT XỬ LÝ TRẠNG THÁI >>>>>>
+                  if (canProcessReport) // Chỉ hiển thị các nút khi báo cáo đang chờ
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              // <<< CẬP NHẬT: Vô hiệu hóa nút khi đang xử lý >>>
+                              onPressed: _isProcessingAction ? null : _handleGoBaiDang,
+                              icon: const Icon(Icons.delete_forever_outlined, color: Colors.white),
+                              label: const Text(
+                                'Gỡ bài đăng',
+                                style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red.shade600, // Màu đỏ cho hành động gỡ
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              // <<< CẬP NHẬT: Vô hiệu hóa nút khi đang xử lý >>>
+                              onPressed: _isProcessingAction ? null : _handleTuChoiBaoCao,
+                              icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+                              label: const Text(
+                                'Từ chối báo cáo',
+                                style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue.shade600, // Màu xanh cho hành động từ chối
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+            // <<< THÊM: Loading overlay >>>
+            if (_isProcessingAction)
+              Container(
+                color: Colors.black.withOpacity(0.5), // Lớp phủ mờ
+                child: const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF2280EF)), // Vòng tròn loading
                 ),
-              const SizedBox(height: 20),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
@@ -526,7 +551,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             title,
             style: const TextStyle(
               fontSize: 20,
-              fontWeight: FontWeight.bold,  
+              fontWeight: FontWeight.bold,
               color: Color(0xFF0079CF),
             ),
           ),
