@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'report_form_screen.dart';
 import 'package:front_end/model/bai_dang_service.dart';
 import 'package:front_end/services/buildImage.dart';
+import 'chat_detail_screen.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final BaiDang baiDang;
@@ -299,7 +300,36 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
   Widget _buildContactButton(Size size) {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: () {
+        if (widget.baiDang.idTaiKhoan == widget.idNguoiBaoCao) {
+          // 🛑 Hiển thị thông báo nếu người đăng là chính mình
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Thông báo'),
+              content: const Text('Bài đăng này là của bạn.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Đóng'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          // ✅ Chuyển sang trang nhắn tin nếu là người khác
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatDetailScreen(
+                idBaiDang: widget.baiDang.id,
+                idNguoiDang: widget.baiDang.idTaiKhoan,
+                idNguoiHienTai: widget.idNguoiBaoCao,
+              ),
+            ),
+          );
+        }
+      },
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.zero,
         shape: RoundedRectangleBorder(

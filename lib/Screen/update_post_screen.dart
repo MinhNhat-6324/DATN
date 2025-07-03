@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'package:front_end/model/chuyen_nganh_service.dart';
 import 'package:front_end/model/loai_san_pham_service.dart';
 import 'package:front_end/model/bai_dang_service.dart';
@@ -35,7 +36,7 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
 
   final List<File> _capturedImages = [];
   final List<String> _existingImageUrls = [];
-  final List<String> _deletedImageUrls = []; // ✅ lưu ảnh đã xoá
+  final List<String> _deletedImageUrls = [];
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -271,7 +272,10 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
             child: GestureDetector(
               onTap: () => setState(() {
                 if (isOld) {
-                  _deletedImageUrls.add(_existingImageUrls[index]);
+                  // ✅ Trích xuất tên file từ URL
+                  final fullUrl = _existingImageUrls[index];
+                  final fileName = Uri.parse(fullUrl).pathSegments.last;
+                  _deletedImageUrls.add(fileName);
                   _existingImageUrls.removeAt(index);
                 } else {
                   _capturedImages.removeAt(index);
@@ -279,8 +283,9 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
               }),
               child: Container(
                 decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(10)),
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 padding: const EdgeInsets.all(2),
                 child: const Icon(Icons.close, color: Colors.white, size: 18),
               ),
