@@ -107,7 +107,8 @@ class RegisterService {
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        final token = responseData['token'];
+          final data = responseData['data'];
+          final token = data != null ? data['token'] : null; ////////
         if (token != null) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('auth_token', token);
