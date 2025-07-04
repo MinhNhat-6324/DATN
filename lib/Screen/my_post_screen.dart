@@ -112,15 +112,14 @@ class PostCard extends StatelessWidget {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'sẵn sàng':
       case 'san_sang':
         return Colors.green.shade600;
-      case 'đang giao dịch':
       case 'dang_giao_dich':
         return Colors.orange.shade700;
-      case 'hoàn thành':
       case 'hoan_thanh':
         return Colors.blue.shade700;
+      case 'vi_pham':
+        return Colors.red.shade700;
       default:
         return Colors.grey.shade600;
     }
@@ -128,17 +127,31 @@ class PostCard extends StatelessWidget {
 
   IconData _getStatusIcon(String status) {
     switch (status.toLowerCase()) {
-      case 'sẵn sàng':
       case 'san_sang':
         return Icons.check_circle;
-      case 'đang giao dịch':
       case 'dang_giao_dich':
         return Icons.compare_arrows;
-      case 'hoàn thành':
       case 'hoan_thanh':
         return Icons.done_all;
+      case 'vi_pham':
+        return Icons.warning_amber_rounded;
       default:
         return Icons.info_outline;
+    }
+  }
+
+  String _getStatusLabel(String status) {
+    switch (status.toLowerCase()) {
+      case 'san_sang':
+        return 'Sẵn sàng';
+      case 'dang_giao_dich':
+        return 'Đang giao dịch';
+      case 'hoan_thanh':
+        return 'Hoàn thành';
+      case 'vi_pham':
+        return 'Vi phạm';
+      default:
+        return status;
     }
   }
 
@@ -150,6 +163,7 @@ class PostCard extends StatelessWidget {
 
     final statusColor = _getStatusColor(post.trangThai);
     final statusIcon = _getStatusIcon(post.trangThai);
+    final statusLabel = _getStatusLabel(post.trangThai);
 
     return GestureDetector(
       onTap: () {
@@ -227,7 +241,7 @@ class PostCard extends StatelessWidget {
                         children: [
                           Icon(statusIcon, color: statusColor, size: 18),
                           const SizedBox(width: 6),
-                          Text(post.trangThai,
+                          Text(statusLabel,
                               style: TextStyle(color: statusColor)),
                         ],
                       ),
@@ -284,6 +298,14 @@ class PostCard extends StatelessWidget {
                         }
                       }
                     } else if (value == 'change_status') {
+                      if (post.trangThai.toLowerCase() == 'vi_pham') {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(
+                          content: Text('Bài đăng hiện đang vi phạm.'),
+                          backgroundColor: Colors.red,
+                        ));
+                        return;
+                      }
                       String current = post.trangThai.toLowerCase();
                       String newStatus =
                           current == 'san_sang' ? 'dang_giao_dich' : 'san_sang';

@@ -139,8 +139,28 @@ class _PostListScreenState extends State<PostListScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start, // Giữ sát trái
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
+                    FutureBuilder<List<Nganh>>(
+                      future: getDanhSachNganh(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) return const SizedBox();
+                        final nganhList = snapshot.data!;
+                        return PopupMenuButton<Nganh>(
+                          icon: const Icon(Icons.list, color: Colors.white),
+                          onSelected: (nganh) {
+                            selectedIdNganh = nganh.id;
+                            _onSearch();
+                          },
+                          itemBuilder: (context) => nganhList
+                              .map((nganh) => PopupMenuItem<Nganh>(
+                                    value: nganh,
+                                    child: Text(nganh.tenNganh),
+                                  ))
+                              .toList(),
+                        );
+                      },
+                    ),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 6),
@@ -156,45 +176,9 @@ class _PostListScreenState extends State<PostListScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(
-                        width: 8), // Khoảng cách nhỏ giữa Text và Icon dropdown
-                    FutureBuilder<List<LoaiSanPham>>(
-                      future: getDanhSachLoai(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          );
-                        } else if (snapshot.hasError || !snapshot.hasData) {
-                          return const SizedBox();
-                        }
+                    const SizedBox(width: 8),
 
-                        final loaiList = [
-                          LoaiSanPham(id: -1, tenLoai: 'Tất cả'),
-                          ...snapshot.data!,
-                        ];
-
-                        return PopupMenuButton<LoaiSanPham>(
-                          icon: const Icon(Icons.arrow_drop_down,
-                              color: Colors.white),
-                          onSelected: (loai) {
-                            selectedIdLoai = loai.id;
-                            _onSearch();
-                          },
-                          itemBuilder: (context) {
-                            return loaiList
-                                .map((loai) => PopupMenuItem<LoaiSanPham>(
-                                      value: loai,
-                                      child: Text(loai.tenLoai),
-                                    ))
-                                .toList();
-                          },
-                        );
-                      },
-                    ),
+                    // PopupMenu ngành (chuyển vào đây)
                   ],
                 ),
               ),
@@ -277,11 +261,34 @@ class _PostListScreenState extends State<PostListScreen> {
         ),
         child: Row(
           children: [
-            InkWell(
-              onTap: _onSearch,
-              child: const Icon(Icons.search, color: Colors.blue),
+            // PopupMenu Loại sản phẩm (ở bên trái search bar)
+            FutureBuilder<List<LoaiSanPham>>(
+              future: getDanhSachLoai(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const SizedBox();
+                final loaiList = [
+                  LoaiSanPham(id: -1, tenLoai: 'Tất cả'),
+                  ...snapshot.data!,
+                ];
+                return PopupMenuButton<LoaiSanPham>(
+                  icon: const Icon(Icons.category, color: Colors.blue),
+                  onSelected: (loai) {
+                    selectedIdLoai = loai.id;
+                    _onSearch();
+                  },
+                  itemBuilder: (context) => loaiList
+                      .map((loai) => PopupMenuItem<LoaiSanPham>(
+                            value: loai,
+                            child: Text(loai.tenLoai),
+                          ))
+                      .toList(),
+                );
+              },
             ),
+
             const SizedBox(width: 8),
+
+            // TextField tìm kiếm
             Expanded(
               child: TextField(
                 controller: _searchController,
@@ -292,37 +299,11 @@ class _PostListScreenState extends State<PostListScreen> {
                 ),
               ),
             ),
-            FutureBuilder<List<Nganh>>(
-              future: getDanhSachNganh(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  );
-                } else if (snapshot.hasError || !snapshot.hasData) {
-                  return const SizedBox.shrink();
-                }
 
-                final nganhList = snapshot.data!;
-
-                return PopupMenuButton<Nganh>(
-                  icon: const Icon(Icons.list, color: Colors.blue),
-                  onSelected: (nganh) {
-                    selectedIdNganh = nganh.id;
-                    _onSearch();
-                  },
-                  itemBuilder: (context) {
-                    return nganhList
-                        .map((nganh) => PopupMenuItem<Nganh>(
-                              value: nganh,
-                              child: Text(nganh.tenNganh),
-                            ))
-                        .toList();
-                  },
-                );
-              },
+            // Nút tìm
+            InkWell(
+              onTap: _onSearch,
+              child: const Icon(Icons.search, color: Colors.blue),
             ),
           ],
         ),

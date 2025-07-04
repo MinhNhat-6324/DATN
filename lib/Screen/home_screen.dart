@@ -38,11 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
           index: currentIndex,
           children: [
             HomeTab(userId: widget.userId),
-            PostScreen(userId: widget.userId), // ✅ đã truyền userId
+            PostScreen(userId: widget.userId),
             ChatScreen(userId: int.parse(widget.userId)),
-            ProfileScreen(
-              userId: widget.userId,
-            ),
+            ProfileScreen(userId: widget.userId),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -200,7 +198,7 @@ class _HomeTabState extends State<HomeTab> {
                           idNganh: 6,
                           idLoai: selectedLoaiChung?.id ?? -1,
                           searchTieuDe: null,
-                          userId: widget.userId, // ✅ truyền thêm userId
+                          userId: widget.userId,
                         ),
                       ),
                     );
@@ -233,7 +231,7 @@ class _HomeTabState extends State<HomeTab> {
                         return _bookItem(
                             context, baiDang, imageUrl, screenWidth);
                       }).toList(),
-                      onLoaiSelected: _chonLoai,
+                      onLoaiSelected: _chonNganh, // chọn ngành ở đây
                       showPlaceholder: baiDangNganh.isEmpty,
                       onViewMore: () {
                         Navigator.push(
@@ -244,7 +242,7 @@ class _HomeTabState extends State<HomeTab> {
                               idNganh: selectedIdNganh,
                               idLoai: selectedLoai?.id ?? -1,
                               searchTieuDe: null,
-                              userId: widget.userId, // ✅ truyền thêm userId
+                              userId: widget.userId,
                             ),
                           ),
                         );
@@ -272,6 +270,38 @@ class _HomeTabState extends State<HomeTab> {
         ),
         child: Row(
           children: [
+            FutureBuilder<List<LoaiSanPham>>(
+              future: futureLoaiList,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const SizedBox();
+                final loaiList = [
+                  LoaiSanPham(id: -1, tenLoai: 'Tất cả'),
+                  ...snapshot.data!
+                ];
+                return PopupMenuButton<LoaiSanPham>(
+                  icon: const Icon(Icons.category, color: Colors.blue),
+                  onSelected: (loai) {
+                    _chonLoai(loai);
+                  },
+                  itemBuilder: (context) => loaiList
+                      .map((loai) => PopupMenuItem<LoaiSanPham>(
+                            value: loai,
+                            child: Text(loai.tenLoai),
+                          ))
+                      .toList(),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: "Nhập tên sách muốn tìm",
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
             IconButton(
               icon: const Icon(Icons.search, color: Colors.blue),
               onPressed: () {
@@ -285,42 +315,11 @@ class _HomeTabState extends State<HomeTab> {
                         idNganh: selectedIdNganh,
                         idLoai: -1,
                         searchTieuDe: keyword,
-                        userId: widget.userId, // ✅ truyền thêm userId
+                        userId: widget.userId,
                       ),
                     ),
                   );
                 }
-              },
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: "Nhập tên sách muốn tìm",
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-            FutureBuilder<List<Nganh>>(
-              future: futureDanhSachNganh,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const SizedBox();
-                final nganhList =
-                    snapshot.data!.where((nganh) => nganh.id != 6).toList();
-
-                return PopupMenuButton<Nganh>(
-                  icon: const Icon(Icons.school, color: Colors.blue),
-                  onSelected: (nganh) {
-                    _chonNganh(nganh); // cập nhật ngành và load lại dữ liệu
-                  },
-                  itemBuilder: (context) => nganhList
-                      .map((nganh) => PopupMenuItem<Nganh>(
-                            value: nganh,
-                            child: Text(nganh.tenNganh),
-                          ))
-                      .toList(),
-                );
               },
             ),
           ],
@@ -338,8 +337,7 @@ class _HomeTabState extends State<HomeTab> {
           MaterialPageRoute(
             builder: (context) => ProductDetailsScreen(
               baiDang: baiDang,
-              idNguoiBaoCao:
-                  int.parse(widget.userId), // ✅ Truyền thêm ID người báo cáo
+              idNguoiBaoCao: int.parse(widget.userId),
             ),
           ),
         );
@@ -389,7 +387,7 @@ class _HomeTabState extends State<HomeTab> {
     required Color color,
     required List<Widget> items,
     required double screenWidth,
-    Function(LoaiSanPham)? onLoaiSelected,
+    required Function onLoaiSelected,
     bool showPlaceholder = false,
     VoidCallback? onViewMore,
   }) {
@@ -404,6 +402,29 @@ class _HomeTabState extends State<HomeTab> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    FutureBuilder<List<Nganh>>(
+                      future: futureDanhSachNganh,
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) return const SizedBox();
+                        final nganhList = snapshot.data!
+                            .where((nganh) => nganh.id != 6)
+                            .toList();
+
+                        return PopupMenuButton<Nganh>(
+                          icon: const Icon(Icons.school, color: Colors.white),
+                          onSelected: (nganh) {
+                            onLoaiSelected(nganh);
+                          },
+                          itemBuilder: (context) => nganhList
+                              .map((nganh) => PopupMenuItem<Nganh>(
+                                    value: nganh,
+                                    child: Text(nganh.tenNganh),
+                                  ))
+                              .toList(),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
                     Flexible(
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -421,41 +442,6 @@ class _HomeTabState extends State<HomeTab> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ),
-                    FutureBuilder<List<LoaiSanPham>>(
-                      future: getDanhSachLoai(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          );
-                        } else if (snapshot.hasError || !snapshot.hasData) {
-                          return const SizedBox.shrink();
-                        }
-
-                        final loaiList = [
-                          LoaiSanPham(id: -1, tenLoai: 'Tất cả'),
-                          ...snapshot.data!
-                        ];
-
-                        return PopupMenuButton<LoaiSanPham>(
-                          icon: const Icon(Icons.arrow_drop_down,
-                              color: Colors.white),
-                          onSelected: onLoaiSelected,
-                          itemBuilder: (context) => loaiList
-                              .map((loai) => PopupMenuItem<LoaiSanPham>(
-                                    value: loai,
-                                    child: Text(loai.tenLoai),
-                                  ))
-                              .toList(),
-                        );
-                      },
                     ),
                   ],
                 ),
