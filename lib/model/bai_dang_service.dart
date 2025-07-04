@@ -36,20 +36,23 @@ class BaiDang {
   final DateTime ngayDang;
   final List<AnhBaiDang> anhBaiDang;
   final String? tenNganh;
-  final int? idNganh; // ✅ thêm dòng này
+  final int? idNganh;
   final int? idLoai;
+  final int idTaiKhoan; // ✅ Thêm dòng này
 
-  BaiDang(
-      {required this.id,
-      required this.tieuDe,
-      required this.gia,
-      required this.doMoi,
-      required this.trangThai,
-      required this.ngayDang,
-      required this.anhBaiDang,
-      this.tenNganh,
-      this.idLoai,
-      this.idNganh});
+  BaiDang({
+    required this.id,
+    required this.tieuDe,
+    required this.gia,
+    required this.doMoi,
+    required this.trangThai,
+    required this.ngayDang,
+    required this.anhBaiDang,
+    required this.idTaiKhoan, // ✅ Thêm dòng này
+    this.tenNganh,
+    this.idLoai,
+    this.idNganh,
+  });
 
   factory BaiDang.fromJson(Map<String, dynamic> json) {
     var danhSachAnh = <AnhBaiDang>[];
@@ -67,9 +70,10 @@ class BaiDang {
       trangThai: json['trang_thai'] ?? '',
       ngayDang: DateTime.parse(json['ngay_dang']),
       anhBaiDang: danhSachAnh,
+      idTaiKhoan: json['id_tai_khoan'] ?? 0, // ✅ Gán từ JSON
       tenNganh: json['chuyen_nganh_san_pham']?['ten_nganh'],
-      idNganh: json['id_nganh'], // ✅ thêm dòng này
-      idLoai: json['id_loai'], // ✅ nếu cần
+      idNganh: json['id_nganh'],
+      idLoai: json['id_loai'],
     );
   }
 }

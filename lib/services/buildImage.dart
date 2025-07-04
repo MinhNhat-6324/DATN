@@ -1,7 +1,12 @@
 String buildImageUrl(String duongDan) {
   if (duongDan.trim().isEmpty) return '';
 
-  // Trường hợp đã là URL đầy đủ
+  // Nếu là chuỗi base64 thì giữ nguyên
+  if (duongDan.startsWith('data:image')) {
+    return duongDan;
+  }
+
+  // Nếu đã là URL đầy đủ
   if (duongDan.startsWith('http')) {
     final uri = Uri.tryParse(duongDan);
     final imgurl = uri?.queryParameters['imgurl'];

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'chat_detail_screen.dart';
+import 'package:front_end/model/tai_khoan.dart';
 
 class ChatScreen extends StatelessWidget {
   const ChatScreen({super.key});
@@ -40,13 +41,15 @@ class ChatScreen extends StatelessWidget {
             context,
             userName: 'Nguyễn Vũ Minh Nhật',
             lastMessage: 'Chào anh.',
-            avatarAsset: 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
+            avatarAsset:
+                'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
           ),
           _buildChatItem(
             context,
             userName: 'Hỷ Châu Quang Phúc',
             lastMessage: 'Hello bạn.',
-            avatarAsset: 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
+            avatarAsset:
+                'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
           ),
         ],
       ),
@@ -61,12 +64,12 @@ class ChatScreen extends StatelessWidget {
   }) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChatDetailScreen(userName: userName),
-          ),
-        );
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => ChatDetailScreen(userName: userName),
+        //   ),
+        // );
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),

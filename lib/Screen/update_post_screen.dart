@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:convert'; // Import this if you need json decode/encode in services
 import 'package:front_end/model/chuyen_nganh_service.dart';
 import 'package:front_end/model/loai_san_pham_service.dart';
 import 'package:front_end/model/bai_dang_service.dart';
@@ -24,9 +25,10 @@ class UpdatePostScreen extends StatefulWidget {
 
 class _UpdatePostScreenState extends State<UpdatePostScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController priceController = TextEditingController();
-  final TextEditingController conditionController = TextEditingController();
+  // Khởi tạo và dispose các controller trong initState/dispose
+  late TextEditingController titleController;
+  late TextEditingController priceController;
+  late TextEditingController conditionController;
 
   List<Nganh> danhSachNganh = [];
   List<LoaiSanPham> danhSachLoai = [];
@@ -35,18 +37,29 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
 
   final List<File> _capturedImages = [];
   final List<String> _existingImageUrls = [];
-  final List<String> _deletedImageUrls = []; // ✅ lưu ảnh đã xoá
+  final List<String> _deletedImageUrls = [];
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    titleController.text = widget.baiDang.tieuDe;
-    priceController.text = widget.baiDang.gia.toString();
-    conditionController.text = widget.baiDang.doMoi.toString();
+    // Khởi tạo controllers
+    titleController = TextEditingController(text: widget.baiDang.tieuDe);
+    priceController = TextEditingController(text: widget.baiDang.gia.toString());
+    conditionController = TextEditingController(text: widget.baiDang.doMoi.toString());
+
     _existingImageUrls.addAll(
         widget.baiDang.anhBaiDang.map((e) => buildImageUrl(e.duongDan)));
     _loadDropdownData();
+  }
+
+  @override
+  void dispose() {
+    // Gọi dispose cho tất cả controllers
+    titleController.dispose();
+    priceController.dispose();
+    conditionController.dispose();
+    super.dispose();
   }
 
   Future<void> _luuBaiDang() async {
@@ -59,18 +72,23 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
     final idNganh = _selectedNganh?.id;
 
     if (idLoai == null || idNganh == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Vui lòng chọn đầy đủ ngành và loại sản phẩm')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Vui lòng chọn đầy đủ ngành và loại sản phẩm')),
+        );
+      }
       return;
     }
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(
+            child: CircularProgressIndicator(color: Color(0xFF0079CF))),
+      );
+    }
 
     final success = await updateBaiDang(
       idBaiDang: widget.baiDang.id!,
@@ -83,33 +101,76 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
       hinhAnhCanXoa: _deletedImageUrls,
     );
 
-    Navigator.pop(context);
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ Cập nhật bài đăng thành công')),
-      );
-      Navigator.pop(context, true);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Cập nhật thất bại. Vui lòng thử lại')),
-      );
+    if (context.mounted) {
+      Navigator.pop(context); // Dismiss loading dialog
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Row(
+                            children: [
+                              Icon(Icons.check_circle_outline, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text('Cập nhật bài viết thành công!', style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
+                          backgroundColor: Colors.green[600],
+                          behavior: SnackBarBehavior.floating,
+                          margin: const EdgeInsets.all(16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+        Navigator.pop(context, true); // Go back and indicate success
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Row(
+                            children: [
+                              Icon(Icons.error_outline, color: Colors.white),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text('Cập nhật bài viết thất bại. Vui lòng thử lại.',
+                                    style: TextStyle(color: Colors.white)),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: Colors.redAccent,
+                          behavior: SnackBarBehavior.floating,
+                          margin: const EdgeInsets.all(16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+      }
     }
   }
 
   Future<void> _loadDropdownData() async {
-    final nganhData = await getDanhSachNganh();
-    final loaiData = await getDanhSachLoai();
-    setState(() {
-      danhSachNganh = nganhData;
-      danhSachLoai = loaiData;
-      _selectedNganh = danhSachNganh.firstWhere(
-          (e) => e.id == widget.baiDang.idNganh,
-          orElse: () => danhSachNganh.first);
-      _selectedLoai = danhSachLoai.firstWhere(
-          (e) => e.id == widget.baiDang.idLoai,
-          orElse: () => danhSachLoai.first);
-    });
+    try {
+      final nganhData = await getDanhSachNganh();
+      final loaiData = await getDanhSachLoai();
+      if (mounted) {
+        setState(() {
+          danhSachNganh = nganhData;
+          danhSachLoai = loaiData;
+          // Set initial selected values, with fallback to first if not found
+          _selectedNganh = danhSachNganh.firstWhere(
+            (e) => e.id == widget.baiDang.idNganh,
+            orElse: () => danhSachNganh.isNotEmpty ? danhSachNganh.first : throw Exception('No nganh data'), // Handle empty list
+          );
+          _selectedLoai = danhSachLoai.firstWhere(
+            (e) => e.id == widget.baiDang.idLoai,
+            orElse: () => danhSachLoai.isNotEmpty ? danhSachLoai.first : throw Exception('No loai data'), // Handle empty list
+          );
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi tải dữ liệu: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _pickImage() async {
@@ -134,9 +195,37 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
       backgroundColor: const Color(0xFFF0F2F5),
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Chỉnh sửa bài đăng',
-            style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF0079CF),
+        title: const Text(
+          'Chỉnh sửa bài đăng',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        backgroundColor: Colors.transparent, // Make AppBar transparent
+        elevation: 0, // Remove shadow
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0079CF), Color(0xFF00C6FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 12,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -146,64 +235,107 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildSectionTitle('Tiêu đề bài viết'),
-              _buildTextFormField(
-                controller: titleController,
-                hintText: 'Tiêu đề (tên sản phẩm...)',
-                validator: (value) => (value == null || value.isEmpty)
-                    ? '❗ Tiêu đề không được để trống'
-                    : null,
+              const SizedBox(height: 8), // Added spacing
+              Card(
+                margin: EdgeInsets.zero, // Remove default card margin
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                child: _buildTextFormField(
+                  controller: titleController,
+                  hintText: 'Tiêu đề (tên sản phẩm...)',
+                  validator: (value) => (value == null || value.isEmpty)
+                      ? '❗ Tiêu đề không được để trống'
+                      : null,
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20), // Increased spacing
+
               _buildSectionTitle('Độ mới sản phẩm'),
-              _buildTextField(
-                controller: conditionController,
-                keyboardType: TextInputType.number,
-                suffixText: '%',
+              const SizedBox(height: 8), // Added spacing
+              Card(
+                margin: EdgeInsets.zero,
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                child: _buildTextField(
+                  controller: conditionController,
+                  keyboardType: TextInputType.number,
+                  suffixText: '%',
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    // Add a formatter to limit input to 0-100 if needed
+                    _PercentageRangeFormatter(),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20), // Increased spacing
+
               _buildSectionTitle('Ngành'),
-              _buildDropdownButtonFormField<Nganh>(
-                value: _selectedNganh,
-                items: danhSachNganh,
-                getLabel: (nganh) => nganh.tenNganh,
-                onChanged: (Nganh? newVal) =>
-                    setState(() => _selectedNganh = newVal),
+              const SizedBox(height: 8), // Added spacing
+              Card(
+                margin: EdgeInsets.zero,
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                child: _buildDropdownButtonFormField<Nganh>(
+                  value: _selectedNganh,
+                  items: danhSachNganh,
+                  getLabel: (nganh) => nganh.tenNganh,
+                  onChanged: (Nganh? newVal) =>
+                      setState(() => _selectedNganh = newVal),
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20), // Increased spacing
+
               _buildSectionTitle('Loại sản phẩm'),
-              _buildDropdownButtonFormField<LoaiSanPham>(
-                value: _selectedLoai,
-                items: danhSachLoai,
-                getLabel: (loai) => loai.tenLoai,
-                onChanged: (LoaiSanPham? newVal) =>
-                    setState(() => _selectedLoai = newVal),
+              const SizedBox(height: 8), // Added spacing
+              Card(
+                margin: EdgeInsets.zero,
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                child: _buildDropdownButtonFormField<LoaiSanPham>(
+                  value: _selectedLoai,
+                  items: danhSachLoai,
+                  getLabel: (loai) => loai.tenLoai,
+                  onChanged: (LoaiSanPham? newVal) =>
+                      setState(() => _selectedLoai = newVal),
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20), // Increased spacing
+
               _buildSectionTitle('Giá tiền'),
-              _buildTextField(
-                controller: priceController,
-                keyboardType: TextInputType.number,
-                hintText: 'Nhập giá tiền',
-                suffixText: 'VNĐ',
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              const SizedBox(height: 8), // Added spacing
+              Card(
+                margin: EdgeInsets.zero,
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                child: _buildTextField(
+                  controller: priceController,
+                  keyboardType: TextInputType.number,
+                  hintText: 'Nhập giá tiền',
+                  suffixText: 'VNĐ',
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20), // Increased spacing
+
               _buildSectionTitle('Ảnh đã có và ảnh mới'),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12), // Adjusted spacing
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: isWide ? 4 : 3,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 12, // Increased spacing
+                  mainAxisSpacing: 12, // Increased spacing
                   childAspectRatio: 1,
                 ),
-                itemCount:
-                    _existingImageUrls.length + _capturedImages.length + 1,
+                itemCount: _existingImageUrls.length + _capturedImages.length + 1,
                 itemBuilder: (context, index) {
-                  if (index ==
-                      _existingImageUrls.length + _capturedImages.length) {
+                  if (index == _existingImageUrls.length + _capturedImages.length) {
                     return GestureDetector(
                       onTap: _showImageSourceActionSheet,
                       child: _buildAddImageTile(),
@@ -220,19 +352,25 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
                   }
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 30), // Increased spacing for button
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _luuBaiDang,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0056D2),
+                    backgroundColor: const Color(0xFF0056D2), // Darker blue
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(12)), // More rounded
+                    shadowColor: Colors.black26, // Add shadow
+                    elevation: 8, // Increase elevation
                   ),
                   child: const Text('Lưu bài viết',
-                      style: TextStyle(color: Colors.white, fontSize: 18)),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 19, // Slightly larger font
+                          fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -246,15 +384,16 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
         fit: StackFit.expand,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(10), // More rounded corners
             child: isOld
                 ? CachedNetworkImage(
                     imageUrl: image,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
-                      color: Colors.grey[200],
+                      color: Colors.grey[100], // Lighter placeholder
                       child: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Color(0xFF0079CF)), // Themed color
                       ),
                     ),
                     errorWidget: (context, url, error) => Container(
@@ -266,12 +405,15 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
                 : Image.file(image, fit: BoxFit.cover),
           ),
           Positioned(
-            top: 4,
-            right: 4,
+            top: 6, // Adjusted position
+            right: 6, // Adjusted position
             child: GestureDetector(
               onTap: () => setState(() {
                 if (isOld) {
-                  _deletedImageUrls.add(_existingImageUrls[index]);
+                  final fullUrl = _existingImageUrls[index];
+                  // Extract filename from URL (e.g., "image.jpg" from "http://example.com/images/image.jpg")
+                  final fileName = Uri.parse(fullUrl).pathSegments.last;
+                  _deletedImageUrls.add(fileName);
                   _existingImageUrls.removeAt(index);
                 } else {
                   _capturedImages.removeAt(index);
@@ -279,10 +421,11 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
               }),
               child: Container(
                 decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.all(2),
-                child: const Icon(Icons.close, color: Colors.white, size: 18),
+                  color: Colors.black.withOpacity(0.6), // Darker overlay
+                  borderRadius: BorderRadius.circular(12), // More rounded
+                ),
+                padding: const EdgeInsets.all(4), // Slightly more padding
+                child: const Icon(Icons.close, color: Colors.white, size: 20), // Larger icon
               ),
             ),
           ),
@@ -294,19 +437,19 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
     String? hintText,
     String? Function(String?)? validator,
   }) =>
-      Container(
-        decoration: _boxDecoration(),
-        child: TextFormField(
-          controller: controller,
-          validator: validator,
-          decoration: InputDecoration(
-            hintText: hintText,
-            border: _inputBorder(),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            filled: true,
-            fillColor: Colors.transparent,
-          ),
+      // Container removed as Card now handles BoxDecoration
+      TextFormField(
+        controller: controller,
+        validator: validator,
+        decoration: InputDecoration(
+          hintText: hintText,
+          border: _inputBorder(),
+          enabledBorder: _inputBorder(), // Apply border to enabled state
+          focusedBorder: _inputBorder(color: const Color(0xFF0079CF)), // Highlight on focus
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14), // More vertical padding
+          filled: true,
+          fillColor: Colors.white, // Explicitly white background
         ),
       );
 
@@ -317,21 +460,22 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
     String? suffixText,
     List<TextInputFormatter>? inputFormatters,
   }) =>
-      Container(
-        decoration: _boxDecoration(),
-        child: TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          inputFormatters: inputFormatters,
-          decoration: InputDecoration(
-            hintText: hintText,
-            suffixText: suffixText,
-            border: _inputBorder(),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            filled: true,
-            fillColor: Colors.transparent,
-          ),
+      // Container removed as Card now handles BoxDecoration
+      TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        decoration: InputDecoration(
+          hintText: hintText,
+          suffixText: suffixText,
+          suffixStyle: const TextStyle(color: Colors.grey, fontSize: 16), // Style for suffix
+          border: _inputBorder(),
+          enabledBorder: _inputBorder(), // Apply border to enabled state
+          focusedBorder: _inputBorder(color: const Color(0xFF0079CF)), // Highlight on focus
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14), // More vertical padding
+          filled: true,
+          fillColor: Colors.white, // Explicitly white background
         ),
       );
 
@@ -341,60 +485,67 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
     required String Function(T) getLabel,
     required ValueChanged<T?> onChanged,
   }) =>
-      Container(
-        decoration: _boxDecoration(),
-        child: DropdownButtonFormField<T>(
-          value: value,
-          decoration: InputDecoration(
-            border: _inputBorder(),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            filled: true,
-            fillColor: Colors.transparent,
-          ),
-          items: items
-              .map((T item) =>
-                  DropdownMenuItem<T>(value: item, child: Text(getLabel(item))))
-              .toList(),
-          onChanged: onChanged,
+      // Container removed as Card now handles BoxDecoration
+      DropdownButtonFormField<T>(
+        value: value,
+        decoration: InputDecoration(
+          border: _inputBorder(),
+          enabledBorder: _inputBorder(), // Apply border to enabled state
+          focusedBorder: _inputBorder(color: const Color(0xFF0079CF)), // Highlight on focus
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14), // More vertical padding
+          filled: true,
+          fillColor: Colors.white, // Explicitly white background
         ),
+        items: items
+            .map((T item) =>
+                DropdownMenuItem<T>(value: item, child: Text(getLabel(item))))
+            .toList(),
+        onChanged: onChanged,
+        isExpanded: true, // Make dropdown take full width
+        icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0079CF)), // Themed icon
       );
 
-  BoxDecoration _boxDecoration() => BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 2),
+  // Removed _boxDecoration() as Card is now used, but keep _inputBorder if needed for individual fields
+  // BoxDecoration _boxDecoration() => BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(8),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.grey.withOpacity(0.1),
+  //           spreadRadius: 1,
+  //           blurRadius: 3,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //     );
+
+  OutlineInputBorder _inputBorder({Color color = Colors.transparent}) => // Default to transparent
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10), // More rounded for input fields
+        borderSide: BorderSide(color: color, width: 1.0), // Add a subtle border
+      );
+
+  Widget _buildSectionTitle(String title) => Padding(
+        padding: const EdgeInsets.only(bottom: 8.0, top: 0), // Adjust padding
+        child: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 17, // Slightly larger font
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF333333),
           ),
-        ],
-      );
-
-  OutlineInputBorder _inputBorder() => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide.none,
-      );
-
-  Widget _buildSectionTitle(String title) => Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF333333),
         ),
       );
 
   Widget _buildAddImageTile() => Container(
         decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade400, width: 2),
+          color: Colors.grey[100], // Lighter grey
+          borderRadius: BorderRadius.circular(10), // More rounded
+          border: Border.all(color: Colors.grey.shade300, width: 1.5), // Thinner, lighter border
         ),
         child: const Center(
-          child: Icon(Icons.add_a_photo, color: Colors.grey, size: 40),
+          child: Icon(Icons.add_a_photo, color: Colors.grey, size: 45), // Larger icon
         ),
       );
 
@@ -405,16 +556,16 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Chụp ảnh mới'),
+                leading: const Icon(Icons.camera_alt, color: Color(0xFF0079CF)),
+                title: const Text('Chụp ảnh mới', style: TextStyle(fontSize: 16)),
                 onTap: () {
                   Navigator.pop(context);
                   _takePhoto();
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Chọn từ thư viện'),
+                leading: const Icon(Icons.photo_library, color: Color(0xFF0079CF)),
+                title: const Text('Chọn từ thư viện', style: TextStyle(fontSize: 16)),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage();
@@ -424,4 +575,26 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
           ),
         ),
       );
+}
+
+// Custom TextInputFormatter to limit percentage input to 0-100
+class _PercentageRangeFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+    int? parsedValue = int.tryParse(newValue.text);
+    if (parsedValue == null) {
+      return oldValue; // Keep old value if not a valid number
+    }
+    if (parsedValue < 0) {
+      return const TextEditingValue(text: '0'); // Don't allow less than 0
+    }
+    if (parsedValue > 100) {
+      return const TextEditingValue(text: '100'); // Don't allow more than 100
+    }
+    return newValue;
+  }
 }
