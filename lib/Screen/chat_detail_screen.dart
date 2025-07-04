@@ -1,3 +1,4 @@
+// ... các import giữ nguyên
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -75,20 +76,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         widget.idNguoiDang,
       );
 
-      // Nếu số lượng tin nhắn thay đổi thì cập nhật
-      if (data.length != tinNhans.length) {
-        setState(() {
-          tinNhans = data;
-          isLoading = false;
-        });
+      setState(() {
+        tinNhans = data;
+        isLoading = false;
+      });
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_scrollController.hasClients) {
-            _scrollController
-                .jumpTo(_scrollController.position.maxScrollExtent);
-          }
-        });
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        }
+      });
     } catch (e) {
       debugPrint('Lỗi khi fetch tin nhắn: $e');
       setState(() {
@@ -126,7 +123,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       baiDangLienQuan: tn.baiDangLienQuan,
     );
     if (success) {
-      await fetchTinNhan();
+      setState(() {
+        final index = tinNhans.indexWhere((msg) => msg.id == tn.id);
+        if (index != -1) {
+          tinNhans[index] = TinNhan(
+            id: tn.id,
+            nguoiGui: tn.nguoiGui,
+            nguoiNhan: tn.nguoiNhan,
+            baiDangLienQuan: tn.baiDangLienQuan,
+            noiDung: 'đã thu hồi',
+            thoiGianGui: tn.thoiGianGui,
+          );
+        }
+      });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Thu hồi tin nhắn thất bại')),
@@ -181,51 +190,59 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           : Column(
               children: [
                 Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16.0),
-                    itemCount: tinNhans.length,
-                    itemBuilder: (context, index) {
-                      final tn = tinNhans[index];
-                      final isMe = tn.nguoiGui == widget.idNguoiHienTai;
-                      final formattedTime =
-                          DateFormat('HH:mm').format(tn.thoiGianGui);
-
-                      return Column(
-                        crossAxisAlignment: isMe
-                            ? CrossAxisAlignment.end
-                            : CrossAxisAlignment.start,
-                        children: [
-                          GestureDetector(
-                            onLongPress: isMe
-                                ? () async {
-                                    final selected = await showMenu<String>(
-                                      context: context,
-                                      position:
-                                          RelativeRect.fromLTRB(200, 200, 0, 0),
-                                      items: [
-                                        const PopupMenuItem<String>(
-                                          value: 'recall',
-                                          child: Text('Thu hồi'),
-                                        ),
-                                      ],
-                                    );
-                                    if (selected == 'recall') {
-                                      await recallMessage(tn);
-                                    }
-                                  }
-                                : null,
-                            child: MessageBubble(
-                              text: tn.noiDung,
-                              time: formattedTime,
-                              isMe: isMe,
-                            ),
+                  child: tinNhans.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Chưa có tin nhắn nào.',
+                            style: TextStyle(color: Colors.grey),
                           ),
-                          const SizedBox(height: 10),
-                        ],
-                      );
-                    },
-                  ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.all(16.0),
+                          itemCount: tinNhans.length,
+                          itemBuilder: (context, index) {
+                            final tn = tinNhans[index];
+                            final isMe = tn.nguoiGui == widget.idNguoiHienTai;
+                            final formattedTime =
+                                DateFormat('HH:mm').format(tn.thoiGianGui);
+
+                            return Column(
+                              crossAxisAlignment: isMe
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
+                              children: [
+                                GestureDetector(
+                                  onLongPress: isMe
+                                      ? () async {
+                                          final selected =
+                                              await showMenu<String>(
+                                            context: context,
+                                            position: RelativeRect.fromLTRB(
+                                                200, 200, 0, 0),
+                                            items: const [
+                                              PopupMenuItem<String>(
+                                                value: 'recall',
+                                                child: Text('Thu hồi'),
+                                              ),
+                                            ],
+                                          );
+                                          if (selected == 'recall') {
+                                            await recallMessage(tn);
+                                          }
+                                        }
+                                      : null,
+                                  child: MessageBubble(
+                                    text: tn.noiDung,
+                                    time: formattedTime,
+                                    isMe: isMe,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                              ],
+                            );
+                          },
+                        ),
                 ),
                 _buildInputBox(),
               ],
