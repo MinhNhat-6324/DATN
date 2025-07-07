@@ -21,7 +21,7 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final TextEditingController _otpController = TextEditingController();
+ late TextEditingController _otpController;
   final _formKey = GlobalKey<FormState>();
   final QuenMatKhauService _quenMatKhauService = QuenMatKhauService();
   final LoginService _loginService = LoginService();
@@ -35,6 +35,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   void initState() {
     super.initState();
+     _otpController = TextEditingController();
     _startCountdown();
   }
 

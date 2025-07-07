@@ -30,7 +30,6 @@ class AnhBaiDang {
 class BaiDang {
   final int id;
   final String tieuDe;
-  final String gia;
   final int doMoi;
   final String trangThai;
   final DateTime ngayDang;
@@ -38,17 +37,16 @@ class BaiDang {
   final String? tenNganh;
   final int? idNganh;
   final int? idLoai;
-  final int idTaiKhoan; // ✅ Thêm dòng này
+  final int idTaiKhoan;
 
   BaiDang({
     required this.id,
     required this.tieuDe,
-    required this.gia,
     required this.doMoi,
     required this.trangThai,
     required this.ngayDang,
     required this.anhBaiDang,
-    required this.idTaiKhoan, // ✅ Thêm dòng này
+    required this.idTaiKhoan,
     this.tenNganh,
     this.idLoai,
     this.idNganh,
@@ -65,12 +63,11 @@ class BaiDang {
     return BaiDang(
       id: json['id_bai_dang'] ?? 0,
       tieuDe: json['tieu_de'] ?? '',
-      gia: json['gia'].toString(),
       doMoi: json['do_moi'] ?? 0,
       trangThai: json['trang_thai'] ?? '',
       ngayDang: DateTime.parse(json['ngay_dang']),
       anhBaiDang: danhSachAnh,
-      idTaiKhoan: json['id_tai_khoan'] ?? 0, // ✅ Gán từ JSON
+      idTaiKhoan: json['id_tai_khoan'] ?? 0,
       tenNganh: json['chuyen_nganh_san_pham']?['ten_nganh'],
       idNganh: json['id_nganh'],
       idLoai: json['id_loai'],
@@ -82,8 +79,7 @@ Future<List<BaiDang>> getBaiDangTheoNganh(int idNganh) async {
   try {
     final url = Uri.parse('http://10.0.2.2:8000/api/bai-dang/nganh/$idNganh');
     final response = await http.get(url);
-    print("RAW JSON: ${response.body}"); // 👈 In ra dữ liệu JSON để kiểm tra
-
+    print("RAW JSON: ${response.body}");
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => BaiDang.fromJson(json)).toList();
@@ -101,7 +97,6 @@ Future<List<BaiDang>> getBaiDangTheoNganh(int idNganh) async {
 Future<List<BaiDang>> getBaiDangTheoNganhVaLoai(
     int idNganh, int? idLoai) async {
   try {
-    // 👇 Tùy biến URL dựa trên idLoai có null hay không
     final url = idLoai == null
         ? Uri.parse('http://10.0.2.2:8000/api/bai-dang/nganh/$idNganh')
         : Uri.parse(
@@ -235,7 +230,6 @@ Future<List<BaiDang>> getBaiDangTheoLoai(int idLoai) async {
 Future<bool> postBaiDang({
   required int idTaiKhoan,
   required String tieuDe,
-  required int gia,
   required int doMoi,
   required int idLoai,
   required int idNganh,
@@ -247,7 +241,6 @@ Future<bool> postBaiDang({
 
     request.fields['id_tai_khoan'] = idTaiKhoan.toString();
     request.fields['tieu_de'] = tieuDe;
-    request.fields['gia'] = gia.toString();
     request.fields['do_moi'] = doMoi.toString();
     request.fields['id_loai'] = idLoai.toString();
     request.fields['id_nganh'] = idNganh.toString();
@@ -329,7 +322,6 @@ Future<BaiDang?> getBaiDangTheoId(int idBaiDang) async {
 Future<bool> updateBaiDang({
   required int idBaiDang,
   required String tieuDe,
-  required int gia,
   required int doMoi,
   required int idLoai,
   required int idNganh,
@@ -342,7 +334,6 @@ Future<bool> updateBaiDang({
 
     request.fields['_method'] = 'PUT'; // Laravel expects PUT via _method
     request.fields['tieu_de'] = tieuDe;
-    request.fields['gia'] = gia.toString();
     request.fields['do_moi'] = doMoi.toString();
     request.fields['id_loai'] = idLoai.toString();
     request.fields['id_nganh'] = idNganh.toString();

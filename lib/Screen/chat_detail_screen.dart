@@ -37,7 +37,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     super.initState();
     fetchNguoiDang();
     fetchTinNhan();
-    _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1000), (timer) {
       fetchTinNhan();
     });
   }

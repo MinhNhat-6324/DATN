@@ -51,20 +51,15 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _buildAppBar(),
-                SizedBox(height: size.height * 0.03),
                 _buildMainImage(imageUrl, size),
                 SizedBox(height: size.height * 0.03),
                 if (baiDang.anhBaiDang.isNotEmpty)
                   _buildImageGallery(baiDang, size),
-                SizedBox(height: size.height * 0.03),
+                SizedBox(height: size.height * 0.01),
                 _buildInfoCard(baiDang, size),
                 SizedBox(height: size.height * 0.04),
                 _buildContactButton(size),
                 const SizedBox(height: 20),
-                const Text('Hoặc', style: TextStyle(color: Colors.black54)),
-                const SizedBox(height: 20),
-                _buildContactOptions(),
-                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -117,8 +112,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
   Widget _buildMainImage(String imageUrl, Size size) {
     return Container(
-      width: size.width * 0.7,
-      height: size.width * 0.7 * (4 / 3),
+      width: size.width * 0.6,
+      height: size.width * 0.6 * (4 / 3),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: Colors.white,
@@ -204,16 +199,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             ),
             overflow: TextOverflow.ellipsis,
             maxLines: 5,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${baiDang.gia} VNĐ',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: size.width * 0.045,
-              fontWeight: FontWeight.bold,
-            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -363,54 +348,5 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  Widget _buildContactOptions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildContactIcon(Icons.phone_android, () {
-          debugPrint('Gọi điện thoại');
-        }, 'Gọi điện'),
-        const SizedBox(width: 30),
-        _buildContactIcon(Icons.mail_outline, () {
-          debugPrint('Gửi email');
-        }, 'Gửi Email'),
-      ],
-    );
-  }
 
-  Widget _buildContactIcon(
-      IconData icon, VoidCallback onPressed, String label) {
-    return Column(
-      children: [
-        InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(30),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Icon(icon, color: const Color(0xFF0079CF), size: 30),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.black87,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
 }

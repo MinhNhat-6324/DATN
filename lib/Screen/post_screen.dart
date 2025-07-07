@@ -21,7 +21,8 @@ class _PostScreenState extends State<PostScreen> {
 
   final TextEditingController titleController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
-  final TextEditingController conditionController = TextEditingController(text: '99');
+  final TextEditingController conditionController =
+      TextEditingController(text: '99');
 
   List<Nganh> danhSachNganh = [];
   List<LoaiSanPham> danhSachLoai = [];
@@ -42,7 +43,8 @@ class _PostScreenState extends State<PostScreen> {
 
   Future<void> _kiemTraTrangThaiTaiKhoan() async {
     try {
-      final taiKhoanData = await TaiKhoanService().getAccountById(widget.userId);
+      final taiKhoanData =
+          await TaiKhoanService().getAccountById(widget.userId);
       debugPrint('Dữ liệu tài khoản: $taiKhoanData');
 
       final trangThai = int.tryParse(taiKhoanData['trang_thai'].toString()) ?? 0;
@@ -81,62 +83,113 @@ class _PostScreenState extends State<PostScreen> {
         setState(() {
           _capturedImages.add(File(photo.path));
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
-              children: [
-                Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
-                SizedBox(width: 8),
-                Text('Đã chụp ảnh!', style: TextStyle(color: Colors.white)),
-              ],
-            ),
-            backgroundColor: const Color(0xFF00C6FF),
-            behavior: SnackBarBehavior.floating, // Nổi
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        _showSnackBar(
+            'Đã chụp ảnh!', const Color(0xFF00C6FF), Icons.check_circle_outline);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.white, size: 20),
-                SizedBox(width: 8),
-                Text('Chưa có ảnh nào được chụp.', style: TextStyle(color: Colors.white)),
-              ],
-            ),
-            backgroundColor: Colors.orangeAccent,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        _showSnackBar(
+            'Chưa có ảnh nào được chụp.', Colors.orangeAccent, Icons.info_outline);
       }
     } catch (e) {
       debugPrint('Lỗi khi truy cập camera: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text('Lỗi khi truy cập camera: ${e.toString().replaceFirst('Exception: ', '')}',
-                    style: const TextStyle(color: Colors.white)),
+      _showSnackBar(
+          'Lỗi khi truy cập camera: ${e.toString().replaceFirst('Exception: ', '')}',
+          Colors.redAccent,
+          Icons.error_outline);
+    }
+  }
+
+  // NEW: Hàm chọn ảnh từ thư viện
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _capturedImages.add(File(image.path));
+        });
+        _showSnackBar(
+            'Đã chọn ảnh từ thư viện!', const Color(0xFF00C6FF), Icons.check_circle_outline);
+      } else {
+        _showSnackBar(
+            'Chưa có ảnh nào được chọn từ thư viện.', Colors.orangeAccent, Icons.info_outline);
+      }
+    } catch (e) {
+      debugPrint('Lỗi khi chọn ảnh từ thư viện: $e');
+      _showSnackBar(
+          'Lỗi khi chọn ảnh từ thư viện: ${e.toString().replaceFirst('Exception: ', '')}',
+          Colors.redAccent,
+          Icons.error_outline);
+    }
+  }
+
+  // NEW: Hàm hiển thị ActionSheet cho phép chọn nguồn ảnh
+  void _showImageSourceActionSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent, // Nền trong suốt
+      builder: (BuildContext bc) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Wrap(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 15.0),
+                child: Text(
+                  'Chọn nguồn ảnh',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
               ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Color(0xFF0079CF)),
+                title: const Text('Chụp ảnh mới', style: TextStyle(fontSize: 17)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _takePhoto();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Color(0xFF00C6FF)),
+                title: const Text('Chọn ảnh từ thư viện', style: TextStyle(fontSize: 17)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage();
+                },
+              ),
+              const SizedBox(height: 10),
             ],
           ),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          duration: const Duration(seconds: 3),
+        );
+      },
+    );
+  }
+
+  // Helper function for showing SnackBars
+  void _showSnackBar(String message, Color backgroundColor, IconData icon) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(message, style: const TextStyle(color: Colors.white)),
+            ),
+          ],
         ),
-      );
-    }
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -240,20 +293,6 @@ class _PostScreenState extends State<PostScreen> {
               ),
               const SizedBox(height: 20),
 
-              _buildSectionTitle('Giá tiền'),
-              const SizedBox(height: 10),
-              _buildTextField(
-                controller: priceController,
-                keyboardType: TextInputType.number,
-                hintText: 'Nhập giá tiền mong muốn',
-                suffixText: ' VNĐ', // Thêm khoảng trắng
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  _CurrencyInputFormatter(), // Custom formatter cho tiền tệ
-                ],
-              ),
-              const SizedBox(height: 20),
-
               _buildSectionTitle('Ảnh sản phẩm'), // Đổi tiêu đề cho rõ ràng hơn
               const SizedBox(height: 10),
               // Grid ảnh và nút chụp ảnh
@@ -292,10 +331,11 @@ class _PostScreenState extends State<PostScreen> {
                       ),
                     ],
                   ),
-                  child: ElevatedButton.icon( // Sử dụng ElevatedButton.icon
-                    onPressed: _takePhoto,
-                    icon: const Icon(Icons.camera_alt, color: Colors.white, size: 22),
-                    label: const Text('Chụp ảnh',
+                  child: ElevatedButton.icon(
+                    // Gọi hàm _showImageSourceActionSheet thay vì _takePhoto trực tiếp
+                    onPressed: _showImageSourceActionSheet,
+                    icon: const Icon(Icons.add_a_photo, color: Colors.white, size: 22), // Đổi icon
+                    label: const Text('Thêm ảnh', // Đổi text
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 17,
@@ -320,45 +360,17 @@ class _PostScreenState extends State<PostScreen> {
                     if (!_formKey.currentState!.validate()) return;
 
                     if (!_coTheDangBai) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Row(
-                            children: [
-                              Icon(Icons.block, color: Colors.white),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Text('Tài khoản của bạn hiện không được phép đăng bài.',
-                                    style: TextStyle(color: Colors.white)),
-                              ),
-                            ],
-                          ),
-                          backgroundColor: Colors.deepOrange, // Màu cảnh báo mạnh hơn
-                          behavior: SnackBarBehavior.floating,
-                          margin: const EdgeInsets.all(16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          duration: const Duration(seconds: 3),
-                        ),
-                      );
+                      _showSnackBar(
+                          'Tài khoản của bạn hiện không được phép đăng bài.',
+                          Colors.deepOrange,
+                          Icons.block);
                       return;
                     }
                     if (_capturedImages.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Row(
-                            children: [
-                              Icon(Icons.image_not_supported, color: Colors.white),
-                              SizedBox(width: 8),
-                              Text('Vui lòng chụp ít nhất một ảnh cho sản phẩm.',
-                                  style: TextStyle(color: Colors.white)),
-                            ],
-                          ),
-                          backgroundColor: Colors.orange[700],
-                          behavior: SnackBarBehavior.floating,
-                          margin: const EdgeInsets.all(16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          duration: const Duration(seconds: 3),
-                        ),
-                      );
+                      _showSnackBar(
+                          'Vui lòng chụp ít nhất một ảnh cho sản phẩm.',
+                          Colors.orange[700]!,
+                          Icons.image_not_supported);
                       return;
                     }
 
@@ -389,7 +401,6 @@ class _PostScreenState extends State<PostScreen> {
                     final success = await postBaiDang(
                       idTaiKhoan: idTaiKhoan,
                       tieuDe: title,
-                      gia: price,
                       doMoi: doMoi,
                       idLoai: idLoai,
                       idNganh: idNganh,
@@ -400,22 +411,8 @@ class _PostScreenState extends State<PostScreen> {
                     ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Ẩn snackbar loading
 
                     if (success) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Row(
-                            children: [
-                              Icon(Icons.check_circle_outline, color: Colors.white),
-                              SizedBox(width: 8),
-                              Text('Đăng bài thành công!', style: TextStyle(color: Colors.white)),
-                            ],
-                          ),
-                          backgroundColor: Colors.green[600],
-                          behavior: SnackBarBehavior.floating,
-                          margin: const EdgeInsets.all(16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
+                      _showSnackBar(
+                          'Đăng bài thành công!', Colors.green[600]!, Icons.check_circle_outline);
                       setState(() {
                         titleController.clear();
                         priceController.clear();
@@ -425,25 +422,8 @@ class _PostScreenState extends State<PostScreen> {
                         _selectedLoai = danhSachLoai.isNotEmpty ? danhSachLoai[0] : null;
                       });
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Row(
-                            children: [
-                              Icon(Icons.error_outline, color: Colors.white),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Text('Đăng bài thất bại. Vui lòng thử lại.',
-                                    style: TextStyle(color: Colors.white)),
-                              ),
-                            ],
-                          ),
-                          backgroundColor: Colors.redAccent,
-                          behavior: SnackBarBehavior.floating,
-                          margin: const EdgeInsets.all(16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          duration: const Duration(seconds: 3),
-                        ),
-                      );
+                      _showSnackBar(
+                          'Đăng bài thất bại. Vui lòng thử lại.', Colors.redAccent, Icons.error_outline);
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -457,7 +437,8 @@ class _PostScreenState extends State<PostScreen> {
                     shadowColor: const Color(0xFF0079CF).withOpacity(0.5), // Bóng màu xanh
                   ),
                   child: const Text('Đăng bài',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // Text lớn hơn
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // Text lớn hơn
                 ),
               ),
             ],
@@ -542,14 +523,18 @@ class _PostScreenState extends State<PostScreen> {
           hintText: hintText,
           hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
           suffixText: suffixText,
-          suffixStyle: const TextStyle(color: Colors.black54, fontSize: 15), // Style cho suffix text
+          suffixStyle:
+              const TextStyle(color: Colors.black54, fontSize: 15), // Style cho suffix text
           border: InputBorder.none, // Bỏ border mặc định
           enabledBorder: InputBorder.none,
-          focusedBorder: OutlineInputBorder( // Viền khi focus
+          focusedBorder: OutlineInputBorder(
+            // Viền khi focus
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF0079CF), width: 2), // Viền xanh khi focus
+            borderSide:
+                const BorderSide(color: Color(0xFF0079CF), width: 2), // Viền xanh khi focus
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14), // Tăng padding
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14), // Tăng padding
           filled: true,
           fillColor: Colors.transparent, // Không cần fill vì container đã có màu
         ),

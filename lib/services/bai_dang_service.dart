@@ -5,13 +5,13 @@ import 'package:http_parser/http_parser.dart';
 import 'dart:io';
 
 class AnhBaiDang {
-  final int? idAnh; // 👈 nullable
+  final int? idAnh;
   final int idBaiDang;
   final String duongDan;
   final int thuTu;
 
   AnhBaiDang({
-    this.idAnh, // 👈 optional
+    this.idAnh,
     required this.idBaiDang,
     required this.duongDan,
     required this.thuTu,
@@ -19,7 +19,7 @@ class AnhBaiDang {
 
   factory AnhBaiDang.fromJson(Map<String, dynamic> json) {
     return AnhBaiDang(
-      idAnh: json['id_anh'] as int?, // 👈 nullable
+      idAnh: json['id_anh'] as int?,
       idBaiDang: json['id_bai_dang'] ?? 0,
       duongDan: json['duong_dan'] ?? '',
       thuTu: json['thu_tu'] ?? 1,
@@ -30,22 +30,26 @@ class AnhBaiDang {
 class BaiDang {
   final int id;
   final String tieuDe;
-  final String gia;
   final int doMoi;
   final String trangThai;
   final DateTime ngayDang;
   final List<AnhBaiDang> anhBaiDang;
-  final String? tenNganh; // 👈 Thêm dòng này
+  final String? tenNganh;
+  final int? idNganh;
+  final int? idLoai;
+  final int idTaiKhoan;
 
   BaiDang({
     required this.id,
     required this.tieuDe,
-    required this.gia,
     required this.doMoi,
     required this.trangThai,
     required this.ngayDang,
     required this.anhBaiDang,
-    this.tenNganh, // 👈 Constructor
+    required this.idTaiKhoan,
+    this.tenNganh,
+    this.idLoai,
+    this.idNganh,
   });
 
   factory BaiDang.fromJson(Map<String, dynamic> json) {
@@ -59,12 +63,14 @@ class BaiDang {
     return BaiDang(
       id: json['id_bai_dang'] ?? 0,
       tieuDe: json['tieu_de'] ?? '',
-      gia: json['gia'] ?? '',
       doMoi: json['do_moi'] ?? 0,
       trangThai: json['trang_thai'] ?? '',
       ngayDang: DateTime.parse(json['ngay_dang']),
       anhBaiDang: danhSachAnh,
-      tenNganh: json['chuyen_nganh_san_pham']?['ten_nganh'], // 👈 Lấy tên ngành
+      idTaiKhoan: json['id_tai_khoan'] ?? 0,
+      tenNganh: json['chuyen_nganh_san_pham']?['ten_nganh'],
+      idNganh: json['id_nganh'],
+      idLoai: json['id_loai'],
     );
   }
 }
@@ -73,7 +79,7 @@ Future<List<BaiDang>> getBaiDangTheoNganh(int idNganh) async {
   try {
     final url = Uri.parse('http://10.0.2.2:8000/api/bai-dang/nganh/$idNganh');
     final response = await http.get(url);
-    print("RAW JSON: ${response.body}"); // 👈 In ra dữ liệu JSON để kiểm tra
+    print("RAW JSON: ${response.body}"); //In ra dữ liệu JSON để kiểm tra
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -199,7 +205,7 @@ Future<List<BaiDang>> getTatCaBaiDang() async {
       throw Exception('Không lấy được toàn bộ bài đăng');
     }
   } catch (e) {
-    print('❌ Lỗi khi gọi API tất cả bài đăng: $e');
+    print('Lỗi khi gọi API tất cả bài đăng: $e');
     rethrow;
   }
 }
