@@ -241,7 +241,7 @@ class _PostListScreenState extends State<PostListScreen> {
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
             BottomNavigationBarItem(
                 icon: Icon(Icons.add_box), label: 'Đăng bài'),
-            BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Tin nhắn'),
+            // BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Tin nhắn'),
             BottomNavigationBarItem(
                 icon: Icon(Icons.person), label: 'Tài khoản'),
           ],
