@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'dart:convert'; // Import this if you need json decode/encode in services
+import 'dart:convert';
 import 'package:front_end/model/chuyen_nganh_service.dart';
 import 'package:front_end/model/loai_san_pham_service.dart';
 import 'package:front_end/model/bai_dang_service.dart';
@@ -27,7 +27,6 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
   final _formKey = GlobalKey<FormState>();
   // Khởi tạo và dispose các controller trong initState/dispose
   late TextEditingController titleController;
-  late TextEditingController priceController;
   late TextEditingController conditionController;
 
   List<Nganh> danhSachNganh = [];
@@ -39,25 +38,31 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
   final List<String> _existingImageUrls = [];
   final List<String> _deletedImageUrls = [];
   final ImagePicker _picker = ImagePicker();
+@override
+void initState() {
+  super.initState();
 
-  @override
-  void initState() {
-    super.initState();
-    // Khởi tạo controllers
-    titleController = TextEditingController(text: widget.baiDang.tieuDe);
-    priceController = TextEditingController(text: widget.baiDang.gia.toString());
-    conditionController = TextEditingController(text: widget.baiDang.doMoi.toString());
+  titleController = TextEditingController(text: widget.baiDang.tieuDe);
+  conditionController = TextEditingController(text: widget.baiDang.doMoi.toString());
 
-    _existingImageUrls.addAll(
-        widget.baiDang.anhBaiDang.map((e) => buildImageUrl(e.duongDan)));
-    _loadDropdownData();
+  // Kiểm tra xem có ảnh không
+  if (widget.baiDang.anhBaiDang.isEmpty) {
+    print('[DEBUG] Không có ảnh nào trong bài đăng!');
+  } else {
+    for (var e in widget.baiDang.anhBaiDang) {
+      final imageUrl = buildImageUrl(e.duongDan);
+      print('[DEBUG] Image URL: $imageUrl');
+      _existingImageUrls.add(imageUrl);
+    }
   }
+
+  _loadDropdownData();
+}
 
   @override
   void dispose() {
     // Gọi dispose cho tất cả controllers
     titleController.dispose();
-    priceController.dispose();
     conditionController.dispose();
     super.dispose();
   }
@@ -66,7 +71,6 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final tieuDe = titleController.text.trim();
-    final gia = int.tryParse(priceController.text.trim()) ?? 0;
     final doMoi = int.tryParse(conditionController.text.trim()) ?? 0;
     final idLoai = _selectedLoai?.id;
     final idNganh = _selectedNganh?.id;
@@ -93,7 +97,6 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
     final success = await updateBaiDang(
       idBaiDang: widget.baiDang.id!,
       tieuDe: tieuDe,
-      gia: gia,
       doMoi: doMoi,
       idLoai: idLoai,
       idNganh: idNganh,
@@ -305,23 +308,6 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
               ),
               const SizedBox(height: 20), // Increased spacing
 
-              _buildSectionTitle('Giá tiền'),
-              const SizedBox(height: 8), // Added spacing
-              Card(
-                margin: EdgeInsets.zero,
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                child: _buildTextField(
-                  controller: priceController,
-                  keyboardType: TextInputType.number,
-                  hintText: 'Nhập giá tiền',
-                  suffixText: 'VNĐ',
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-              ),
-              const SizedBox(height: 20), // Increased spacing
-
               _buildSectionTitle('Ảnh đã có và ảnh mới'),
               const SizedBox(height: 12), // Adjusted spacing
               GridView.builder(
@@ -379,58 +365,60 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
       ),
     );
   }
+Widget _buildImageTile(dynamic image, bool isOld, int index) => Stack(
+  fit: StackFit.expand,
+  children: [
+    ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: isOld
+          ? Image.network(
+              image,
+              fit: BoxFit.cover,
+              errorBuilder: (context, url, error) {
+                print('[ERROR] Không thể tải ảnh: $url - $error');
+                return Image.network(
+                  'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
+                  fit: BoxFit.cover,
+                );
+              },
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                // Trả luôn ảnh mặc định thay vì vòng xoay
+                return Image.network(
+                  'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
+                  fit: BoxFit.cover,
+                );
+              },
+            )
+          : Image.file(image, fit: BoxFit.cover),
+    ),
+    Positioned(
+      top: 6,
+      right: 6,
+      child: GestureDetector(
+        onTap: () => setState(() {
+          if (isOld) {
+            final fullUrl = _existingImageUrls[index];
+            final fileName = Uri.parse(fullUrl).pathSegments.last;
+            _deletedImageUrls.add(fileName);
+            _existingImageUrls.removeAt(index);
+          } else {
+            _capturedImages.removeAt(index);
+          }
+        }),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.all(4),
+          child: const Icon(Icons.close, color: Colors.white, size: 20),
+        ),
+      ),
+    ),
+  ],
+);
 
-  Widget _buildImageTile(dynamic image, bool isOld, int index) => Stack(
-        fit: StackFit.expand,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10), // More rounded corners
-            child: isOld
-                ? CachedNetworkImage(
-                    imageUrl: image,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: Colors.grey[100], // Lighter placeholder
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Color(0xFF0079CF)), // Themed color
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[200],
-                      child: Icon(Icons.broken_image,
-                          color: Colors.grey[400], size: 40),
-                    ),
-                  )
-                : Image.file(image, fit: BoxFit.cover),
-          ),
-          Positioned(
-            top: 6, // Adjusted position
-            right: 6, // Adjusted position
-            child: GestureDetector(
-              onTap: () => setState(() {
-                if (isOld) {
-                  final fullUrl = _existingImageUrls[index];
-                  // Extract filename from URL (e.g., "image.jpg" from "http://example.com/images/image.jpg")
-                  final fileName = Uri.parse(fullUrl).pathSegments.last;
-                  _deletedImageUrls.add(fileName);
-                  _existingImageUrls.removeAt(index);
-                } else {
-                  _capturedImages.removeAt(index);
-                }
-              }),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.6), // Darker overlay
-                  borderRadius: BorderRadius.circular(12), // More rounded
-                ),
-                padding: const EdgeInsets.all(4), // Slightly more padding
-                child: const Icon(Icons.close, color: Colors.white, size: 20), // Larger icon
-              ),
-            ),
-          ),
-        ],
-      );
 
   Widget _buildTextFormField({
     required TextEditingController controller,
@@ -505,20 +493,6 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
         isExpanded: true, // Make dropdown take full width
         icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0079CF)), // Themed icon
       );
-
-  // Removed _boxDecoration() as Card is now used, but keep _inputBorder if needed for individual fields
-  // BoxDecoration _boxDecoration() => BoxDecoration(
-  //       color: Colors.white,
-  //       borderRadius: BorderRadius.circular(8),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: Colors.grey.withOpacity(0.1),
-  //           spreadRadius: 1,
-  //           blurRadius: 3,
-  //           offset: const Offset(0, 2),
-  //         ),
-  //       ],
-  //     );
 
   OutlineInputBorder _inputBorder({Color color = Colors.transparent}) => // Default to transparent
       OutlineInputBorder(

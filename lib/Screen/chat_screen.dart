@@ -23,7 +23,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _fetchChatList();
 
-    // Tự động làm mới mỗi 60 giây
+    //Tự động làm mới mỗi 60 giây
     _refreshTimer = Timer.periodic(const Duration(seconds: 1000), (_) {
       _fetchChatList();
     });

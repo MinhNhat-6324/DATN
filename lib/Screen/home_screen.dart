@@ -369,12 +369,12 @@ class _HomeTabState extends State<HomeTab> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            Text(
-              "${baiDang.gia} VND",
-              style: const TextStyle(color: Colors.grey),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            // Text(
+            //   "${baiDang.gia} VND",
+            //   style: const TextStyle(color: Colors.grey),
+            //   maxLines: 1,
+            //   overflow: TextOverflow.ellipsis,
+            // ),
           ],
         ),
       ),

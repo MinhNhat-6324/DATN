@@ -6,7 +6,7 @@ class LoginService {
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/login'), // Sử dụng baseUrl từ ApiConfig
+        Uri.parse('${ApiConfig.baseUrl}/login'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Accept': 'application/json',

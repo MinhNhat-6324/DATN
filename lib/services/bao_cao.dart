@@ -48,7 +48,28 @@ class TaiKhoan {
   }
 }
 
+class AnhBaiDang {
+  final int? idAnh;
+  final int idBaiDang;
+  final String duongDan;
+  final int thuTu;
 
+  AnhBaiDang({
+    this.idAnh,
+    required this.idBaiDang,
+    required this.duongDan,
+    required this.thuTu,
+  });
+
+  factory AnhBaiDang.fromJson(Map<String, dynamic> json) {
+    return AnhBaiDang(
+      idAnh: json['id_anh'] as int?,
+      idBaiDang: json['id_bai_dang'] ?? 0,
+      duongDan: json['duong_dan'] ?? '',
+      thuTu: json['thu_tu'] ?? 1,
+    );
+  }
+}
 // --- ĐỊNH NGHĨA CLASS BAIDANG ---
 // Đảm bảo rằng cấu trúc BaiDang này khớp với phần "bai_dang" trong JSON của bạn.
 // Nếu chưa có, giữ nguyên đoạn code này hoặc đưa vào một file model riêng.
@@ -59,11 +80,11 @@ class BaiDang {
   final int? doMoi;
   final int? idLoai;
   final int? idNganh;
-  final String? gia;
   final String? ngayDang;
+  final List<AnhBaiDang> anhBaiDang;
   final String? trangThai;
   final String? noiDung; 
-  final List<String>? anhBaiDang; 
+  
 
   BaiDang({
     required this.id,
@@ -72,14 +93,20 @@ class BaiDang {
     this.doMoi,
     this.idLoai,
     this.idNganh,
-    this.gia,
     this.ngayDang,
+    required this.anhBaiDang,
     this.trangThai,
     this.noiDung, 
-    this.anhBaiDang,
+    
   });
 
   factory BaiDang.fromJson(Map<String, dynamic> json) {
+    var danhSachAnh = <AnhBaiDang>[];
+    if (json['anh_bai_dang'] is List) {
+      danhSachAnh = (json['anh_bai_dang'] as List)
+          .map((x) => AnhBaiDang.fromJson(x))
+          .toList();
+    }
     return BaiDang(
       id: json['id_bai_dang'] as int,
       idTaiKhoan: json['id_tai_khoan'] as int,
@@ -87,15 +114,11 @@ class BaiDang {
       doMoi: json['do_moi'] as int?,
       idLoai: json['id_loai'] as int?,
       idNganh: json['id_nganh'] as int?,
-      gia: json['gia'] as String?,
       ngayDang: json['ngay_dang'] as String?,
+      anhBaiDang: danhSachAnh,
       trangThai: json['trang_thai'] as String?,
       noiDung: json['noi_dung'] as String?,
-      // Logic phân tích cú pháp cho 'anh_bai_dang'
-      // Giả định 'anh_bai_dang' trong JSON là một List của các chuỗi URL (duong_dan)
-      anhBaiDang: json['anh_bai_dang'] != null && json['anh_bai_dang'] is List
-          ? List<String>.from(json['anh_bai_dang'].map((x) => x['duong_dan'].toString())) // Chú ý: .map((x) => x['duong_dan'].toString())
-          : null,
+      
     );
   }
 }

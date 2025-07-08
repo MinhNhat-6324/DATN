@@ -33,11 +33,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _currentBaoCao = widget.baoCao; // Khởi tạo _currentBaoCao từ widget.baoCao ban đầu
-
-    if (_currentBaoCao.baiDang != null && _currentBaoCao.baiDang!.anhBaiDang != null && _currentBaoCao.baiDang!.anhBaiDang!.isNotEmpty) {
-      selectedImageUrl = buildImageUrl(_currentBaoCao.baiDang!.anhBaiDang![0]);
-    }
+    _currentBaoCao = widget.baoCao; 
     _fetchLoaiSanPham();
     _fetchChuyenNganh();
   }
@@ -298,11 +294,13 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     String currentMainImageUrl;
     if (selectedImageUrl != null && selectedImageUrl!.isNotEmpty) {
       currentMainImageUrl = selectedImageUrl!;
-    } else if (baiDang != null && baiDang.anhBaiDang != null && baiDang.anhBaiDang!.isNotEmpty) {
-      currentMainImageUrl = buildImageUrl(baiDang.anhBaiDang![0]);
+    } else if (baiDang != null && baiDang.anhBaiDang.isNotEmpty) {
+      currentMainImageUrl = buildImageUrl(baiDang.anhBaiDang[0].duongDan);
     } else {
       currentMainImageUrl = "https://via.placeholder.com/150";
     }
+debugPrint("✅ Ảnh chính: ${baiDang?.anhBaiDang.isNotEmpty == true ? baiDang!.anhBaiDang[0].duongDan : 'Không có'}");
+debugPrint("✅ URL ảnh: $currentMainImageUrl");
 
     // Xác định xem các nút có nên được hiển thị hay không
     final bool canProcessReport = baoCao.trangThai == 'dang_cho';
@@ -333,8 +331,8 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                   SizedBox(height: size.height * 0.03),
                   _buildMainImage(currentMainImageUrl, size),
                   SizedBox(height: size.height * 0.03),
-                  if (baiDang != null && baiDang.anhBaiDang != null && baiDang.anhBaiDang!.isNotEmpty)
-                    _buildImageGallery(baiDang.anhBaiDang!),
+                  if (baiDang != null && baiDang.anhBaiDang.isNotEmpty)
+                    _buildImageGallery(baiDang.anhBaiDang),
                   SizedBox(height: size.height * 0.03),
 
                   // 1. Thẻ thông tin bài đăng bị báo cáo
@@ -343,12 +341,6 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                       title: 'Thông tin bài đăng bị báo cáo',
                       children: [
                         _buildInfoRow('Tiêu đề:', baiDang.tieuDe ?? 'Không có'),
-                        _buildInfoRow(
-                          'Giá:',
-                          baiDang.gia != null
-                              ? '${NumberFormat('#,##0').format(double.parse(baiDang.gia!))} VNĐ'
-                              : 'Không có',
-                        ),
                         _buildInfoRow('Độ mới:', baiDang.doMoi != null
                             ? '${baiDang.doMoi}%'
                             : 'Không rõ'),
@@ -495,38 +487,39 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     );
   }
 
-  Widget _buildImageGallery(List<String> imageUrls) {
-    if (imageUrls.isEmpty) return const SizedBox.shrink();
+ Widget _buildImageGallery(List<AnhBaiDang> images) {
+  if (images.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: imageUrls.map((url) {
-            final fullUrl = buildImageUrl(url);
-            return GestureDetector(
-              onTap: () => setState(() => selectedImageUrl = fullUrl),
-              child: _buildSmallImage(fullUrl),
-            );
-          }).toList(),
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 16),
+    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.9),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: Colors.grey.shade300, width: 1),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 6,
+          offset: const Offset(0, 3),
         ),
+      ],
+    ),
+    child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: images.map((anh) {
+          final fullUrl = buildImageUrl(anh.duongDan);
+          return GestureDetector(
+            onTap: () => setState(() => selectedImageUrl = fullUrl),
+            child: _buildSmallImage(fullUrl),
+          );
+        }).toList(),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _buildInfoCard({required String title, required List<Widget> children}) {
     return Container(
@@ -690,26 +683,22 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 // <<<< Cần thêm copyWith vào model BaiDang nếu bạn muốn cập nhật một cách immutable >>>>
 extension BaiDangCopyWith on BaiDang {
   BaiDang copyWith({
-    int? id,
-    int? idTaiKhoan,
     String? tieuDe,
     int? doMoi,
     int? idLoai,
     int? idNganh,
-    String? gia,
     String? ngayDang,
     String? trangThai,
     String? noiDung,
-    List<String>? anhBaiDang,
+    List<AnhBaiDang>? anhBaiDang,
   }) {
     return BaiDang(
-      id: id ?? this.id,
-      idTaiKhoan: idTaiKhoan ?? this.idTaiKhoan,
+      id: this.id,
+      idTaiKhoan: this.idTaiKhoan,
       tieuDe: tieuDe ?? this.tieuDe,
       doMoi: doMoi ?? this.doMoi,
       idLoai: idLoai ?? this.idLoai,
       idNganh: idNganh ?? this.idNganh,
-      gia: gia ?? this.gia,
       ngayDang: ngayDang ?? this.ngayDang,
       trangThai: trangThai ?? this.trangThai,
       noiDung: noiDung ?? this.noiDung,
@@ -717,6 +706,7 @@ extension BaiDangCopyWith on BaiDang {
     );
   }
 }
+  
 
 // <<<< Cần thêm copyWith vào model BaoCao nếu bạn muốn cập nhật một cách immutable >>>>
 extension BaoCaoCopyWith on BaoCao {
