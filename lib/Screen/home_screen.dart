@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'post_screen.dart';
-import 'chat_screen.dart';
 import 'profile_screen.dart';
 import 'product_details_screen.dart';
 import 'package:front_end/model/bai_dang_service.dart';
@@ -60,7 +59,6 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
             BottomNavigationBarItem(
                 icon: Icon(Icons.add_box), label: 'Đăng bài'),
-            BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Tin nhắn'),
             BottomNavigationBarItem(
                 icon: Icon(Icons.person), label: 'Tài khoản'),
           ],

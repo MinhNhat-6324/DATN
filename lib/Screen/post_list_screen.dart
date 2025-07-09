@@ -36,26 +36,26 @@ class _PostListScreenState extends State<PostListScreen> {
   String? searchTieuDe;
   late String selectedNganhName;
   @override
-void initState() {
-  super.initState();
-  selectedIdNganh = widget.idNganh;
-  selectedIdLoai = widget.idLoai ?? -1;
-  selectedNganhName = widget.title; // ban đầu
-  searchTieuDe = widget.searchTieuDe;
-  _searchController.text = widget.searchTieuDe ?? '';
+  void initState() {
+    super.initState();
+    selectedIdNganh = widget.idNganh;
+    selectedIdLoai = widget.idLoai ?? -1;
+    selectedNganhName = widget.title; // ban đầu
+    searchTieuDe = widget.searchTieuDe;
+    _searchController.text = widget.searchTieuDe ?? '';
 
-  final hasSearch = searchTieuDe != null && searchTieuDe!.trim().isNotEmpty;
+    final hasSearch = searchTieuDe != null && searchTieuDe!.trim().isNotEmpty;
 
-  if (hasSearch) {
-    futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
-      selectedIdNganh,
-      selectedIdLoai ?? -1,
-      searchTieuDe!,
-    );
-  } else {
-    _loadFilteredBaiDang();
+    if (hasSearch) {
+      futureBaiDang = getBaiDangTheoNganhLoaiTieuDe(
+        selectedIdNganh,
+        selectedIdLoai ?? -1,
+        searchTieuDe!,
+      );
+    } else {
+      _loadFilteredBaiDang();
+    }
   }
-}
 
   void _loadFilteredBaiDang() {
     setState(() {
@@ -134,10 +134,11 @@ void initState() {
         body: SafeArea(
           child: Column(
             children: [
-                    _buildSearchBar(),
+              _buildSearchBar(),
               // Lọc chuyên ngành
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -165,7 +166,8 @@ void initState() {
                       },
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.cyan,
                         borderRadius: BorderRadius.circular(20),
@@ -183,8 +185,9 @@ void initState() {
               ),
 
               // Lọc ngành
-             Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
                 child: Align(
                   alignment: Alignment.centerLeft, // <-- canh lề trái
                   child: Container(
@@ -193,7 +196,8 @@ void initState() {
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.cyan, width: 1),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     child: Row(
                       mainAxisSize: MainAxisSize.min, // <-- chỉ vừa nội dung
                       children: [
@@ -220,7 +224,8 @@ void initState() {
                                       ))
                                   .toList(),
                               child: Row(
-                                mainAxisSize: MainAxisSize.min, // <-- vừa icon + text
+                                mainAxisSize:
+                                    MainAxisSize.min, // <-- vừa icon + text
                                 children: [
                                   Text(
                                     selectedIdLoai == -1
@@ -228,7 +233,8 @@ void initState() {
                                         : loaiList
                                             .firstWhere(
                                               (l) => l.id == selectedIdLoai,
-                                              orElse: () => LoaiSanPham(id: -1, tenLoai: 'Tất cả'),
+                                              orElse: () => LoaiSanPham(
+                                                  id: -1, tenLoai: 'Tất cả'),
                                             )
                                             .tenLoai,
                                     style: const TextStyle(
@@ -236,7 +242,8 @@ void initState() {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  const Icon(Icons.arrow_drop_down, color: Colors.white),
+                                  const Icon(Icons.arrow_drop_down,
+                                      color: Colors.white),
                                 ],
                               ),
                             );
@@ -268,10 +275,14 @@ void initState() {
                       child: GridView.builder(
                         itemCount: baiDangList.length,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                          crossAxisCount:
+                              MediaQuery.of(context).size.width > 600 ? 3 : 2,
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 10,
-                          childAspectRatio: MediaQuery.of(context).size.width > 600 ? 0.75 : 0.6,
+                          childAspectRatio:
+                              MediaQuery.of(context).size.width > 600
+                                  ? 0.75
+                                  : 0.6,
                         ),
                         itemBuilder: (context, index) {
                           final baiDang = baiDangList[index];
@@ -282,7 +293,8 @@ void initState() {
                               ? buildImageUrl(duongDan)
                               : "https://via.placeholder.com/150";
 
-                          return _bookItem(context, baiDang, imageUrl,screenWidth);
+                          return _bookItem(
+                              context, baiDang, imageUrl, screenWidth);
                         },
                       ),
                     );
@@ -330,7 +342,9 @@ void initState() {
       ),
     );
   }
- Widget _bookItem(BuildContext context, BaiDang baiDang, String imageUrl,double screenWidth) {
+
+  Widget _bookItem(BuildContext context, BaiDang baiDang, String imageUrl,
+      double screenWidth) {
     return GestureDetector(
       onTap: () {
         Navigator.push(

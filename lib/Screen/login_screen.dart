@@ -130,6 +130,9 @@ class _LoginScreenState extends State<LoginScreen> {
         // Lưu thông tin đăng nhập vào SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', data['token']);
+        await prefs.setString(
+            'access_token', data['token']); // 👈 thêm dòng này
+
         await prefs.setString('user_id', userId);
         await prefs.setString('user_email', data['email']);
         await prefs.setInt('loai_tai_khoan', loaiTaiKhoan);
@@ -265,7 +268,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                            MaterialPageRoute(
+                                builder: (_) => const ForgotPasswordScreen()),
                           );
                         },
                         child: const Text(
