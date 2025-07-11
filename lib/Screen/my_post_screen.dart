@@ -163,6 +163,8 @@ class PostCard extends StatelessWidget {
         return 'Sẵn sàng';
       case 'da_cho_tang':
         return 'Đã cho tặng';
+      case 'qua_han':
+        return 'Đã quá hạn';
       default:
         return status.replaceAll('_', ' ').toCapitalized();
     }
@@ -174,6 +176,8 @@ class PostCard extends StatelessWidget {
         return Colors.green.shade600;
       case 'Đã cho tặng':
         return Colors.blue.shade700;
+      case 'Đã quá hạn':
+        return const Color.fromARGB(255, 178, 229, 11);
       default:
         return Colors.grey.shade600;
     }
@@ -185,6 +189,8 @@ class PostCard extends StatelessWidget {
         return Icons.check_circle;
       case 'Đã cho tặng':
         return Icons.done_all;
+      case 'Đã quá hạn':
+        return Icons.access_time;
       default:
         return Icons.info_outline;
     }
@@ -226,7 +232,7 @@ class PostCard extends StatelessWidget {
                   child: Image.network(
                     imageUrl,
                     width: 100,
-                    height: 100,
+                    height: 130,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Image.network(
                       'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
@@ -381,6 +387,8 @@ class PostCard extends StatelessWidget {
                                 ),
                                 ElevatedButton(
                                   onPressed: () => Navigator.pop(context, true),
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue),
                                   child: const Text('Xác nhận',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold)),
@@ -419,7 +427,7 @@ class PostCard extends StatelessWidget {
                                   const SizedBox(width: 10),
                                   const Text('Xác nhận đăng lại',
                                       style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
+                                          fontWeight: FontWeight.bold, fontSize: 22)),
                                 ],
                               ),
                               content: const Text(

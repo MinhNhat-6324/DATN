@@ -38,31 +38,15 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             HomeTab(userId: widget.userId),
             PostScreen(userId: widget.userId),
-            // ChatScreen(userId: int.parse(widget.userId)),
             ProfileScreen(userId: widget.userId),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: currentIndex,
-          onTap: (index) async {
-            if (index == 1) {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PostScreen(userId: widget.userId),
-                ),
-              );
-
-              if (result == true) {
-                setState(() {
-                  currentIndex = 0; // Quay về tab Trang chủ và load lại
-                });
-              }
-            } else {
-              setState(() {
-                currentIndex = index;
-              });
-            }
+          onTap: (index) {
+            setState(() {
+              currentIndex = index;
+            });
           },
           type: BottomNavigationBarType.fixed,
           backgroundColor: const Color(0xFF0065F8),
@@ -358,7 +342,7 @@ class _HomeTabState extends State<HomeTab> {
         );
       },
       child: Container(
-        width: screenWidth * 0.35,
+        width: screenWidth * 0.5,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -369,16 +353,14 @@ class _HomeTabState extends State<HomeTab> {
           children: [
             Expanded(
               child: Center(
-                child: AspectRatio(
-                  aspectRatio: 1, // hoặc 1 nếu bạn muốn ảnh vuông
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.broken_image),
-                    ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  // Điều chỉnh để ảnh hiển thị lớn hơn và chứa toàn bộ ảnh
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain, // Thay đổi từ BoxFit.cover sang BoxFit.contain
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.broken_image),
                   ),
                 ),
               ),
@@ -388,23 +370,34 @@ class _HomeTabState extends State<HomeTab> {
             Text(
               baiDang.tieuDe,
               style: const TextStyle(fontWeight: FontWeight.w600),
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
-
-            // 🆕 Hiển thị lớp chuyên ngành
-            Text(
-              "Lớp: ${baiDang.lopChuyenNganh ?? 'Không rõ'}",
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.school, size: 14, color: Colors.blueGrey),
+                const SizedBox(width: 4),
+                Text(
+                  "${baiDang.lopChuyenNganh ?? 'Không rõ'}",
+                  style: const TextStyle(fontSize: 12, color: Colors.black87),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-
-            // 🆕 Hiển thị năm xuất bản
-            Text(
-              "Năm: ${baiDang.namXuatBan?.toString() ?? '---'}",
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.calendar_today, size: 14, color: Colors.blueGrey),
+                const SizedBox(width: 4),
+                Text(
+                  "Năm: ${baiDang.namXuatBan?.toString() ?? '---'}",
+                  style: const TextStyle(fontSize: 12, color: Colors.black87),
+                ),
+              ],
             ),
           ],
         ),
@@ -476,7 +469,7 @@ class _HomeTabState extends State<HomeTab> {
           )
         else
           SizedBox(
-            height: 180,
+            height: 240,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: items

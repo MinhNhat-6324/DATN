@@ -545,8 +545,8 @@ class _PostScreenState extends State<PostScreen> {
                         _selectedLoai =
                             danhSachLoai.isNotEmpty ? danhSachLoai[0] : null;
                       });
-                      Navigator.pop(
-                          context, true); // 👈 Gửi kết quả về HomeScreen
+                      // Navigator.pop(
+                      //     context, true); // 👈 Gửi kết quả về HomeScreen
                     } else {
                       _showSnackBar('Không thể đăng bài đăng này',
                           Colors.redAccent, Icons.error_outline);

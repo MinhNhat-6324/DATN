@@ -221,7 +221,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Lớp chuyên ngành: ${baiDang.lopChuyenNganh ?? '---'}',
+            '${baiDang.lopChuyenNganh ?? '---'}',
             style: const TextStyle(fontSize: 14, color: Colors.black87),
           ),
           const SizedBox(height: 6),

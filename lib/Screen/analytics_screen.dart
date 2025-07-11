@@ -633,6 +633,8 @@ class _DashboardThongKeScreenState extends State<DashboardThongKeScreen> with Si
         return Colors.red.shade600;
       case 'Vi phạm':
         return Colors.purple.shade600;
+      case 'Quá hạn':
+        return Colors.yellow.shade600;
       default:
         return Colors.blueGrey.shade400;
     }
