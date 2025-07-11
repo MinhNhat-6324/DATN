@@ -225,23 +225,26 @@ Future<bool> goBaiDangBaoCao(int baoCaoId) async {
   final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.goBaiDangEndpoint(baoCaoId)}');
 
   try {
-    final response = await http.post(url); // Sử dụng POST method như định nghĩa backend
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+    );
 
-    if (response.statusCode == 200) { // Backend trả về 200 OK cho thành công
-      print('Gỡ bài đăng và duyệt báo cáo $baoCaoId thành công.');
+    if (response.statusCode == 200) {
+      print('✅ Gỡ bài đăng & duyệt báo cáo $baoCaoId thành công.');
       return true;
     } else {
       final Map<String, dynamic> responseBody = jsonDecode(response.body);
       final String message = responseBody['message'] ?? 'Lỗi không xác định.';
-      print('Lỗi khi gỡ bài đăng và duyệt báo cáo $baoCaoId: ${response.statusCode} - $message');
-      // Có thể throw Exception hoặc xử lý lỗi cụ thể hơn nếu cần
+      print('❌ Lỗi gỡ bài đăng $baoCaoId: ${response.statusCode} - $message');
       return false;
     }
   } catch (e) {
-    print('Lỗi khi gọi API gỡ bài đăng và duyệt báo cáo: $e');
+    print('❌ Lỗi khi gọi API gỡ bài đăng: $e');
     return false;
   }
 }
+
 
 /// Gửi yêu cầu từ chối báo cáo và duyệt nó.
 /// Trả về true nếu thành công, false nếu có lỗi hoặc báo cáo không ở trạng thái 'dang_cho'.

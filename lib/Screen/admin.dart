@@ -5,6 +5,8 @@ import 'user_management_screen.dart';
 import 'pending_user_management_screen.dart';
 import 'admin_registration_screen.dart';
 import 'login_screen.dart'; // Import màn hình đăng nhập để điều hướng về
+import 'analytics_screen.dart';
+import 'notification_screen.dart';
 
 class AdminScreen extends StatefulWidget {
   final String userId;
@@ -205,6 +207,33 @@ class _AdminScreenState extends State<AdminScreen> {
                   ),
                   _buildFeatureCard(
                     context,
+                    icon: Icons.bar_chart,
+                    label: "Thống kê số lượng",
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const DashboardThongKeScreen()),
+                      );
+                    },
+                    iconColor: const Color.fromARGB(255, 94, 228, 64),
+                  ),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.notifications_active,
+                    label: "Thông báo hệ thống",
+                    onPressed: () {
+                      Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      NotificationScreen(userId: widget.userId),
+                                ),
+                              );
+                    },
+                    iconColor: const Color.fromARGB(255, 239, 148, 11),
+                  ),
+                  _buildFeatureCard(
+                    context,
                     icon: Icons.person_add,
                     label: "Tạo tài khoản Admin",
                     onPressed: () {
@@ -213,7 +242,7 @@ class _AdminScreenState extends State<AdminScreen> {
                         MaterialPageRoute(builder: (context) => const AdminRegistrationScreen()),
                       );
                     },
-                    iconColor: const Color.fromARGB(255, 94, 228, 64),
+                    iconColor: const Color.fromARGB(255, 175, 26, 244),
                   ),
                 ],
               ),

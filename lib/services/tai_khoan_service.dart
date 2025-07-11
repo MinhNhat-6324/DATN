@@ -567,4 +567,39 @@ class TaiKhoanService {
       throw Exception('Đã xảy ra lỗi không mong muốn khi thay đổi mật khẩu: ${e.toString().replaceFirst('Exception: ', '')}.');
     }
   }
+
+  // Phương thức lấy dữ liệu thống kê để vẽ biểu đồ
+Future<Map<String, dynamic>> getChartStatistics() async {
+  final token = await _getToken();
+  final url = Uri.parse('$_baseUrl${ApiConfig.thongKeBieuDoEndpoint}');
+
+  try {
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final responseData = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return responseData;
+    } else if (response.statusCode == 401) {
+      throw Exception('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+    } else {
+      debugPrint('Backend Error Response (Get Chart Statistics): ${response.body}');
+      throw Exception(responseData['message'] ?? 'Đã xảy ra lỗi khi lấy thống kê biểu đồ.');
+    }
+  } on SocketException {
+    throw Exception('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.');
+  } on FormatException {
+    throw Exception('Lỗi định dạng dữ liệu từ máy chủ. Vui lòng thử lại sau.');
+  } catch (e) {
+    debugPrint('Unexpected error in getChartStatistics: $e');
+    throw Exception('Đã xảy ra lỗi không mong muốn: ${e.toString().replaceFirst('Exception: ', '')}.');
+  }
+}
+
 }

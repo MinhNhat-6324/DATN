@@ -271,4 +271,47 @@ Future<bool> postBaiDang({
     print("❌ Lỗi khi gửi bài đăng: $e");
     return false;
   }
+
+  
 }
+
+Future<Map<String, dynamic>> thongKeBaiDangTheoTrangThai() async {
+  try {
+    final url = Uri.parse('http://10.0.2.2:8000/api/bai-dang/thong-ke-trang-thai');
+    final response = await http.get(url);
+
+    print("📊 JSON thống kê trạng thái: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      return data; // ✅ không ép map nữa
+    } else {
+      throw Exception('Không thể thống kê bài đăng theo trạng thái');
+    }
+  } catch (e) {
+    print('❌ Lỗi thống kê trạng thái: $e');
+    rethrow;
+  }
+}
+
+Future<List<Map<String, dynamic>>> thongKeBaiDangTheoChuyenNganh() async {
+  try {
+    final url = Uri.parse('http://10.0.2.2:8000/api/chuyen-nganh-san-pham/thong-ke-bai-dang');
+    final response = await http.get(url);
+
+    print("📊 JSON thống kê theo chuyên ngành: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> json = jsonDecode(response.body);
+      final List<dynamic> data = json['data']; // 👈 lấy mảng data
+      return data.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception('Không thể thống kê bài đăng theo chuyên ngành');
+    }
+  } catch (e) {
+    print('❌ Lỗi thống kê chuyên ngành: $e');
+    rethrow;
+  }
+}
+
+

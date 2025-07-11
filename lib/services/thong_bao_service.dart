@@ -5,38 +5,43 @@ import 'api_config.dart';
 
 class ThongBaoService {
   /// Gửi thông báo trạng thái tài khoản
-  Future<void> guiThongBaoTaiKhoan({
-    required int idTaiKhoan,
-    required int trangThai,
-  }) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.thongBaoTaiKhoanEndpoint}');
-    
-    debugPrint('Đang gọi API thông báo trạng thái tài khoản: $url');
-    debugPrint('Body gửi đi: ${jsonEncode({'id_tai_khoan': idTaiKhoan, 'trang_thai': trangThai})}');
+Future<void> guiThongBaoTaiKhoan({
+  required int idTaiKhoan,
+  required int trangThai,
+  String? lyDo, // Thêm lý do
+}) async {
+  final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.thongBaoTaiKhoanEndpoint}');
+  
+  final body = {
+    'id_tai_khoan': idTaiKhoan,
+    'trang_thai': trangThai,
+    if (lyDo != null && lyDo.isNotEmpty) 'ly_do': lyDo, // thêm vào nếu có
+  };
 
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'id_tai_khoan': idTaiKhoan,
-          'trang_thai': trangThai,
-        }),
-      );
+  debugPrint('Đang gọi API thông báo trạng thái tài khoản: $url');
+  debugPrint('Body gửi đi: ${jsonEncode(body)}');
 
-      debugPrint('Mã trạng thái phản hồi: ${response.statusCode}');
-      debugPrint('Nội dung phản hồi: ${response.body}');
+  try {
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint('Gửi thông báo thành công.');
-      } else {
-        throw Exception('Gửi thông báo thất bại: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      debugPrint('Lỗi khi gửi thông báo: $e');
-      throw Exception('Lỗi kết nối hoặc phản hồi không hợp lệ khi gửi thông báo: $e');
+    debugPrint('Mã trạng thái phản hồi: ${response.statusCode}');
+    debugPrint('Nội dung phản hồi: ${response.body}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      debugPrint('Gửi thông báo thành công.');
+    } else {
+      throw Exception('Gửi thông báo thất bại: ${response.statusCode} - ${response.body}');
     }
+  } catch (e) {
+    debugPrint('Lỗi khi gửi thông báo: $e');
+    throw Exception('Lỗi kết nối hoặc phản hồi không hợp lệ khi gửi thông báo: $e');
   }
+}
+
 
   /// Lấy danh sách thông báo của người dùng
   Future<List<dynamic>> layThongBaoTheoTaiKhoan(int idTaiKhoan) async {
@@ -92,5 +97,39 @@ class ThongBaoService {
     }
   }
 
-  
+    /// Gửi yêu cầu mở khóa tài khoản
+  Future<void> guiYeuCauMoKhoaTaiKhoan({
+    required int idTaiKhoan,
+    String? noiDung,
+  }) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.guiYeuCauMoKhoaTaiKhoan}');
+    final body = {
+      'id_tai_khoan': idTaiKhoan,
+      if (noiDung != null && noiDung.isNotEmpty) 'noi_dung': noiDung,
+    };
+
+    debugPrint('Đang gọi API gửi yêu cầu mở khóa: $url');
+    debugPrint('Body gửi đi: ${jsonEncode(body)}');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      debugPrint('Mã phản hồi: ${response.statusCode}');
+      debugPrint('Nội dung phản hồi: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('Gửi yêu cầu mở khóa thành công.');
+      } else {
+        throw Exception('Không thể gửi yêu cầu mở khóa: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Lỗi khi gửi yêu cầu mở khóa: $e');
+      throw Exception('Lỗi kết nối hoặc phản hồi không hợp lệ khi gửi yêu cầu mở khóa: $e');
+    }
+  }
+
 }

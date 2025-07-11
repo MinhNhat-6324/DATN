@@ -1,8 +1,7 @@
-// front_end/Screen/notification_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:front_end/services/thong_bao_service.dart';
-import 'package:flutter/foundation.dart'; // Thêm để dùng debugPrint
-// import 'package:front_end/config/api_config.dart'; // Không cần thiết ở đây vì ThongBaoService đã xử lý
+import 'package:front_end/services/tai_khoan_service.dart';
 
 class NotificationScreen extends StatefulWidget {
   final String userId;
@@ -18,11 +17,32 @@ class _NotificationScreenState extends State<NotificationScreen> {
   List<dynamic> _notifications = [];
   bool _isLoading = true;
   String? _errorMessage;
+  bool _biKhoa = false;
 
   @override
   void initState() {
     super.initState();
     _fetchNotifications();
+    _kiemTraTrangThaiTaiKhoan();
+  }
+
+  Future<void> _kiemTraTrangThaiTaiKhoan() async {
+    try {
+      final taiKhoanData = await TaiKhoanService().getAccountById(widget.userId);
+      debugPrint('Dữ liệu tài khoản: $taiKhoanData');
+
+      final trangThai = int.tryParse(taiKhoanData['trang_thai'].toString()) ?? 0;
+      debugPrint('Trạng thái tài khoản: $trangThai');
+
+      setState(() {
+        _biKhoa = trangThai == 2;
+      });
+    } catch (e) {
+      debugPrint('Lỗi kiểm tra trạng thái tài khoản: $e');
+      setState(() {
+        _biKhoa = false;
+      });
+    }
   }
 
   Future<void> _fetchNotifications() async {
@@ -46,26 +66,20 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
   }
 
-  // Hàm để đánh dấu thông báo đã đọc và cập nhật UI
   Future<void> _markAsReadAndRefresh(int index) async {
     final notification = _notifications[index];
-    // Đảm bảo khóa chính của thông báo là 'id' trong JSON trả về từ backend.
-    // Nếu backend trả về 'id_thong_bao', bạn cần đổi thành notification['id_thong_bao']
-    final int thongBaoId = notification['id_thong_bao']; 
-    final int daDocStatus = notification['da_doc'] ?? 0; // Lấy trạng thái hiện tại
+    final int thongBaoId = notification['id_thong_bao'];
+    final int daDocStatus = notification['da_doc'] ?? 0;
 
-    if (daDocStatus == 0) { // Chỉ đánh dấu nếu chưa đọc
+    if (daDocStatus == 0) {
       try {
         await _thongBaoService.markThongBaoAsRead(thongBaoId);
         setState(() {
-          // Cập nhật trạng thái 'da_doc' trong danh sách cục bộ
-          // Điều này giúp giao diện phản hồi tức thì mà không cần gọi lại API
           _notifications[index]['da_doc'] = 1;
         });
-        debugPrint('Thông báo $thongBaoId đã được đánh dấu là đã đọc trong UI.');
+        debugPrint('Thông báo $thongBaoId đã được đánh dấu là đã đọc.');
       } catch (e) {
-        debugPrint('Không thể đánh dấu thông báo đã đọc qua API: $e');
-        // Có thể hiển thị SnackBar lỗi nếu cần thông báo cho người dùng
+        debugPrint('Không thể đánh dấu đã đọc: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Không thể đánh dấu thông báo đã đọc. Vui lòng thử lại.'),
@@ -74,6 +88,143 @@ class _NotificationScreenState extends State<NotificationScreen> {
         );
       }
     }
+  }
+
+  Future<void> _showUnlockRequestDialog() async {
+    final TextEditingController reasonController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Yêu cầu mở khóa tài khoản",
+            style: TextStyle(color: Color(0xFF2280EF), fontWeight: FontWeight.bold, fontSize: 19)),
+        content: TextField(
+          controller: reasonController,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Nhập nội dung yêu cầu',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Hủy"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2280EF),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Gửi yêu cầu"),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      _sendUnlockRequest(reasonController.text.trim());
+    }
+  }
+
+  Future<void> _sendUnlockRequest(String content) async {
+    try {
+      await _thongBaoService.guiYeuCauMoKhoaTaiKhoan(
+        idTaiKhoan: int.parse(widget.userId),
+        noiDung: content,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Yêu cầu mở khóa đã được gửi đến quản trị viên.'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Lỗi gửi yêu cầu mở khóa: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không thể gửi yêu cầu mở khóa: ${e.toString().replaceFirst("Exception: ", "")}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
+  }
+
+  Widget _buildNotificationItem(int index) {
+    final notification = _notifications[index];
+    final String content = notification['noi_dung'] ?? 'Không có nội dung';
+    final String? createdAt = notification['thoi_gian_tao'];
+    final int daDoc = notification['da_doc'] ?? 0;
+
+    String formattedTime = '';
+    if (createdAt != null) {
+      try {
+        final DateTime dateTime = DateTime.parse(createdAt);
+        formattedTime = '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute}';
+      } catch (e) {
+        debugPrint('Error parsing date: $e');
+        formattedTime = createdAt;
+      }
+    }
+
+    final Color cardColor = daDoc == 0 ? const Color.fromARGB(255, 173, 236, 244) : Colors.white;
+    final TextStyle titleStyle = TextStyle(
+      fontWeight: daDoc == 0 ? FontWeight.bold : FontWeight.normal,
+      fontSize: 16,
+      color: Colors.black87,
+    );
+    final TextStyle contentStyle = TextStyle(
+      fontSize: 14,
+      color: daDoc == 0 ? Colors.black87 : Colors.black54,
+    );
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 3,
+      color: cardColor,
+      child: InkWell(
+        onTap: () {
+          _markAsReadAndRefresh(index);
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.notifications_active, color: Colors.blue.shade800, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Thông báo từ hệ thống', style: titleStyle),
+                    const SizedBox(height: 4),
+                    Text(content, style: contentStyle),
+                    if (formattedTime.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6.0),
+                        child: Text(
+                          formattedTime,
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -89,112 +240,52 @@ class _NotificationScreenState extends State<NotificationScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       backgroundColor: const Color(0xFF00C6FF),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.white))
-          : _errorMessage != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      'Lỗi: $_errorMessage',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ),
-                )
-              : _notifications.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'Bạn chưa có thông báo nào.',
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(8.0),
-                      itemCount: _notifications.length,
-                      itemBuilder: (context, index) {
-                        final notification = _notifications[index];
-                        final String content = notification['noi_dung'] ?? 'Không có nội dung';
-                        final String? createdAt = notification['thoi_gian_tao'];
-                        final int daDoc = notification['da_doc'] ?? 0; // Lấy trạng thái đã đọc
-
-                        String formattedTime = '';
-                        if (createdAt != null) {
-                          try {
-                            final DateTime dateTime = DateTime.parse(createdAt);
-                            formattedTime = '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute}';
-                          } catch (e) {
-                            debugPrint('Error parsing date: $e');
-                            formattedTime = createdAt; // Giữ nguyên chuỗi nếu không parse được
-                          }
-                        }
-
-                        // Icon và màu sắc mặc định, không phụ thuộc vào 'type'
-                        IconData iconData = Icons.notifications_active; // Icon thông báo chung
-                        Color iconColor = Colors.blue.shade800; // Màu xanh đậm
-
-                        // Điều chỉnh màu nền và kiểu chữ dựa trên trạng thái đã đọc
-                        final Color cardColor = daDoc == 0 ? const Color.fromARGB(255, 173, 236, 244) : Colors.white; // Màu nhạt hơn nếu chưa đọc
-                        final TextStyle titleStyle = TextStyle(
-                          fontWeight: daDoc == 0 ? FontWeight.bold : FontWeight.normal, // Đậm hơn nếu chưa đọc
-                          fontSize: 16,
-                          color: Colors.black87,
-                        );
-                        final TextStyle contentStyle = TextStyle(
-                          fontSize: 14,
-                          color: daDoc == 0 ? Colors.black87 : Colors.black54, // Đậm hơn nếu chưa đọc
-                        );
-
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4.0),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 3,
-                          color: cardColor, // Áp dụng màu nền
-                          child: InkWell( // Sử dụng InkWell để tạo hiệu ứng chạm và bắt sự kiện onTap
-                            onTap: () {
-                              _markAsReadAndRefresh(index); // Đánh dấu là đã đọc khi chạm vào
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Icon(iconData, color: iconColor, size: 28), // Sử dụng icon và màu mặc định
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Thông báo từ hệ thống', // Tiêu đề mặc định nếu không có 'tieu_de'
-                                          style: titleStyle,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          content, // Nội dung chính
-                                          style: contentStyle,
-                                        ),
-                                        if (formattedTime.isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 6.0),
-                                            child: Text(
-                                              formattedTime,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+      body: Column(
+        children: [
+          if (_biKhoa)
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.lock_open),
+                label: const Text("Gửi yêu cầu mở khóa tài khoản"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  elevation: 5,
+                ),
+                onPressed: _showUnlockRequestDialog,
+              ),
+            ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                : _errorMessage != null
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            'Lỗi: $_errorMessage',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white, fontSize: 16),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      )
+                    : _notifications.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Bạn chưa có thông báo nào.',
+                              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(8.0),
+                            itemCount: _notifications.length,
+                            itemBuilder: (context, index) => _buildNotificationItem(index),
+                          ),
+          ),
+        ],
+      ),
     );
   }
 }

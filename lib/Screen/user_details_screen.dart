@@ -80,77 +80,67 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
   }
 
   // Phương thức để cập nhật trạng thái tài khoản (kích hoạt, hạn chế, khóa)
-  Future<void> _updateAccountStatus(int targetStatus) async {
-    if (_userDetails == null) return;
+Future<void> _updateAccountStatus(int targetStatus) async {
+  if (_userDetails == null) return;
 
-    final String actionDescription;
-    final String confirmMessage;
-    final String confirmButtonText;
-    final int currentTrangThaiBeforeUpdate = _userDetails!['trang_thai'] ?? 0; // Lấy trạng thái hiện tại trước khi thay đổi
+  final String hoTen = _userDetails!['ho_ten'] ?? 'người dùng này';
+  final int currentTrangThaiBeforeUpdate = _userDetails!['trang_thai'] ?? 0;
 
-    switch (targetStatus) {
-      case 0: // Chuyển về Chờ duyệt
-        actionDescription = "chuyển về trạng thái chờ duyệt";
-        confirmMessage = "Bạn có chắc chắn muốn chuyển tài khoản của ${_userDetails!['ho_ten'] ?? 'người dùng này'} về trạng thái chờ duyệt?";
-        confirmButtonText = "Chuyển";
-        break;
-      case 1: // Kích hoạt / Mở khóa
-        if (currentTrangThaiBeforeUpdate == 0) {
-          actionDescription = "kích hoạt";
-          confirmMessage = "Bạn có chắc chắn muốn kích hoạt tài khoản của ${_userDetails!['ho_ten'] ?? 'người dùng này'}?";
-          confirmButtonText = "Kích hoạt";
-        } else { // Current status is 2 (Bị khóa), so this is 'Mở khóa'
-          actionDescription = "mở khóa";
-          confirmMessage = "Bạn có chắc chắn muốn mở khóa tài khoản của ${_userDetails!['ho_ten'] ?? 'người dùng này'}?";
-          confirmButtonText = "Mở khóa";
-        }
-        break;
-      case 2: // Khóa
-        actionDescription = "khóa";
-        confirmMessage = "Bạn có chắc chắn muốn khóa tài khoản của ${_userDetails!['ho_ten'] ?? 'người dùng này'}?";
-        confirmButtonText = "Khóa";
-        break;
-      default:
-        // Trường hợp không xác định, không làm gì
-        return;
-    }
-
+  if (targetStatus == 2) {
+    // Trường hợp KHÓA -> cần nhập lý do
+    String lyDo = '';
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        backgroundColor: Colors.white,
-        title: Text(
-          "Xác nhận ${actionDescription} tài khoản",
-          style: const TextStyle(
-              color: Color(0xFF2280EF), fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          confirmMessage,
-          style: const TextStyle(color: Colors.black87),
-        ),
-        actions: [
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Hủy"),
+      builder: (context) {
+        final TextEditingController reasonController = TextEditingController();
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            "Xác nhận khóa tài khoản",
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold,fontSize: 21),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2280EF),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Nhập lý do khóa tài khoản của       $hoTen:",
+                style: const TextStyle(color: Colors.black87),
               ),
-              elevation: 5,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(confirmButtonText),
+              const SizedBox(height: 10),
+              TextField(
+                controller: reasonController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: "Nhập lý do...",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Hủy"),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                lyDo = reasonController.text.trim();
+                if (lyDo.isEmpty) {
+                  _showSnackBar("Vui lòng nhập lý do khóa!", isError: true);
+                  return;
+                }
+                Navigator.pop(context, true);
+              },
+              child: const Text("Khóa"),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirm == true) {
@@ -160,59 +150,123 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
 
       try {
         await _taiKhoanService.updateAccountStatus(widget.userId, targetStatus);
-        
-        // Cập nhật trạng thái trong UI sau khi gọi API thành công
         setState(() {
-          _userDetails!['trang_thai'] = targetStatus; 
+          _userDetails!['trang_thai'] = targetStatus;
         });
 
-        // GỬI THÔNG BÁO VÀO DB THÔNG QUA ThongBaoService
-        // Lấy id_tai_khoan. Đảm bảo nó là int hoặc chuyển đổi về int.
+        // GỬI THÔNG BÁO CÓ LÝ DO KHÓA
         final int? idTaiKhoan = _userDetails!['id_tai_khoan'] is int
             ? _userDetails!['id_tai_khoan']
-            : int.tryParse(widget.userId); // Dùng widget.userId nếu id_tai_khoan trong _userDetails không chắc chắn là int
+            : int.tryParse(widget.userId);
 
         if (idTaiKhoan != null) {
           await _thongBaoService.guiThongBaoTaiKhoan(
             idTaiKhoan: idTaiKhoan,
-            trangThai: targetStatus, // Gửi trạng thái mới để service tự tạo nội dung
+            trangThai: targetStatus,
+            lyDo: lyDo, // Truyền thêm lý do
           );
-          debugPrint('Đã gửi thông báo trạng thái tài khoản cho ID: $idTaiKhoan, trạng thái: $targetStatus');
-        } else {
-          debugPrint('WARNING: Không thể gửi thông báo vì id_tai_khoan không hợp lệ.');
         }
 
-        // Tùy chỉnh thông báo thành công dựa trên hành động và TRẠNG THÁI TRƯỚC ĐÓ
-        String successMessage;
-        switch (targetStatus) {
-          case 0:
-            successMessage = "Đã chuyển tài khoản của ${_userDetails!['ho_ten'] ?? 'người dùng này'} về trạng thái chờ duyệt thành công!";
-            break;
-          case 1:
-            // Dựa vào trạng thái cũ để tạo thông báo chính xác
-            if (currentTrangThaiBeforeUpdate == 0) { // Nếu trạng thái trước đó là 0 (chờ duyệt)
-                successMessage = "Đã kích hoạt tài khoản của ${_userDetails!['ho_ten'] ?? 'người dùng này'} thành công!";
-            } else { // Nếu trạng thái trước đó là 2 (bị khóa)
-                successMessage = "Đã mở khóa tài khoản của ${_userDetails!['ho_ten'] ?? 'người dùng này'} thành công!";
-            }
-            break;
-          case 2:
-            successMessage = "Đã khóa tài khoản của ${_userDetails!['ho_ten'] ?? 'người dùng này'} thành công!";
-            break;
-          default:
-            successMessage = "Đã cập nhật trạng thái tài khoản thành công!";
-        }
-        _showSnackBar(successMessage, isError: false);
-
-      } on Exception catch (e) {
-        _showSnackBar("Lỗi khi ${actionDescription} tài khoản: ${e.toString().replaceFirst('Exception: ', '')}", isError: true);
+        _showSnackBar("Đã khóa tài khoản của $hoTen thành công!", isError: false);
+      } catch (e) {
+        _showSnackBar("Lỗi khi khóa tài khoản: ${e.toString().replaceFirst('Exception: ', '')}", isError: true);
       } finally {
         setState(() {
           _isLoading = false;
         });
       }
     }
+  } 
+  else {
+    // Các trường hợp KHÔNG PHẢI khóa -> xử lý như cũ
+    await _handleNormalStatusChange(targetStatus, hoTen, currentTrangThaiBeforeUpdate);
   }
+}
+
+// Helper tách phần còn lại (kích hoạt, mở khóa)
+Future<void> _handleNormalStatusChange(int targetStatus, String hoTen, int currentTrangThaiBeforeUpdate) async {
+  String actionDescription, confirmMessage, confirmButtonText;
+
+  if (targetStatus == 0) {
+    actionDescription = "chuyển về trạng thái chờ duyệt";
+    confirmMessage = "Bạn có chắc chắn muốn chuyển tài khoản của $hoTen về trạng thái chờ duyệt?";
+    confirmButtonText = "Chuyển";
+  } else if (targetStatus == 1) {
+    if (currentTrangThaiBeforeUpdate == 0) {
+      actionDescription = "kích hoạt";
+      confirmMessage = "Bạn có chắc chắn muốn kích hoạt tài khoản của $hoTen?";
+      confirmButtonText = "Kích hoạt";
+    } else {
+      actionDescription = "mở khóa";
+      confirmMessage = "Bạn có chắc chắn muốn mở khóa tài khoản của $hoTen?";
+      confirmButtonText = "Mở khóa";
+    }
+  } else {
+    return;
+  }
+
+  final confirm = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text(
+        "Xác nhận $actionDescription tài khoản",
+        style: const TextStyle(color: Color(0xFF2280EF), fontWeight: FontWeight.bold),
+      ),
+      content: Text(confirmMessage, style: const TextStyle(color: Colors.black87)),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Hủy")),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2280EF),
+            foregroundColor: Colors.white,
+          ),
+          onPressed: () => Navigator.pop(context, true),
+          child: Text(confirmButtonText),
+        ),
+      ],
+    ),
+  );
+
+  if (confirm == true) {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _taiKhoanService.updateAccountStatus(widget.userId, targetStatus);
+      setState(() {
+        _userDetails!['trang_thai'] = targetStatus;
+      });
+
+      final int? idTaiKhoan = _userDetails!['id_tai_khoan'] is int
+          ? _userDetails!['id_tai_khoan']
+          : int.tryParse(widget.userId);
+
+      if (idTaiKhoan != null) {
+        await _thongBaoService.guiThongBaoTaiKhoan(
+          idTaiKhoan: idTaiKhoan,
+          trangThai: targetStatus,
+        );
+      }
+
+      String successMessage = (targetStatus == 0)
+          ? "Đã chuyển tài khoản của $hoTen về trạng thái chờ duyệt!"
+          : (currentTrangThaiBeforeUpdate == 0)
+              ? "Đã kích hoạt tài khoản của $hoTen thành công!"
+              : "Đã mở khóa tài khoản của $hoTen thành công!";
+
+      _showSnackBar(successMessage, isError: false);
+    } catch (e) {
+      _showSnackBar("Lỗi khi $actionDescription tài khoản: ${e.toString().replaceFirst('Exception: ', '')}", isError: true);
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+}
+
 
   // Phương thức để xóa tài khoản
   Future<void> _deleteUser() async {
