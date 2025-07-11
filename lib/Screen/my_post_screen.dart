@@ -36,14 +36,15 @@ class _MyPostScreenState extends State<MyPostScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
           centerTitle: true,
           title: const Text(
             'Bài viết của tôi',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+            style: TextStyle(
+                fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -75,6 +76,7 @@ class _MyPostScreenState extends State<MyPostScreen> {
             tabs: [
               Tab(text: 'Sẵn sàng'),
               Tab(text: 'Đã cho tặng'),
+              Tab(text: 'Quá hạn'), // 👉 Thêm dòng này
             ],
           ),
         ),
@@ -86,18 +88,28 @@ class _MyPostScreenState extends State<MyPostScreen> {
                 child: CircularProgressIndicator(color: Color(0xFF0079CF)),
               );
             } else if (snapshot.hasError) {
-              return const Center(child: Text('Đã xảy ra lỗi khi tải bài viết.'));
+              return const Center(
+                  child: Text('Đã xảy ra lỗi khi tải bài viết.'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const Center(child: Text('Bạn chưa có bài đăng nào.'));
             } else {
               final posts = snapshot.data!;
-              final sanSang = posts.where((e) => e.trangThai.toLowerCase() == 'san_sang').toList();
-              final daChoTang = posts.where((e) => e.trangThai.toLowerCase() == 'da_cho_tang').toList();
+              final sanSang = posts
+                  .where((e) => e.trangThai.toLowerCase() == 'san_sang')
+                  .toList();
+              final daChoTang = posts
+                  .where((e) => e.trangThai.toLowerCase() == 'da_cho_tang')
+                  .toList();
+              final quaHan = posts
+                  .where((e) => e.trangThai.toLowerCase() == 'qua_han')
+                  .toList();
 
               return TabBarView(
                 children: [
                   _buildPostList(sanSang, allowActions: true),
                   _buildPostList(daChoTang, allowActions: false),
+                  _buildPostList(quaHan,
+                      allowActions: true, isExpired: true), // 👉 thêm dòng này
                 ],
               );
             }
@@ -107,7 +119,8 @@ class _MyPostScreenState extends State<MyPostScreen> {
     );
   }
 
-  Widget _buildPostList(List<BaiDang> posts, {required bool allowActions}) {
+  Widget _buildPostList(List<BaiDang> posts,
+      {required bool allowActions, bool isExpired = false}) {
     if (posts.isEmpty) {
       return const Center(child: Text('Không có bài viết nào.'));
     }
@@ -121,6 +134,7 @@ class _MyPostScreenState extends State<MyPostScreen> {
           userId: widget.userId,
           onPostUpdated: _refreshAfterUpdate,
           allowActions: allowActions,
+          isExpired: isExpired,
         );
       },
     );
@@ -132,6 +146,7 @@ class PostCard extends StatelessWidget {
   final String userId;
   final VoidCallback onPostUpdated;
   final bool allowActions;
+  final bool isExpired;
 
   const PostCard({
     super.key,
@@ -139,6 +154,7 @@ class PostCard extends StatelessWidget {
     required this.userId,
     required this.onPostUpdated,
     required this.allowActions,
+    required this.isExpired,
   });
 
   String _formatStatusText(String status) {
@@ -201,8 +217,8 @@ class PostCard extends StatelessWidget {
         elevation: 6,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Row(
+            padding: const EdgeInsets.all(15.0),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ClipRRect(
@@ -227,13 +243,15 @@ class PostCard extends StatelessWidget {
                     children: [
                       Text(
                         post.tieuDe,
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.bold),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
                           color: statusColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
@@ -263,180 +281,263 @@ class PostCard extends StatelessWidget {
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, size: 20),
                     onSelected: (value) async {
-                      if (value == 'edit') {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => UpdatePostScreen(
-                              idNguoiDung: int.parse(userId),
-                              baiDang: post,
+                      switch (value) {
+                        case 'edit':
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => UpdatePostScreen(
+                                idNguoiDung: int.parse(userId),
+                                baiDang: post,
+                              ),
                             ),
-                          ),
-                        );
-                        onPostUpdated();
-                      } else if (value == 'delete') {
-                        // START: Beautiful Confirmation Dialog for Delete
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                            title: Row(
-                              children: [
-                                const Icon(Icons.warning_rounded, color: Colors.red, size: 30),
-                                const SizedBox(width: 10),
-                                Text(
-                                  'Xác nhận xóa',
-                                  style: TextStyle(
-                                      color: Colors.red.shade700, fontWeight: FontWeight.bold),
+                          );
+                          onPostUpdated();
+                          break;
+
+                        case 'delete':
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20)),
+                              title: Row(
+                                children: [
+                                  const Icon(Icons.warning_rounded,
+                                      color: Colors.red, size: 30),
+                                  const SizedBox(width: 10),
+                                  Text('Xác nhận xóa',
+                                      style: TextStyle(
+                                          color: Colors.red.shade700,
+                                          fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              content: const Text(
+                                'Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              actionsAlignment: MainAxisAlignment.spaceEvenly,
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('Hủy'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red),
+                                  child: const Text('Xóa',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
                                 ),
                               ],
                             ),
-                            content: const Text(
-                              'Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            actionsAlignment: MainAxisAlignment.spaceEvenly,
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.blueGrey,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                ),
-                                child: const Text('Hủy', style: TextStyle(fontSize: 16)),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                  elevation: 5,
-                                ),
-                                child: const Text('Xóa', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                              ),
-                            ],
-                          ),
-                        );
-                        // END: Beautiful Confirmation Dialog for Delete
+                          );
 
-                        if (confirm == true) {
-                          final success = await deleteBaiDang(post.id);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(success
-                                  ? 'Đã xóa bài viết thành công.'
-                                  : 'Xóa bài viết thất bại.'),
-                              backgroundColor:
-                                  success ? Colors.green : Colors.redAccent,
-                            ));
-                            if (success) onPostUpdated();
+                          if (confirm == true) {
+                            final success = await deleteBaiDang(post.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(
+                                content: Text(success
+                                    ? 'Đã xóa bài viết thành công.'
+                                    : 'Xóa bài viết thất bại.'),
+                                backgroundColor:
+                                    success ? Colors.green : Colors.redAccent,
+                              ));
+                              if (success) onPostUpdated();
+                            }
                           }
-                        }
-                      } else if (value == 'change_status') {
-                        // START: Beautiful Confirmation Dialog for Change Status
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                            title: Row(
-                              children: [
-                                const Icon(Icons.check_circle, color: Color.fromARGB(255, 17, 155, 214), size: 30),
-                                const SizedBox(width: 10),
-                                Text(
-                                  'Đã cho tặng?',
-                                  style: TextStyle(
-                                      color: Color.fromARGB(255, 17, 155, 214), fontWeight: FontWeight.bold),
+                          break;
+
+                        case 'change_status':
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20)),
+                              title: const Row(
+                                children: [
+                                  Icon(Icons.check_circle,
+                                      color: Colors.blue, size: 30),
+                                  SizedBox(width: 10),
+                                  Text('Đã cho tặng?',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              content: const Text(
+                                'Bạn có muốn xác nhận đã cho tặng bài viết này không?',
+                                textAlign: TextAlign.center,
+                              ),
+                              actionsAlignment: MainAxisAlignment.spaceEvenly,
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('Hủy'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Xác nhận',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
                                 ),
                               ],
                             ),
-                            content: const Text(
-                              'Bạn có muốn xác nhận đã cho tặng bài viết này không?',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            actionsAlignment: MainAxisAlignment.spaceEvenly,
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.blueGrey,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                ),
-                                child: const Text('Hủy', style: TextStyle(fontSize: 16)),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color.fromARGB(255, 17, 155, 214), // Màu sắc phù hợp cho xác nhận
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                  elevation: 5,
-                                ),
-                                child: const Text('Xác nhận', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                              ),
-                            ],
-                          ),
-                        );
-                        // END: Beautiful Confirmation Dialog for Change Status
+                          );
 
-                        if (confirm == true) {
-                          final success =
-                              await doiTrangThaiBaiDang(post.id, 'da_cho_tang');
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(success
-                                  ? 'Cho tặng thành công!.'
-                                  : 'Đổi trạng thái thất bại.'),
-                              backgroundColor:
-                                  success ? Colors.green : Colors.redAccent,
-                            ));
-                            if (success) onPostUpdated();
+                          if (confirm == true) {
+                            final success = await doiTrangThaiBaiDang(
+                                post.id, 'da_cho_tang');
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(
+                                content: Text(success
+                                    ? 'Cho tặng thành công!'
+                                    : 'Đổi trạng thái thất bại.'),
+                                backgroundColor:
+                                    success ? Colors.green : Colors.redAccent,
+                              ));
+                              if (success) onPostUpdated();
+                            }
                           }
-                        }
+                          break;
+
+                        case 'repost':
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20)),
+                              title: Row(
+                                children: [
+                                  Icon(Icons.refresh,
+                                      color: Colors.orange.shade700, size: 30),
+                                  const SizedBox(width: 10),
+                                  const Text('Xác nhận đăng lại',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              content: const Text(
+                                'Bạn có chắc muốn đăng lại bài viết này không?',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              actionsAlignment: MainAxisAlignment.spaceEvenly,
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('Hủy'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.orange),
+                                  child: const Text('Đăng lại',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirm == true) {
+                            final daVuot = await kiemTraVuotSoLuongBaiDang(
+                                post.idTaiKhoan);
+
+                            if (daVuot) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(const SnackBar(
+                                  content: Text(
+                                      "⚠️ Bạn đã đăng tối đa 5 bài trong hôm nay. Không thể đăng lại."),
+                                  backgroundColor: Colors.orange,
+                                ));
+                              }
+                            } else {
+                              final success = await repostBaiDang(post.id);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(SnackBar(
+                                  content: Text(success
+                                      ? 'Đăng lại thành công.'
+                                      : 'Đăng lại thất bại.'),
+                                  backgroundColor:
+                                      success ? Colors.green : Colors.redAccent,
+                                ));
+                                if (success) onPostUpdated();
+                              }
+                            }
+                          }
+                          break;
                       }
                     },
-                    itemBuilder: (_) => [
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, color: Colors.blue.shade600),
-                            const SizedBox(width: 8),
-                            const Text('Chỉnh sửa', style: TextStyle(fontSize: 15)),
-                          ],
+                    itemBuilder: (_) {
+                      if (post.trangThai == 'qua_han') {
+                        return [
+                          PopupMenuItem(
+                            value: 'repost',
+                            child: Row(
+                              children: [
+                                Icon(Icons.refresh,
+                                    color: Colors.orange.shade700),
+                                const SizedBox(width: 8),
+                                const Text('Đăng lại',
+                                    style: TextStyle(fontSize: 15)),
+                              ],
+                            ),
+                          ),
+                        ];
+                      }
+
+                      return [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit, color: Colors.blue.shade600),
+                              const SizedBox(width: 8),
+                              const Text('Chỉnh sửa',
+                                  style: TextStyle(fontSize: 15)),
+                            ],
+                          ),
                         ),
-                      ),
-                      PopupMenuItem(
-                        value: 'change_status',
-                        child: Row(
-                          children: [
-                            Icon(Icons.check_circle_outline, color: Colors.green.shade600),
-                            const SizedBox(width: 8),
-                            const Text('Đã cho tặng', style: TextStyle(fontSize: 15)),
-                          ],
+                        PopupMenuItem(
+                          value: 'change_status',
+                          child: Row(
+                            children: [
+                              Icon(Icons.check_circle_outline,
+                                  color: Colors.green.shade600),
+                              const SizedBox(width: 8),
+                              const Text('Đã cho tặng',
+                                  style: TextStyle(fontSize: 15)),
+                            ],
+                          ),
                         ),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_outline, color: Colors.red.shade600),
-                            const SizedBox(width: 8),
-                            Text('Xóa bài viết', style: TextStyle(color: Colors.red.shade600, fontSize: 15)),
-                          ],
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline,
+                                  color: Colors.red.shade600),
+                              const SizedBox(width: 8),
+                              Text('Xóa bài viết',
+                                  style: TextStyle(
+                                      color: Colors.red.shade600,
+                                      fontSize: 15)),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ];
+                    },
                   ),
               ],
-          )
-        ),
+            )),
       ),
     );
   }

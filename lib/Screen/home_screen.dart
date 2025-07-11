@@ -44,10 +44,25 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: currentIndex,
-          onTap: (index) {
-            setState(() {
-              currentIndex = index;
-            });
+          onTap: (index) async {
+            if (index == 1) {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PostScreen(userId: widget.userId),
+                ),
+              );
+
+              if (result == true) {
+                setState(() {
+                  currentIndex = 0; // Quay về tab Trang chủ và load lại
+                });
+              }
+            } else {
+              setState(() {
+                currentIndex = index;
+              });
+            }
           },
           type: BottomNavigationBarType.fixed,
           backgroundColor: const Color(0xFF0065F8),
@@ -67,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
 class HomeTab extends StatefulWidget {
   final String userId;
   const HomeTab({super.key, required this.userId});
@@ -80,7 +96,8 @@ class _HomeTabState extends State<HomeTab> {
   late Future<List<Nganh>> futureDanhSachNganh;
   late Future<List<LoaiSanPham>> futureLoaiList;
 
-  String selectedTenNganh = 'Đang tải ...';
+  String selectedTenNganh = '';
+
   int selectedIdNganh = 1;
   LoaiSanPham? selectedLoai;
   LoaiSanPham? selectedLoaiChung;
@@ -99,10 +116,12 @@ class _HomeTabState extends State<HomeTab> {
     _fetchBaiDangNganh();
     _fetchNganhTheoUser();
     _fetchBaiDangChung();
+    print("Ngành được chọn: $selectedTenNganh");
   }
 
   Future<void> _fetchBaiDangChung() async {
-    final data = await getBaiDangTheoNganhVaLoai(8, selectedLoaiChung?.id ?? -1);
+    final data =
+        await getBaiDangTheoNganhVaLoai(8, selectedLoaiChung?.id ?? -1);
     setState(() {
       dataChung = data;
     });
@@ -143,12 +162,13 @@ class _HomeTabState extends State<HomeTab> {
       if (userId == null) return;
 
       final sinhVien = await fetchSinhVienById(userId);
-      if (sinhVien?.chuyenNganh == null) return;
+
+      final idChuyenNganh = sinhVien?.chuyenNganh;
 
       final dsNganh = await getDanhSachNganh();
       final nganh = dsNganh.firstWhere(
-        (n) => n.id == sinhVien!.chuyenNganh,
-        orElse: () => Nganh(id: sinhVien!.chuyenNganh!, tenNganh: "Không rõ"),
+        (n) => n.id == idChuyenNganh,
+        orElse: () => Nganh(id: idChuyenNganh ?? -1, tenNganh: "Không rõ"),
       );
 
       setState(() {
@@ -156,8 +176,11 @@ class _HomeTabState extends State<HomeTab> {
         selectedTenNganh = nganh.tenNganh;
         selectedLoai = LoaiSanPham(id: -1, tenLoai: 'Tất cả');
       });
+
       _fetchBaiDangNganh();
-    } catch (_) {}
+    } catch (e) {
+      print("Lỗi khi lấy ngành sinh viên: $e");
+    }
   }
 
   @override
@@ -215,11 +238,14 @@ class _HomeTabState extends State<HomeTab> {
                             child: Text("Lỗi bài đăng: ${snapshot.error}"));
                       }
 
-                      final baiDangNganh = snapshot.data?.take(4).toList() ?? [];
+                      final baiDangNganh =
+                          snapshot.data?.take(4).toList() ?? [];
 
                       return _buildCategorySection(
                         context: context,
-                        title: "$selectedTenNganh",
+                        title: selectedTenNganh.isEmpty
+                            ? 'Chuyên ngành của bạn'
+                            : selectedTenNganh,
                         color: Colors.indigo,
                         screenWidth: screenWidth,
                         items: baiDangNganh.map((baiDang) {
@@ -259,65 +285,66 @@ class _HomeTabState extends State<HomeTab> {
       ),
     );
   }
-Widget _buildSearchBar(BuildContext context, double screenWidth) {
-  return Padding(
-    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: 16),
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              onSubmitted: (_) => _onSearch(), // <<< giống PostListScreen
-              decoration: const InputDecoration(
-                hintText: "Nhập tên sách muốn tìm",
-                border: InputBorder.none,
+
+  Widget _buildSearchBar(BuildContext context, double screenWidth) {
+    return Padding(
+      padding:
+          EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: 16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                onSubmitted: (_) => _onSearch(), // <<< giống PostListScreen
+                decoration: const InputDecoration(
+                  hintText: "Nhập tên sách muốn tìm",
+                  border: InputBorder.none,
+                ),
               ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.blue),
-            onPressed: _onSearch, // <<< giống PostListScreen
-          ),
-        ],
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.blue),
+              onPressed: _onSearch, // <<< giống PostListScreen
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
-void _onSearch() {
-  final keyword = _searchController.text.trim();
-  if (keyword.isEmpty) return;
+    );
+  }
 
-  final isChung = selectedIdNganh == 8;
-  final isTatCaNganh = selectedIdNganh == -1;
+  void _onSearch() {
+    final keyword = _searchController.text.trim();
+    if (keyword.isEmpty) return;
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => PostListScreen(
-        title: isTatCaNganh 
-            ? 'Tất cả chuyên ngành'
-            : (isChung ? 'Sách chung' : 'Ngành $selectedTenNganh'),
-        idNganh: isTatCaNganh ? -1 : selectedIdNganh,
-        idLoai: isChung
-            ? selectedLoaiChung?.id ?? -1
-            : selectedLoai?.id ?? -1,
-        searchTieuDe: keyword,
-        userId: widget.userId,
+    final isChung = selectedIdNganh == 8;
+    final isTatCaNganh = selectedIdNganh == -1;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PostListScreen(
+          title: isTatCaNganh
+              ? 'Tất cả chuyên ngành'
+              : (isChung ? 'Sách chung' : 'Ngành $selectedTenNganh'),
+          idNganh: isTatCaNganh ? -1 : selectedIdNganh,
+          idLoai:
+              isChung ? selectedLoaiChung?.id ?? -1 : selectedLoai?.id ?? -1,
+          searchTieuDe: keyword,
+          userId: widget.userId,
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-
-
-  Widget _bookItem(BuildContext context, BaiDang baiDang, String imageUrl,double screenWidth) {
+  Widget _bookItem(BuildContext context, BaiDang baiDang, String imageUrl,
+      double screenWidth) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -338,24 +365,46 @@ void _onSearch() {
         ),
         padding: const EdgeInsets.all(8),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.broken_image),
+              child: Center(
+                child: AspectRatio(
+                  aspectRatio: 1, // hoặc 1 nếu bạn muốn ảnh vuông
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.broken_image),
+                    ),
+                  ),
                 ),
               ),
             ),
+
             const SizedBox(height: 6),
             Text(
               baiDang.tieuDe,
               style: const TextStyle(fontWeight: FontWeight.w600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+
+            // 🆕 Hiển thị lớp chuyên ngành
+            Text(
+              "Lớp: ${baiDang.lopChuyenNganh ?? 'Không rõ'}",
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+
+            // 🆕 Hiển thị năm xuất bản
+            Text(
+              "Năm: ${baiDang.namXuatBan?.toString() ?? '---'}",
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
             ),
           ],
         ),

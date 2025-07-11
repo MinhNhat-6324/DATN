@@ -44,9 +44,14 @@ class TinNhan {
 }
 
 class TinNhanService {
-  Future<List<TinNhan>> getTinNhanGiuaHaiNguoi(int user1, int user2) async {
+  Future<List<TinNhan>> getTinNhanGiuaHaiNguoi(
+    int user1,
+    int user2,
+    int idBaiDang, // <--- thêm tham số bài đăng
+  ) async {
     final response = await http.get(
-      Uri.parse('${ApiConfig.baseUrl}/tin-nhan/giua/$user1/$user2'),
+      Uri.parse(
+          '${ApiConfig.baseUrl}/tin-nhan/giua/$user1/$user2?bai_dang=$idBaiDang'),
     );
 
     if (response.statusCode == 200) {

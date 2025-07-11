@@ -28,36 +28,53 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
   // Khởi tạo và dispose các controller trong initState/dispose
   late TextEditingController titleController;
   late TextEditingController conditionController;
-
+  late TextEditingController lopChuyenNganhController;
+  late TextEditingController namXuatBanController;
   List<Nganh> danhSachNganh = [];
   List<LoaiSanPham> danhSachLoai = [];
   Nganh? _selectedNganh;
   LoaiSanPham? _selectedLoai;
-
+  int _sliderValue = 99;
+  String? _selectedLopChuyenNganh;
   final List<File> _capturedImages = [];
   final List<String> _existingImageUrls = [];
   final List<String> _deletedImageUrls = [];
   final ImagePicker _picker = ImagePicker();
-@override
-void initState() {
-  super.initState();
+  @override
+  void initState() {
+    super.initState();
+    lopChuyenNganhController =
+        TextEditingController(text: widget.baiDang.lopChuyenNganh ?? '');
+    namXuatBanController = TextEditingController(
+        text: widget.baiDang.namXuatBan?.toString() ?? '');
+    print('[DEBUG] Năm xuất bản: ${widget.baiDang.namXuatBan}');
 
-  titleController = TextEditingController(text: widget.baiDang.tieuDe);
-  conditionController = TextEditingController(text: widget.baiDang.doMoi.toString());
+    titleController = TextEditingController(text: widget.baiDang.tieuDe);
+    _selectedLopChuyenNganh = widget.baiDang.lopChuyenNganh ?? 'CĐ Ngành';
 
-  // Kiểm tra xem có ảnh không
-  if (widget.baiDang.anhBaiDang.isEmpty) {
-    print('[DEBUG] Không có ảnh nào trong bài đăng!');
-  } else {
-    for (var e in widget.baiDang.anhBaiDang) {
-      final imageUrl = buildImageUrl(e.duongDan);
-      print('[DEBUG] Image URL: $imageUrl');
-      _existingImageUrls.add(imageUrl);
+    // Kiểm tra xem có ảnh không
+    if (widget.baiDang.anhBaiDang.isEmpty) {
+      print('[DEBUG] Không có ảnh nào trong bài đăng!');
+    } else {
+      for (var e in widget.baiDang.anhBaiDang) {
+        final imageUrl = buildImageUrl(e.duongDan);
+        print('[DEBUG] Image URL: $imageUrl');
+        _existingImageUrls.add(imageUrl);
+      }
     }
+
+    _loadDropdownData();
+    _sliderValue = widget.baiDang.doMoi ?? 99;
   }
 
-  _loadDropdownData();
-}
+  String _getMoTaDoMoi(int value) {
+    if (value >= 90) return 'Gần như mới, còn rất tốt';
+    if (value >= 70) return 'Còn sử dụng tốt, có vài vết nhẹ';
+    if (value >= 50) return 'Đã qua sử dụng nhiều, bị tróc nhẹ';
+    if (value >= 30) return 'Hơi cũ, rách/móp nhẹ, mất một số trang/bìa';
+    if (value >= 10) return 'Cũ nặng, mất trang hoặc bìa, dùng để tham khảo';
+    return 'Hư hỏng nhiều, chỉ tham khảo phần còn lại';
+  }
 
   @override
   void dispose() {
@@ -65,13 +82,16 @@ void initState() {
     titleController.dispose();
     conditionController.dispose();
     super.dispose();
+    lopChuyenNganhController.dispose();
+    namXuatBanController.dispose();
   }
 
   Future<void> _luuBaiDang() async {
     if (!_formKey.currentState!.validate()) return;
 
     final tieuDe = titleController.text.trim();
-    final doMoi = int.tryParse(conditionController.text.trim()) ?? 0;
+    final doMoi = _sliderValue;
+
     final idLoai = _selectedLoai?.id;
     final idNganh = _selectedNganh?.id;
 
@@ -80,6 +100,17 @@ void initState() {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('Vui lòng chọn đầy đủ ngành và loại sản phẩm')),
+        );
+      }
+      return;
+    }
+    if (_existingImageUrls.isEmpty && _capturedImages.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❗ Bài đăng cần ít nhất một ảnh'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
       return;
@@ -97,53 +128,58 @@ void initState() {
     final success = await updateBaiDang(
       idBaiDang: widget.baiDang.id!,
       tieuDe: tieuDe,
-      doMoi: doMoi,
+      doMoi: _sliderValue,
       idLoai: idLoai,
       idNganh: idNganh,
       hinhAnhMoi: _capturedImages,
       hinhAnhCanXoa: _deletedImageUrls,
+      lopChuyenNganh: _selectedLopChuyenNganh!,
+      namXuatBan: int.parse(namXuatBanController.text),
     );
 
     if (context.mounted) {
       Navigator.pop(context); // Dismiss loading dialog
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Row(
-                            children: [
-                              Icon(Icons.check_circle_outline, color: Colors.white),
-                              SizedBox(width: 8),
-                              Text('Cập nhật bài viết thành công!', style: TextStyle(color: Colors.white)),
-                            ],
-                          ),
-                          backgroundColor: Colors.green[600],
-                          behavior: SnackBarBehavior.floating,
-                          margin: const EdgeInsets.all(16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle_outline, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Cập nhật bài viết thành công!',
+                    style: TextStyle(color: Colors.white)),
+              ],
+            ),
+            backgroundColor: Colors.green[600],
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: const Duration(seconds: 2),
+          ),
+        );
         Navigator.pop(context, true); // Go back and indicate success
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Row(
-                            children: [
-                              Icon(Icons.error_outline, color: Colors.white),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Text('Cập nhật bài viết thất bại. Vui lòng thử lại.',
-                                    style: TextStyle(color: Colors.white)),
-                              ),
-                            ],
-                          ),
-                          backgroundColor: Colors.redAccent,
-                          behavior: SnackBarBehavior.floating,
-                          margin: const EdgeInsets.all(16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          duration: const Duration(seconds: 3),
-                        ),
-                      );
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('Cập nhật bài viết thất bại. Vui lòng thử lại.',
+                      style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
     }
   }
@@ -159,11 +195,15 @@ void initState() {
           // Set initial selected values, with fallback to first if not found
           _selectedNganh = danhSachNganh.firstWhere(
             (e) => e.id == widget.baiDang.idNganh,
-            orElse: () => danhSachNganh.isNotEmpty ? danhSachNganh.first : throw Exception('No nganh data'), // Handle empty list
+            orElse: () => danhSachNganh.isNotEmpty
+                ? danhSachNganh.first
+                : throw Exception('No nganh data'), // Handle empty list
           );
           _selectedLoai = danhSachLoai.firstWhere(
             (e) => e.id == widget.baiDang.idLoai,
-            orElse: () => danhSachLoai.isNotEmpty ? danhSachLoai.first : throw Exception('No loai data'), // Handle empty list
+            orElse: () => danhSachLoai.isNotEmpty
+                ? danhSachLoai.first
+                : throw Exception('No loai data'), // Handle empty list
           );
         });
       }
@@ -255,24 +295,78 @@ void initState() {
               const SizedBox(height: 20), // Increased spacing
 
               _buildSectionTitle('Độ mới sản phẩm'),
-              const SizedBox(height: 8), // Added spacing
+              const SizedBox(height: 10),
+              Slider(
+                value: _sliderValue.toDouble(),
+                min: 0,
+                max: 100,
+                divisions: 20,
+                label: '${_sliderValue.round()}%',
+                onChanged: (value) {
+                  setState(() {
+                    _sliderValue = value.round();
+                  });
+                },
+              ),
+              Text(
+                'Độ mới: ${_sliderValue.round()}% - ${_getMoTaDoMoi(_sliderValue.round())}',
+                style: const TextStyle(fontSize: 15),
+              ),
+              const SizedBox(height: 20),
+
+              const SizedBox(height: 20), // Increased spacing
+              _buildSectionTitle('Lớp chuyên ngành'),
+              const SizedBox(height: 8),
               Card(
                 margin: EdgeInsets.zero,
                 elevation: 4,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
-                child: _buildTextField(
-                  controller: conditionController,
-                  keyboardType: TextInputType.number,
-                  suffixText: '%',
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    // Add a formatter to limit input to 0-100 if needed
-                    _PercentageRangeFormatter(),
-                  ],
+                child: DropdownButtonFormField<String>(
+                  value: _selectedLopChuyenNganh,
+                  items: ['CĐ Nghề', 'CĐ Ngành']
+                      .map((lop) =>
+                          DropdownMenuItem(value: lop, child: Text(lop)))
+                      .toList(),
+                  onChanged: (value) =>
+                      setState(() => _selectedLopChuyenNganh = value),
+                  decoration: InputDecoration(
+                    border: _inputBorder(),
+                    enabledBorder: _inputBorder(),
+                    focusedBorder: _inputBorder(color: const Color(0xFF0079CF)),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
                 ),
               ),
-              const SizedBox(height: 20), // Increased spacing
+              const SizedBox(height: 20),
+              _buildSectionTitle('Năm xuất bản'),
+              const SizedBox(height: 8),
+              Card(
+                margin: EdgeInsets.zero,
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                child: _buildTextFormField(
+                  controller: namXuatBanController,
+                  //  hintText: 'Nhập năm (VD: 2023)',
+                  validator: (value) {
+                    if (value == null || value.isEmpty)
+                      return '❗ Vui lòng nhập năm xuất bản';
+                    final parsed = int.tryParse(value);
+                    final currentYear = DateTime.now().year;
+                    if (parsed == null || parsed <= 0 || parsed > currentYear) {
+                      return '❗ Năm không hợp lệ';
+                    }
+                    return null;
+                  },
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                ),
+              ),
+              const SizedBox(height: 20),
 
               _buildSectionTitle('Ngành'),
               const SizedBox(height: 8), // Added spacing
@@ -319,9 +413,11 @@ void initState() {
                   mainAxisSpacing: 12, // Increased spacing
                   childAspectRatio: 1,
                 ),
-                itemCount: _existingImageUrls.length + _capturedImages.length + 1,
+                itemCount:
+                    _existingImageUrls.length + _capturedImages.length + 1,
                 itemBuilder: (context, index) {
-                  if (index == _existingImageUrls.length + _capturedImages.length) {
+                  if (index ==
+                      _existingImageUrls.length + _capturedImages.length) {
                     return GestureDetector(
                       onTap: _showImageSourceActionSheet,
                       child: _buildAddImageTile(),
@@ -348,7 +444,8 @@ void initState() {
                     backgroundColor: const Color(0xFF0056D2), // Darker blue
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)), // More rounded
+                        borderRadius:
+                            BorderRadius.circular(12)), // More rounded
                     shadowColor: Colors.black26, // Add shadow
                     elevation: 8, // Increase elevation
                   ),
@@ -365,79 +462,82 @@ void initState() {
       ),
     );
   }
-Widget _buildImageTile(dynamic image, bool isOld, int index) => Stack(
-  fit: StackFit.expand,
-  children: [
-    ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: isOld
-          ? Image.network(
-              image,
-              fit: BoxFit.cover,
-              errorBuilder: (context, url, error) {
-                print('[ERROR] Không thể tải ảnh: $url - $error');
-                return Image.network(
-                  'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
-                  fit: BoxFit.cover,
-                );
-              },
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                // Trả luôn ảnh mặc định thay vì vòng xoay
-                return Image.network(
-                  'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
-                  fit: BoxFit.cover,
-                );
-              },
-            )
-          : Image.file(image, fit: BoxFit.cover),
-    ),
-    Positioned(
-      top: 6,
-      right: 6,
-      child: GestureDetector(
-        onTap: () => setState(() {
-          if (isOld) {
-            final fullUrl = _existingImageUrls[index];
-            final fileName = Uri.parse(fullUrl).pathSegments.last;
-            _deletedImageUrls.add(fileName);
-            _existingImageUrls.removeAt(index);
-          } else {
-            _capturedImages.removeAt(index);
-          }
-        }),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.6),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.all(4),
-          child: const Icon(Icons.close, color: Colors.white, size: 20),
-        ),
-      ),
-    ),
-  ],
-);
 
+  Widget _buildImageTile(dynamic image, bool isOld, int index) => Stack(
+        fit: StackFit.expand,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: isOld
+                ? Image.network(
+                    image,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, url, error) {
+                      print('[ERROR] Không thể tải ảnh: $url - $error');
+                      return Image.network(
+                        'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
+                        fit: BoxFit.cover,
+                      );
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      // Trả luôn ảnh mặc định thay vì vòng xoay
+                      return Image.network(
+                        'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
+                        fit: BoxFit.cover,
+                      );
+                    },
+                  )
+                : Image.file(image, fit: BoxFit.cover),
+          ),
+          Positioned(
+            top: 6,
+            right: 6,
+            child: GestureDetector(
+              onTap: () => setState(() {
+                if (isOld) {
+                  final fullUrl = _existingImageUrls[index];
+                  final fileName = Uri.parse(fullUrl).pathSegments.last;
+                  _deletedImageUrls.add(fileName);
+                  _existingImageUrls.removeAt(index);
+                } else {
+                  _capturedImages.removeAt(index);
+                }
+              }),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(4),
+                child: const Icon(Icons.close, color: Colors.white, size: 20),
+              ),
+            ),
+          ),
+        ],
+      );
 
   Widget _buildTextFormField({
     required TextEditingController controller,
     String? hintText,
     String? Function(String?)? validator,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
   }) =>
-      // Container removed as Card now handles BoxDecoration
       TextFormField(
         controller: controller,
         validator: validator,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
         decoration: InputDecoration(
           hintText: hintText,
           border: _inputBorder(),
-          enabledBorder: _inputBorder(), // Apply border to enabled state
-          focusedBorder: _inputBorder(color: const Color(0xFF0079CF)), // Highlight on focus
+          enabledBorder: _inputBorder(),
+          focusedBorder: _inputBorder(color: const Color(0xFF0079CF)),
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14), // More vertical padding
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           filled: true,
-          fillColor: Colors.white, // Explicitly white background
+          fillColor: Colors.white,
         ),
       );
 
@@ -456,12 +556,14 @@ Widget _buildImageTile(dynamic image, bool isOld, int index) => Stack(
         decoration: InputDecoration(
           hintText: hintText,
           suffixText: suffixText,
-          suffixStyle: const TextStyle(color: Colors.grey, fontSize: 16), // Style for suffix
+          suffixStyle: const TextStyle(
+              color: Colors.grey, fontSize: 16), // Style for suffix
           border: _inputBorder(),
           enabledBorder: _inputBorder(), // Apply border to enabled state
-          focusedBorder: _inputBorder(color: const Color(0xFF0079CF)), // Highlight on focus
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14), // More vertical padding
+          focusedBorder: _inputBorder(
+              color: const Color(0xFF0079CF)), // Highlight on focus
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 14), // More vertical padding
           filled: true,
           fillColor: Colors.white, // Explicitly white background
         ),
@@ -479,9 +581,10 @@ Widget _buildImageTile(dynamic image, bool isOld, int index) => Stack(
         decoration: InputDecoration(
           border: _inputBorder(),
           enabledBorder: _inputBorder(), // Apply border to enabled state
-          focusedBorder: _inputBorder(color: const Color(0xFF0079CF)), // Highlight on focus
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14), // More vertical padding
+          focusedBorder: _inputBorder(
+              color: const Color(0xFF0079CF)), // Highlight on focus
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 14), // More vertical padding
           filled: true,
           fillColor: Colors.white, // Explicitly white background
         ),
@@ -491,12 +594,15 @@ Widget _buildImageTile(dynamic image, bool isOld, int index) => Stack(
             .toList(),
         onChanged: onChanged,
         isExpanded: true, // Make dropdown take full width
-        icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0079CF)), // Themed icon
+        icon: const Icon(Icons.arrow_drop_down,
+            color: Color(0xFF0079CF)), // Themed icon
       );
 
-  OutlineInputBorder _inputBorder({Color color = Colors.transparent}) => // Default to transparent
+  OutlineInputBorder _inputBorder(
+          {Color color = Colors.transparent}) => // Default to transparent
       OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10), // More rounded for input fields
+        borderRadius:
+            BorderRadius.circular(10), // More rounded for input fields
         borderSide: BorderSide(color: color, width: 1.0), // Add a subtle border
       );
 
@@ -516,10 +622,13 @@ Widget _buildImageTile(dynamic image, bool isOld, int index) => Stack(
         decoration: BoxDecoration(
           color: Colors.grey[100], // Lighter grey
           borderRadius: BorderRadius.circular(10), // More rounded
-          border: Border.all(color: Colors.grey.shade300, width: 1.5), // Thinner, lighter border
+          border: Border.all(
+              color: Colors.grey.shade300,
+              width: 1.5), // Thinner, lighter border
         ),
         child: const Center(
-          child: Icon(Icons.add_a_photo, color: Colors.grey, size: 45), // Larger icon
+          child: Icon(Icons.add_a_photo,
+              color: Colors.grey, size: 45), // Larger icon
         ),
       );
 
@@ -531,15 +640,18 @@ Widget _buildImageTile(dynamic image, bool isOld, int index) => Stack(
             children: [
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: Color(0xFF0079CF)),
-                title: const Text('Chụp ảnh mới', style: TextStyle(fontSize: 16)),
+                title:
+                    const Text('Chụp ảnh mới', style: TextStyle(fontSize: 16)),
                 onTap: () {
                   Navigator.pop(context);
                   _takePhoto();
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library, color: Color(0xFF0079CF)),
-                title: const Text('Chọn từ thư viện', style: TextStyle(fontSize: 16)),
+                leading:
+                    const Icon(Icons.photo_library, color: Color(0xFF0079CF)),
+                title: const Text('Chọn từ thư viện',
+                    style: TextStyle(fontSize: 16)),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage();

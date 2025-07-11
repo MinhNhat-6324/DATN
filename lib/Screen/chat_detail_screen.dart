@@ -52,9 +52,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     try {
       final tinNhanService = TinNhanService();
       final data = await tinNhanService.getTinNhanGiuaHaiNguoi(
-        widget.idNguoiHienTai,
-        widget.idNguoiDang,
-      );
+          widget.idNguoiHienTai, widget.idNguoiDang, widget.idBaiDang);
       setState(() {
         tinNhans = data;
         isLoading = false;
@@ -98,7 +96,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       appBar: AppBar(
         titleSpacing: 0,
         title: Text(
-          'Gửi email đến ${userName ?? ''}',
+          'Gửi email đến ###',
           style: const TextStyle(
             color: Colors.white,
             fontSize: 18,

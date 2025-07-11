@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
 import 'dart:io';
+import 'package:front_end/services/api_config.dart';
 
 class AnhBaiDang {
   final int? idAnh;
@@ -38,6 +39,8 @@ class BaiDang {
   final int? idNganh;
   final int? idLoai;
   final int idTaiKhoan;
+  final String? lopChuyenNganh; // ✅ thêm
+  final int? namXuatBan; // ✅ thêm
 
   BaiDang({
     required this.id,
@@ -50,6 +53,8 @@ class BaiDang {
     this.tenNganh,
     this.idLoai,
     this.idNganh,
+    this.lopChuyenNganh,
+    this.namXuatBan,
   });
 
   factory BaiDang.fromJson(Map<String, dynamic> json) {
@@ -71,6 +76,8 @@ class BaiDang {
       tenNganh: json['chuyen_nganh_san_pham']?['ten_nganh'],
       idNganh: json['id_nganh'],
       idLoai: json['id_loai'],
+      lopChuyenNganh: json['lop_chuyen_nganh'], // ✅
+      namXuatBan: json['nam_xuat_ban'], // ✅
     );
   }
 }
@@ -234,6 +241,8 @@ Future<bool> postBaiDang({
   required int idLoai,
   required int idNganh,
   required List<File> hinhAnh,
+  required String lopChuyenNganh, // ✅ mới
+  required int namXuatBan, // ✅ mới
 }) async {
   try {
     final uri = Uri.parse("http://10.0.2.2:8000/api/bai-dang");
@@ -244,6 +253,8 @@ Future<bool> postBaiDang({
     request.fields['do_moi'] = doMoi.toString();
     request.fields['id_loai'] = idLoai.toString();
     request.fields['id_nganh'] = idNganh.toString();
+    request.fields['lop_chuyen_nganh'] = lopChuyenNganh; // ✅
+    request.fields['nam_xuat_ban'] = namXuatBan.toString(); // ✅
 
     for (int i = 0; i < hinhAnh.length; i++) {
       final file = hinhAnh[i];
@@ -260,8 +271,7 @@ Future<bool> postBaiDang({
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
 
-    print(
-        "\uD83D\uDCE4 POST bài đăng: ${response.statusCode} - ${response.body}");
+    print("📤 POST bài đăng: ${response.statusCode} - ${response.body}");
 
     if (response.statusCode != 201) {
       print('⚠️ Đăng bài thất bại! Mã lỗi: ${response.statusCode}');
@@ -327,24 +337,26 @@ Future<bool> updateBaiDang({
   required int idNganh,
   required List<File> hinhAnhMoi,
   required List<String> hinhAnhCanXoa,
+  required String lopChuyenNganh, // ✅ thêm tham số
+  required int namXuatBan, // ✅ thêm tham số
 }) async {
   try {
     final uri = Uri.parse("http://10.0.2.2:8000/api/bai-dang/$idBaiDang");
     final request = http.MultipartRequest('POST', uri);
 
-    request.fields['_method'] = 'PUT'; // Laravel expects PUT via _method
+    request.fields['_method'] = 'PUT';
     request.fields['tieu_de'] = tieuDe;
     request.fields['do_moi'] = doMoi.toString();
     request.fields['id_loai'] = idLoai.toString();
     request.fields['id_nganh'] = idNganh.toString();
+    request.fields['lop_chuyen_nganh'] = lopChuyenNganh; // ✅ thêm dòng này
+    request.fields['nam_xuat_ban'] = namXuatBan.toString(); // ✅ thêm dòng này
 
-    // 🧹 Gửi danh sách ảnh cần xoá (chỉ tên file)
     for (int i = 0; i < hinhAnhCanXoa.length; i++) {
       final fileName = hinhAnhCanXoa[i].split('/').last;
       request.fields['hinh_anh_can_xoa[$i]'] = fileName;
     }
 
-    // 🖼️ Gửi ảnh mới thêm
     for (int i = 0; i < hinhAnhMoi.length; i++) {
       final file = hinhAnhMoi[i];
       final mimeType =
@@ -396,4 +408,40 @@ Future<bool> doiTrangThaiBaiDang(int idBaiDang, String trangThaiMoi) async {
     body: {'trang_thai': trangThaiMoi},
   );
   return response.statusCode == 200;
+}
+
+Future<bool> repostBaiDang(int idBaiDang) async {
+  try {
+    final url =
+        Uri.parse('http://10.0.2.2:8000/api/bai-dang/$idBaiDang/repost');
+    final response = await http.post(url);
+
+    print("♻️ REPOST bài đăng: ${response.statusCode} - ${response.body}");
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print('⚠️ Lỗi khi repost bài đăng. Mã lỗi: ${response.statusCode}');
+      print('⚠️ Nội dung lỗi: ${response.body}');
+      return false;
+    }
+  } catch (e) {
+    print("❌ Lỗi khi gọi API repost bài đăng: $e");
+    return false;
+  }
+}
+
+Future<bool> kiemTraVuotSoLuongBaiDang(int idTaiKhoan) async {
+  final danhSach = await getBaiDangTheoNguoiDung(idTaiKhoan);
+
+  final today = DateTime.now();
+  final todayOnly = DateTime(today.year, today.month, today.day);
+
+  final baiDangHomNay = danhSach.where((bai) {
+    final ngayDang = bai.ngayDang; // Đã là DateTime
+    final ngayDangOnly = DateTime(ngayDang.year, ngayDang.month, ngayDang.day);
+    return ngayDangOnly == todayOnly;
+  }).toList();
+
+  return baiDangHomNay.length >= 5; // ✅ Giới hạn 5 bài trong ngày
 }
