@@ -365,6 +365,7 @@ class _PostListScreenState extends State<PostListScreen> {
         ),
         padding: const EdgeInsets.all(8),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: ClipRRect(
@@ -383,6 +384,21 @@ class _PostListScreenState extends State<PostListScreen> {
               style: const TextStyle(fontWeight: FontWeight.w600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+
+            // 🆕 Lớp chuyên ngành
+            Text(
+              "Lớp: ${baiDang.lopChuyenNganh ?? 'Không rõ'}",
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+
+            // 🆕 Năm xuất bản
+            Text(
+              "Năm: ${baiDang.namXuatBan?.toString() ?? '---'}",
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
             ),
           ],
         ),

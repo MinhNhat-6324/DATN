@@ -219,6 +219,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Text(
+            'Lớp chuyên ngành: ${baiDang.lopChuyenNganh ?? '---'}',
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Năm xuất bản: ${baiDang.namXuatBan?.toString() ?? '---'}',
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
+          ),
         ],
       ),
     );
@@ -347,6 +357,4 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       ),
     );
   }
-
-
 }

@@ -18,6 +18,10 @@ class PostScreen extends StatefulWidget {
 
 class _PostScreenState extends State<PostScreen> {
   final _formKey = GlobalKey<FormState>();
+  double _doMoi = 99; // Giá trị mặc định
+  final TextEditingController lopChuyenNganhController =
+      TextEditingController();
+  final TextEditingController namXuatBanController = TextEditingController();
 
   final TextEditingController titleController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
@@ -39,6 +43,8 @@ class _PostScreenState extends State<PostScreen> {
     super.initState();
     _loadDropdownData();
     _kiemTraTrangThaiTaiKhoan();
+    lopChuyenNganhController.text = 'CĐ Ngành';
+    titleController.text = 'Sách giáo trình ';
   }
 
   Future<void> _kiemTraTrangThaiTaiKhoan() async {
@@ -47,7 +53,8 @@ class _PostScreenState extends State<PostScreen> {
           await TaiKhoanService().getAccountById(widget.userId);
       debugPrint('Dữ liệu tài khoản: $taiKhoanData');
 
-      final trangThai = int.tryParse(taiKhoanData['trang_thai'].toString()) ?? 0;
+      final trangThai =
+          int.tryParse(taiKhoanData['trang_thai'].toString()) ?? 0;
       debugPrint('Trạng thái tài khoản: $trangThai');
 
       setState(() {
@@ -76,6 +83,15 @@ class _PostScreenState extends State<PostScreen> {
     }
   }
 
+  String _getMoTaDoMoi(int value) {
+    if (value >= 90) return 'Gần như mới, còn rất tốt';
+    if (value >= 70) return 'Còn sử dụng tốt, có vài vết nhẹ';
+    if (value >= 50) return 'Đã qua sử dụng nhiều, bị tróc nhẹ';
+    if (value >= 30) return 'Hơi cũ, rách/móp nhẹ, mất một số trang/bìa';
+    if (value >= 10) return 'Cũ nặng, mất trang hoặc bìa, dùng để tham khảo';
+    return 'Hư hỏng nhiều, chỉ tham khảo phần còn lại';
+  }
+
   Future<void> _takePhoto() async {
     try {
       final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
@@ -83,11 +99,11 @@ class _PostScreenState extends State<PostScreen> {
         setState(() {
           _capturedImages.add(File(photo.path));
         });
-        _showSnackBar(
-            'Đã chụp ảnh!', const Color(0xFF00C6FF), Icons.check_circle_outline);
+        _showSnackBar('Đã chụp ảnh!', const Color(0xFF00C6FF),
+            Icons.check_circle_outline);
       } else {
-        _showSnackBar(
-            'Chưa có ảnh nào được chụp.', Colors.orangeAccent, Icons.info_outline);
+        _showSnackBar('Chưa có ảnh nào được chụp.', Colors.orangeAccent,
+            Icons.info_outline);
       }
     } catch (e) {
       debugPrint('Lỗi khi truy cập camera: $e');
@@ -106,11 +122,11 @@ class _PostScreenState extends State<PostScreen> {
         setState(() {
           _capturedImages.add(File(image.path));
         });
-        _showSnackBar(
-            'Đã chọn ảnh từ thư viện!', const Color(0xFF00C6FF), Icons.check_circle_outline);
+        _showSnackBar('Đã chọn ảnh từ thư viện!', const Color(0xFF00C6FF),
+            Icons.check_circle_outline);
       } else {
-        _showSnackBar(
-            'Chưa có ảnh nào được chọn từ thư viện.', Colors.orangeAccent, Icons.info_outline);
+        _showSnackBar('Chưa có ảnh nào được chọn từ thư viện.',
+            Colors.orangeAccent, Icons.info_outline);
       }
     } catch (e) {
       debugPrint('Lỗi khi chọn ảnh từ thư viện: $e');
@@ -148,15 +164,18 @@ class _PostScreenState extends State<PostScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: Color(0xFF0079CF)),
-                title: const Text('Chụp ảnh mới', style: TextStyle(fontSize: 17)),
+                title:
+                    const Text('Chụp ảnh mới', style: TextStyle(fontSize: 17)),
                 onTap: () {
                   Navigator.pop(context);
                   _takePhoto();
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library, color: Color(0xFF00C6FF)),
-                title: const Text('Chọn ảnh từ thư viện', style: TextStyle(fontSize: 17)),
+                leading:
+                    const Icon(Icons.photo_library, color: Color(0xFF00C6FF)),
+                title: const Text('Chọn ảnh từ thư viện',
+                    style: TextStyle(fontSize: 17)),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage();
@@ -217,17 +236,22 @@ class _PostScreenState extends State<PostScreen> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.transparent, // Nền trong suốt để gradient phủ toàn bộ
+        backgroundColor:
+            Colors.transparent, // Nền trong suốt để gradient phủ toàn bộ
         elevation: 0, // Bỏ đổ bóng mặc định của AppBar
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               // Gradient màu xanh hiện đại hơn
-              colors: [Color(0xFF0079CF), Color(0xFF00C6FF)], // Từ xanh đậm đến xanh sáng
+              colors: [
+                Color(0xFF0079CF),
+                Color(0xFF00C6FF)
+              ], // Từ xanh đậm đến xanh sáng
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)), // Bo góc dưới AppBar
+            borderRadius: BorderRadius.vertical(
+                bottom: Radius.circular(25)), // Bo góc dưới AppBar
             boxShadow: [
               BoxShadow(
                 color: Colors.black26, // Đổ bóng nhẹ nhàng
@@ -260,17 +284,80 @@ class _PostScreenState extends State<PostScreen> {
 
               _buildSectionTitle('Độ mới sản phẩm'),
               const SizedBox(height: 10),
-              _buildTextField(
-                controller: conditionController,
-                keyboardType: TextInputType.number,
-                suffixText: '%',
-                hintText: 'Nhập độ mới (ví dụ: 90)',
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(3), // Giới hạn 3 chữ số
-                  _PercentageInputFormatter(), // Tùy chỉnh formatter để giới hạn 0-100
-                ],
+              Slider(
+                value: _doMoi,
+                min: 0,
+                max: 100,
+                divisions: 20,
+                label: '${_doMoi.round()}%',
+                onChanged: (value) {
+                  setState(() {
+                    _doMoi = value;
+                  });
+                },
               ),
+              Text(
+                'Độ mới: ${_doMoi.round()}% - ${_getMoTaDoMoi(_doMoi.round())}',
+                style: const TextStyle(fontSize: 15),
+              ),
+              const SizedBox(height: 20),
+              _buildSectionTitle('Lớp chuyên ngành'),
+              const SizedBox(height: 10),
+              Container(
+                decoration: _inputBoxDecoration(),
+                child: DropdownButtonFormField<String>(
+                  value: lopChuyenNganhController.text.isNotEmpty
+                      ? lopChuyenNganhController.text
+                      : null,
+                  items: ['CĐ Nghề', 'CĐ Ngành']
+                      .map((String value) => DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          ))
+                      .toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      lopChuyenNganhController.text = newValue ?? '';
+                    });
+                  },
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF0079CF), width: 2),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    filled: true,
+                    fillColor: Colors.transparent,
+                  ),
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Vui lòng chọn lớp chuyên ngành'
+                      : null,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+              _buildSectionTitle('Năm xuất bản'),
+              const SizedBox(height: 10),
+              _buildTextFormField(
+                controller: namXuatBanController,
+                hintText: 'VD: 2021',
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Vui lòng nhập năm xuất bản';
+                  }
+                  final int? year = int.tryParse(value);
+                  final int currentYear = DateTime.now().year;
+                  if (year == null || year <= 0 || year > currentYear) {
+                    return 'Năm không hợp lệ';
+                  }
+                  return null;
+                },
+              ),
+
               const SizedBox(height: 20),
 
               _buildSectionTitle('Ngành'),
@@ -279,7 +366,8 @@ class _PostScreenState extends State<PostScreen> {
                 value: _selectedNganh,
                 items: danhSachNganh,
                 getLabel: (nganh) => nganh.tenNganh,
-                onChanged: (Nganh? newValue) => setState(() => _selectedNganh = newValue),
+                onChanged: (Nganh? newValue) =>
+                    setState(() => _selectedNganh = newValue),
               ),
               const SizedBox(height: 20),
 
@@ -289,7 +377,8 @@ class _PostScreenState extends State<PostScreen> {
                 value: _selectedLoai,
                 items: danhSachLoai,
                 getLabel: (loai) => loai.tenLoai,
-                onChanged: (LoaiSanPham? newValue) => setState(() => _selectedLoai = newValue),
+                onChanged: (LoaiSanPham? newValue) =>
+                    setState(() => _selectedLoai = newValue),
               ),
               const SizedBox(height: 20),
 
@@ -311,7 +400,8 @@ class _PostScreenState extends State<PostScreen> {
                     return _buildImageThumbnail(_capturedImages[index], index);
                   },
                 ),
-                const SizedBox(height: 15), // Khoảng cách giữa grid và nút camera
+                const SizedBox(
+                    height: 15), // Khoảng cách giữa grid và nút camera
               ],
               Align(
                 alignment: Alignment.centerRight,
@@ -325,7 +415,8 @@ class _PostScreenState extends State<PostScreen> {
                     borderRadius: BorderRadius.circular(10), // Bo góc hơn
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF0079CF).withOpacity(0.3), // Màu bóng xanh
+                        color: const Color(0xFF0079CF)
+                            .withOpacity(0.3), // Màu bóng xanh
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -334,7 +425,8 @@ class _PostScreenState extends State<PostScreen> {
                   child: ElevatedButton.icon(
                     // Gọi hàm _showImageSourceActionSheet thay vì _takePhoto trực tiếp
                     onPressed: _showImageSourceActionSheet,
-                    icon: const Icon(Icons.add_a_photo, color: Colors.white, size: 22), // Đổi icon
+                    icon: const Icon(Icons.add_a_photo,
+                        color: Colors.white, size: 22), // Đổi icon
                     label: const Text('Thêm ảnh', // Đổi text
                         style: TextStyle(
                             color: Colors.white,
@@ -342,14 +434,18 @@ class _PostScreenState extends State<PostScreen> {
                             fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent, // Nền trong suốt
-                      shadowColor: Colors.transparent, // Bỏ bóng mặc định của ElevatedButton
-                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20), // Tăng padding
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shadowColor: Colors
+                          .transparent, // Bỏ bóng mặc định của ElevatedButton
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 20), // Tăng padding
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 30), // Khoảng cách lớn hơn trước nút Đăng bài
+              const SizedBox(
+                  height: 30), // Khoảng cách lớn hơn trước nút Đăng bài
 
               // Nút Đăng bài
               SizedBox(
@@ -366,6 +462,20 @@ class _PostScreenState extends State<PostScreen> {
                           Icons.block);
                       return;
                     }
+                    // 🔍 Kiểm tra số lượng bài đăng
+                    final _idTaiKhoan = int.tryParse(widget.userId) ?? 1;
+                    final vuotSoLuong =
+                        await kiemTraVuotSoLuongBaiDang(_idTaiKhoan);
+
+                    if (vuotSoLuong) {
+                      _showSnackBar(
+                        'Bạn đã đăng quá số lượng bài cho phép (tối đa 5 bài / 1 ngay).',
+                        Colors.redAccent,
+                        Icons.warning_amber_outlined,
+                      );
+                      return;
+                    }
+
                     if (_capturedImages.isEmpty) {
                       _showSnackBar(
                           'Vui lòng chụp ít nhất một ảnh cho sản phẩm.',
@@ -375,8 +485,11 @@ class _PostScreenState extends State<PostScreen> {
                     }
 
                     final title = titleController.text.trim();
-                    final price = int.tryParse(priceController.text.replaceAll('.', '').trim()) ?? 0; // Xóa dấu chấm cho số tiền
-                    final doMoi = int.tryParse(conditionController.text.trim()) ?? 100;
+                    final price = int.tryParse(
+                            priceController.text.replaceAll('.', '').trim()) ??
+                        0; // Xóa dấu chấm cho số tiền
+                    final doMoi = _doMoi.round();
+
                     final idLoai = _selectedLoai?.id ?? 1;
                     final idNganh = _selectedNganh?.id ?? 1;
                     final idTaiKhoan = int.tryParse(widget.userId) ?? 1;
@@ -385,16 +498,21 @@ class _PostScreenState extends State<PostScreen> {
                       SnackBar(
                         content: const Row(
                           children: [
-                            CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2),
                             SizedBox(width: 10),
-                            Text('Đang đăng bài...', style: TextStyle(color: Colors.white)),
+                            Text('Đang đăng bài...',
+                                style: TextStyle(color: Colors.white)),
                           ],
                         ),
                         backgroundColor: Colors.blueAccent,
                         behavior: SnackBarBehavior.floating,
                         margin: const EdgeInsets.all(16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        duration: const Duration(seconds: 5), // Thời gian hiển thị dài hơn cho loading
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        duration: const Duration(
+                            seconds:
+                                5), // Thời gian hiển thị dài hơn cho loading
                       ),
                     );
 
@@ -404,41 +522,53 @@ class _PostScreenState extends State<PostScreen> {
                       doMoi: doMoi,
                       idLoai: idLoai,
                       idNganh: idNganh,
+                      lopChuyenNganh: lopChuyenNganhController.text.trim(),
+                      namXuatBan:
+                          int.tryParse(namXuatBanController.text.trim()) ?? 0,
                       hinhAnh: _capturedImages,
                     );
 
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Ẩn snackbar loading
+                    ScaffoldMessenger.of(context)
+                        .hideCurrentSnackBar(); // Ẩn snackbar loading
 
                     if (success) {
-                      _showSnackBar(
-                          'Đăng bài thành công!', Colors.green[600]!, Icons.check_circle_outline);
+                      _showSnackBar('Đăng bài thành công!', Colors.green[600]!,
+                          Icons.check_circle_outline);
                       setState(() {
                         titleController.clear();
                         priceController.clear();
                         conditionController.text = '99';
                         _capturedImages.clear();
-                        _selectedNganh = danhSachNganh.isNotEmpty ? danhSachNganh[0] : null;
-                        _selectedLoai = danhSachLoai.isNotEmpty ? danhSachLoai[0] : null;
+                        _selectedNganh =
+                            danhSachNganh.isNotEmpty ? danhSachNganh[0] : null;
+                        _selectedLoai =
+                            danhSachLoai.isNotEmpty ? danhSachLoai[0] : null;
                       });
+                      Navigator.pop(
+                          context, true); // 👈 Gửi kết quả về HomeScreen
                     } else {
-                      _showSnackBar(
-                          'Đăng bài thất bại. Vui lòng thử lại.', Colors.redAccent, Icons.error_outline);
+                      _showSnackBar('Không thể đăng bài đăng này',
+                          Colors.redAccent, Icons.error_outline);
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0079CF), // Màu xanh chủ đạo
+                    backgroundColor:
+                        const Color(0xFF0079CF), // Màu xanh chủ đạo
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 11),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12), // Bo góc hơn cho nút chính
+                      borderRadius:
+                          BorderRadius.circular(12), // Bo góc hơn cho nút chính
                     ),
                     elevation: 10, // Tăng đổ bóng
-                    shadowColor: const Color(0xFF0079CF).withOpacity(0.5), // Bóng màu xanh
+                    shadowColor: const Color(0xFF0079CF)
+                        .withOpacity(0.5), // Bóng màu xanh
                   ),
                   child: const Text('Đăng bài',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // Text lớn hơn
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)), // Text lớn hơn
                 ),
               ),
             ],
@@ -479,7 +609,8 @@ class _PostScreenState extends State<PostScreen> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.black54, // Màu nền của nút xóa
-                    borderRadius: BorderRadius.circular(15), // Bo tròn hoàn toàn
+                    borderRadius:
+                        BorderRadius.circular(15), // Bo tròn hoàn toàn
                   ),
                   padding: const EdgeInsets.all(5),
                   child: const Icon(Icons.close, color: Colors.white, size: 18),
@@ -518,25 +649,27 @@ class _PostScreenState extends State<PostScreen> {
         controller: controller,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
-        style: const TextStyle(fontSize: 16, color: Colors.black87), // Style cho text nhập vào
+        style: const TextStyle(
+            fontSize: 16, color: Colors.black87), // Style cho text nhập vào
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
           suffixText: suffixText,
-          suffixStyle:
-              const TextStyle(color: Colors.black54, fontSize: 15), // Style cho suffix text
+          suffixStyle: const TextStyle(
+              color: Colors.black54, fontSize: 15), // Style cho suffix text
           border: InputBorder.none, // Bỏ border mặc định
           enabledBorder: InputBorder.none,
           focusedBorder: OutlineInputBorder(
             // Viền khi focus
             borderRadius: BorderRadius.circular(12),
-            borderSide:
-                const BorderSide(color: Color(0xFF0079CF), width: 2), // Viền xanh khi focus
+            borderSide: const BorderSide(
+                color: Color(0xFF0079CF), width: 2), // Viền xanh khi focus
           ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14), // Tăng padding
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 14), // Tăng padding
           filled: true,
-          fillColor: Colors.transparent, // Không cần fill vì container đã có màu
+          fillColor:
+              Colors.transparent, // Không cần fill vì container đã có màu
         ),
       ),
     );
@@ -563,10 +696,12 @@ class _PostScreenState extends State<PostScreen> {
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: Color(0xFF0079CF), width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           filled: true,
           fillColor: Colors.transparent,
-          errorStyle: const TextStyle(color: Colors.red, fontSize: 13, height: 1.2), // Tùy chỉnh lỗi
+          errorStyle: const TextStyle(
+              color: Colors.red, fontSize: 13, height: 1.2), // Tùy chỉnh lỗi
           errorMaxLines: 2, // Cho phép lỗi hiển thị 2 dòng
         ),
       ),
@@ -585,8 +720,10 @@ class _PostScreenState extends State<PostScreen> {
       child: DropdownButtonFormField<T>(
         value: value,
         isExpanded: true, // Cho phép dropdown mở rộng hết chiều rộng
-        icon: Icon(Icons.arrow_drop_down_rounded, color: Colors.grey[600], size: 28), // Icon mũi tên
-        style: const TextStyle(fontSize: 16, color: Colors.black87), // Style cho giá trị được chọn
+        icon: Icon(Icons.arrow_drop_down_rounded,
+            color: Colors.grey[600], size: 28), // Icon mũi tên
+        style: const TextStyle(
+            fontSize: 16, color: Colors.black87), // Style cho giá trị được chọn
         decoration: InputDecoration(
           border: InputBorder.none, // Bỏ border mặc định
           enabledBorder: InputBorder.none,
@@ -594,7 +731,8 @@ class _PostScreenState extends State<PostScreen> {
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: Color(0xFF0079CF), width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           filled: true,
           fillColor: Colors.transparent,
         ),
@@ -623,14 +761,16 @@ class _PostScreenState extends State<PostScreen> {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.grey[200]!, width: 1.0), // Viền nhẹ mặc định
+        border: Border.all(
+            color: Colors.grey[200]!, width: 1.0), // Viền nhẹ mặc định
       );
 }
 
 // Custom Input Formatter cho phần trăm (0-100)
 class _PercentageInputFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.text.isEmpty) {
       return newValue;
     }
@@ -649,7 +789,8 @@ class _PercentageInputFormatter extends TextInputFormatter {
 
 // Custom Input Formatter cho định dạng tiền tệ (thêm dấu chấm)
 class _CurrencyInputFormatter extends TextInputFormatter {
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.text.isEmpty) {
       return newValue;
     }
