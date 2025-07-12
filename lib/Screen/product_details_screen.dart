@@ -20,11 +20,25 @@ class ProductDetailsScreen extends StatefulWidget {
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   String? selectedImageUrl;
+  List<BaiDang> BaiDangLienQuan = [];
+  @override
+  void initState() {
+    super.initState();
+    _loadBaiDangLienQuan();
+  }
+
+  void _loadBaiDangLienQuan() async {
+    final list = await getBaiDangLienQuan(widget.baiDang.id);
+    print("🔍 Số bài liên quan: ${list.length}");
+    setState(() => BaiDangLienQuan = list);
+  }
 
   @override
   Widget build(BuildContext context) {
     final baiDang = widget.baiDang;
+
     final size = MediaQuery.of(context).size;
+
     String imageUrl;
     if (selectedImageUrl != null && selectedImageUrl!.isNotEmpty) {
       imageUrl = selectedImageUrl!;
@@ -59,6 +73,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 _buildInfoCard(baiDang, size),
                 SizedBox(height: size.height * 0.04),
                 _buildContactButton(size),
+                const SizedBox(height: 20),
+                Divider(
+                  thickness: 1,
+                  color: Colors.white70,
+                  indent: 16,
+                  endIndent: 16,
+                ),
+                const SizedBox(height: 20),
+                if (BaiDangLienQuan.isNotEmpty)
+                  _buildRelatedSection(BaiDangLienQuan),
                 const SizedBox(height: 20),
               ],
             ),
@@ -355,6 +379,113 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildRelatedSection(List<BaiDang> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(
+            'Sản phẩm liên quan',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 220, // 🔧 tăng chiều cao
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: items.length.clamp(0, 4), // tối đa 4 bài
+            itemBuilder: (context, index) {
+              final item = items[index];
+              final imageUrl = item.anhBaiDang.isNotEmpty
+                  ? buildImageUrl(item.anhBaiDang[0].duongDan)
+                  : "https://via.placeholder.com/150";
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductDetailsScreen(
+                        baiDang: item,
+                        idNguoiBaoCao: widget.idNguoiBaoCao,
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 150,
+                  margin: const EdgeInsets.only(left: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AspectRatio(
+                          aspectRatio: 1,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.broken_image),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          item.tieuDe,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "Lớp: ${item.lopChuyenNganh ?? '---'}",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        Text(
+                          "Năm: ${item.namXuatBan?.toString() ?? '---'}",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
