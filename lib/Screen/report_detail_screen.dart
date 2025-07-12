@@ -99,97 +99,101 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   }
 
   // <<<<<< HÀM XỬ LÝ KHI NHẤN NÚT "GỠ BÀI ĐĂNG" >>>>>>
+    // <<<<<< HÀM XỬ LÝ KHI NHẤN NÚT "GỠ BÀI ĐĂNG" >>>>>>
   Future<void> _handleGoBaiDang() async {
-    // Ngăn chặn nhiều lần nhấn và xử lý nếu báo cáo đã được xử lý
-    if (_isProcessingAction || _currentBaoCao.trangThai != 'dang_cho') {
-      if (_currentBaoCao.trangThai != 'dang_cho') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Báo cáo này đã được xử lý.')),
-        );
-      }
-      return;
+  if (_isProcessingAction || _currentBaoCao.trangThai != 'dang_cho') {
+    if (_currentBaoCao.trangThai != 'dang_cho') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Báo cáo này đã được xử lý.')),
+      );
     }
-
-    // Cập nhật logic pop của dialog: "Hủy" trả về false, "Xác nhận" trả về true
-    final bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text(
-            "Xác nhận gỡ bài đăng",
-            style: TextStyle(color: Color(0xFF2280EF), fontWeight: FontWeight.bold),
-          ),
-          content: const Text('Bạn có chắc chắn muốn gỡ bài đăng này không?', style: TextStyle(color: Colors.black87)),
-          actions: <Widget>[
-            TextButton(
-              style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
-              onPressed: () => Navigator.of(context).pop(false), // <<< SỬA: Hủy trả về false >>>
-              child: const Text('Hủy'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2280EF),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 5,
-              ),
-              onPressed: () => Navigator.of(context).pop(true), // <<< ĐÚNG: Xác nhận trả về true >>>
-              child: const Text("Xác nhận"),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirm == true) { // Chỉ thực hiện nếu người dùng xác nhận
-      setState(() {
-        _isProcessingAction = true; // Bắt đầu loading
-      });
-      try {
-        bool success = await goBaiDangBaoCao(_currentBaoCao.id);
-
-        if (success) {
-          // Cập nhật trạng thái báo cáo và trạng thái bài đăng trên UI
-          setState(() {
-            _currentBaoCao = _currentBaoCao.copyWith(
-              trangThai: 'da_xu_ly', // Trạng thái báo cáo chuyển sang "da__xu_ly"
-              baiDang: _currentBaoCao.baiDang?.copyWith(trangThai: 'vi_pham'), // Cập nhật trạng thái bài đăng
-            );
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Bài đăng đã được gỡ!',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              margin: const EdgeInsets.all(16),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-          // Quay về màn hình trước đó, có thể truyền kết quả về nếu cần
-          Navigator.pop(context, true); // True để báo hiệu có thay đổi
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Không thể gỡ bài đăng. Vui lòng thử lại.')),
-          );
-        }
-      } catch (e) {
-        debugPrint('Lỗi khi gọi API gỡ bài đăng: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã xảy ra lỗi: ${e.toString()}')),
-        );
-      } finally {
-        setState(() {
-          _isProcessingAction = false; // Kết thúc loading
-        });
-      }
-    }
+    return;
   }
+
+  // Mở dialog xác nhận không cần ô nhập
+  final bool? confirm = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text(
+          "   Xác nhận gỡ bài đăng",
+          style: TextStyle(color: Color(0xFF2280EF), fontWeight: FontWeight.bold, fontSize: 21),
+        ),
+        content: const Text(
+          'Bạn có chắc chắn muốn gỡ bài đăng này không?',
+          style: TextStyle(color: Colors.black87),
+        ),
+        actions: <Widget>[
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2280EF),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 5,
+            ),
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
+            child: const Text("Xác nhận"),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (confirm != true) {
+    return;
+  }
+
+  setState(() {
+    _isProcessingAction = true;
+  });
+
+  try {
+    bool success = await goBaiDangBaoCao(_currentBaoCao.id); // Không cần truyền lý do
+
+    if (success) {
+      setState(() {
+        _currentBaoCao = _currentBaoCao.copyWith(
+          trangThai: 'da_xu_ly',
+          baiDang: _currentBaoCao.baiDang?.copyWith(trangThai: 'vi_pham'),
+        );
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Bài đăng đã được gỡ và chủ bài đăng đã nhận thông báo!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      Navigator.pop(context, true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể gỡ bài đăng. Vui lòng thử lại.')),
+      );
+    }
+  } catch (e) {
+    debugPrint('Lỗi khi gọi API gỡ bài đăng: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Đã xảy ra lỗi: ${e.toString()}')),
+    );
+  } finally {
+    setState(() {
+      _isProcessingAction = false;
+    });
+  }
+}
+
 
   // <<<<<< HÀM XỬ LÝ KHI NHẤN NÚT "TỪ CHỐI BÁO CÁO" >>>>>>
   Future<void> _handleTuChoiBaoCao() async {

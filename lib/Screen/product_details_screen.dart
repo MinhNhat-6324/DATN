@@ -245,7 +245,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Lớp chuyên ngành: ${baiDang.lopChuyenNganh ?? '---'}',
+            '${baiDang.lopChuyenNganh ?? '---'}',
             style: const TextStyle(fontSize: 14, color: Colors.black87),
           ),
           const SizedBox(height: 6),
@@ -391,7 +391,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           child: Text(
             'Sản phẩm liên quan',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -400,92 +400,97 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         const SizedBox(height: 10),
         SizedBox(
           height: 220, // 🔧 tăng chiều cao
-          child: ListView.builder(
+          child: ListView(
             scrollDirection: Axis.horizontal,
-            itemCount: items.length.clamp(0, 4), // tối đa 4 bài
-            itemBuilder: (context, index) {
-              final item = items[index];
-              final imageUrl = item.anhBaiDang.isNotEmpty
-                  ? buildImageUrl(item.anhBaiDang[0].duongDan)
-                  : "https://via.placeholder.com/150";
-
-              return GestureDetector(
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ProductDetailsScreen(
-                        baiDang: item,
-                        idNguoiBaoCao: widget.idNguoiBaoCao,
-                      ),
-                    ),
-                  );
-                },
-                child: Container(
-                  width: 150,
-                  margin: const EdgeInsets.only(left: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AspectRatio(
-                          aspectRatio: 1,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.broken_image),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          item.tieuDe,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          "Lớp: ${item.lopChuyenNganh ?? '---'}",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black54,
-                          ),
-                        ),
-                        Text(
-                          "Năm: ${item.namXuatBan?.toString() ?? '---'}",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
+            children: items
+                .take(4)
+                .map((baiDang) => _bookItemLienQuan(context, baiDang))
+                .toList(),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _bookItemLienQuan(BuildContext context, BaiDang baiDang) {
+    final imageUrl = baiDang.anhBaiDang.isNotEmpty
+        ? buildImageUrl(baiDang.anhBaiDang[0].duongDan)
+        : "https://via.placeholder.com/150";
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProductDetailsScreen(
+              baiDang: baiDang,
+              idNguoiBaoCao: widget.idNguoiBaoCao,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: 160,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        margin: const EdgeInsets.only(left: 16),
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.broken_image),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Center(
+              child: Text(
+                baiDang.tieuDe,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.school, size: 14, color: Colors.blueGrey),
+                const SizedBox(width: 4),
+                Text(
+                  baiDang.lopChuyenNganh ?? '---',
+                  style: const TextStyle(fontSize: 12, color: Colors.black87),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.calendar_today,
+                    size: 14, color: Colors.blueGrey),
+                const SizedBox(width: 4),
+                Text(
+                  "Năm: ${baiDang.namXuatBan?.toString() ?? '---'}",
+                  style: const TextStyle(fontSize: 12, color: Colors.black87),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

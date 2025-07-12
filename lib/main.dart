@@ -3,6 +3,7 @@ import 'Screen/start_screen.dart';
 import 'Screen/admin.dart';
 import 'Screen/login_screen.dart';
 import 'Screen/register_screen.dart';
+import 'Screen/analytics_screen.dart';
 
 void main() {
   runApp(const SachChuyenTayApp());

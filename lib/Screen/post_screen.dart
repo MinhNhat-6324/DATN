@@ -536,7 +536,7 @@ class _PostScreenState extends State<PostScreen> {
                       _showSnackBar('Đăng bài thành công!', Colors.green[600]!,
                           Icons.check_circle_outline);
                       setState(() {
-                        titleController.clear();
+                        titleController.text = 'Sách giáo trình ';
                         priceController.clear();
                         conditionController.text = '99';
                         _capturedImages.clear();
@@ -544,9 +544,11 @@ class _PostScreenState extends State<PostScreen> {
                             danhSachNganh.isNotEmpty ? danhSachNganh[0] : null;
                         _selectedLoai =
                             danhSachLoai.isNotEmpty ? danhSachLoai[0] : null;
+                        namXuatBanController.clear();
                       });
-                      Navigator.pop(
-                          context, true); // 👈 Gửi kết quả về HomeScreen
+
+                      // Navigator.pop(
+                      //     context, true); // 👈 Gửi kết quả về HomeScreen
                     } else {
                       _showSnackBar('Không thể đăng bài đăng này',
                           Colors.redAccent, Icons.error_outline);
