@@ -18,10 +18,11 @@ class PostScreen extends StatefulWidget {
 
 class _PostScreenState extends State<PostScreen> {
   final _formKey = GlobalKey<FormState>();
-  double _doMoi = 99; // Giá trị mặc định
+  double _doMoi = 90; // Giá trị mặc định
   final TextEditingController lopChuyenNganhController =
       TextEditingController();
-  final TextEditingController namXuatBanController = TextEditingController();
+  late final List<int> _namXuatBanOptions;
+  int _selectedNamXuatBan = DateTime.now().year;
 
   final TextEditingController titleController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
@@ -37,6 +38,35 @@ class _PostScreenState extends State<PostScreen> {
   final ImagePicker _picker = ImagePicker();
 
   bool _coTheDangBai = false;
+  final Map<int, List<Map<String, String>>> doMoiTheoLoai = {
+    1: [
+      // 📘 Sách giáo trình
+      {'percent': '100', 'desc': 'Mới tinh, chưa sử dụng'},
+      {'percent': '90', 'desc': 'Gần như mới, không rách'},
+      {'percent': '70', 'desc': 'Đã sử dụng, có vết gấp nhẹ'},
+      {'percent': '50', 'desc': 'Cũ, tróc bìa nhẹ hoặc ố màu'},
+      {'percent': '30', 'desc': 'Hư nhẹ, rách vài trang'},
+      {'percent': '10', 'desc': 'Hư nặng, chỉ tham khảo'},
+    ],
+    2: [
+      // 🛠️ Dụng cụ
+      {'percent': '100', 'desc': 'Chưa sử dụng, còn nguyên bao bì'},
+      {'percent': '90', 'desc': 'Ít dùng, còn mới'},
+      {'percent': '70', 'desc': 'Đã sử dụng, hoạt động tốt'},
+      {'percent': '50', 'desc': 'Có trầy xước nhẹ'},
+      {'percent': '30', 'desc': 'Cũ, mòn hoặc có lỗi nhỏ'},
+      {'percent': '10', 'desc': 'Cũ nặng, dùng tạm'},
+    ],
+    3: [
+      // 📄 Tài liệu học tập
+      {'percent': '100', 'desc': 'Bản in rõ nét, chưa sử dụng'},
+      {'percent': '90', 'desc': 'Gần như mới, sạch sẽ'},
+      {'percent': '70', 'desc': 'Đã sử dụng, gấp góc nhẹ'},
+      {'percent': '50', 'desc': 'Bị lem mực hoặc rách nhẹ'},
+      {'percent': '30', 'desc': 'Thiếu vài trang, vẫn đọc được'},
+      {'percent': '10', 'desc': 'Mất nhiều nội dung, chỉ để tham khảo'},
+    ],
+  };
 
   @override
   void initState() {
@@ -45,6 +75,8 @@ class _PostScreenState extends State<PostScreen> {
     _kiemTraTrangThaiTaiKhoan();
     lopChuyenNganhController.text = 'CĐ Ngành';
     titleController.text = 'Sách giáo trình ';
+    _namXuatBanOptions =
+        List.generate(6, (index) => DateTime.now().year - index);
   }
 
   Future<void> _kiemTraTrangThaiTaiKhoan() async {
@@ -269,6 +301,45 @@ class _PostScreenState extends State<PostScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _buildSectionTitle('Ngành'),
+              const SizedBox(height: 10),
+              _buildDropdownButtonFormField<Nganh>(
+                value: _selectedNganh,
+                items: danhSachNganh,
+                getLabel: (nganh) => nganh.tenNganh,
+                onChanged: (Nganh? newValue) =>
+                    setState(() => _selectedNganh = newValue),
+              ),
+              const SizedBox(height: 20),
+
+              _buildSectionTitle('Loại sản phẩm'),
+              const SizedBox(height: 10),
+              _buildDropdownButtonFormField<LoaiSanPham>(
+                value: _selectedLoai,
+                items: danhSachLoai,
+                getLabel: (loai) => loai.tenLoai,
+                onChanged: (LoaiSanPham? newValue) {
+                  setState(() {
+                    _selectedLoai = newValue;
+
+                    // Cập nhật tiêu đề mặc định theo loại
+                    switch (newValue?.id) {
+                      case 1:
+                        titleController.text = 'Sách giáo trình ';
+                        break;
+                      case 2:
+                        titleController.text = 'Dụng cụ ';
+                        break;
+                      case 3:
+                        titleController.text = 'Tài liệu học tập ';
+                        break;
+                      default:
+                        titleController.text = '';
+                    }
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
               _buildSectionTitle('Tiêu đề bài viết'),
               const SizedBox(height: 10), // Tăng khoảng cách
               _buildTextFormField(
@@ -284,22 +355,59 @@ class _PostScreenState extends State<PostScreen> {
 
               _buildSectionTitle('Độ mới sản phẩm'),
               const SizedBox(height: 10),
-              Slider(
-                value: _doMoi,
-                min: 0,
-                max: 100,
-                divisions: 20,
-                label: '${_doMoi.round()}%',
-                onChanged: (value) {
-                  setState(() {
-                    _doMoi = value;
-                  });
-                },
+              Column(
+                children: (doMoiTheoLoai[_selectedLoai?.id] ?? []).map((item) {
+                  final isSelected = _doMoi == double.parse(item['percent']!);
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _doMoi = double.parse(item['percent']!);
+                      });
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color:
+                            isSelected ? const Color(0xFF0079CF) : Colors.white,
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFF0079CF)
+                              : Colors.grey[300]!,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isSelected
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_unchecked,
+                            color: isSelected ? Colors.white : Colors.grey[600],
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '${item['percent']}% - ${item['desc']}',
+                              style: TextStyle(
+                                fontSize: 15,
+                                color:
+                                    isSelected ? Colors.white : Colors.black87,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
-              Text(
-                'Độ mới: ${_doMoi.round()}% - ${_getMoTaDoMoi(_doMoi.round())}',
-                style: const TextStyle(fontSize: 15),
-              ),
+
               const SizedBox(height: 20),
               _buildSectionTitle('Lớp chuyên ngành'),
               const SizedBox(height: 10),
@@ -342,44 +450,61 @@ class _PostScreenState extends State<PostScreen> {
               const SizedBox(height: 20),
               _buildSectionTitle('Năm xuất bản'),
               const SizedBox(height: 10),
-              _buildTextFormField(
-                controller: namXuatBanController,
-                hintText: 'VD: 2021',
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Vui lòng nhập năm xuất bản';
-                  }
-                  final int? year = int.tryParse(value);
-                  final int currentYear = DateTime.now().year;
-                  if (year == null || year <= 0 || year > currentYear) {
-                    return 'Năm không hợp lệ';
-                  }
-                  return null;
-                },
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: _namXuatBanOptions.map((year) {
+                  final isSelected = _selectedNamXuatBan == year;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedNamXuatBan = year;
+                      });
+                    },
+                    child: Container(
+                      width: 80,
+                      height: 45,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color:
+                            isSelected ? const Color(0xFF0079CF) : Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFF0079CF)
+                              : Colors.grey[300]!,
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          if (isSelected)
+                            BoxShadow(
+                              color: const Color(0xFF0079CF).withOpacity(0.2),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            )
+                        ],
+                      ),
+                      child: Text(
+                        '$year',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
+              if (_selectedNamXuatBan == null)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Vui lòng chọn năm xuất bản',
+                    style: TextStyle(color: Colors.red, fontSize: 13),
+                  ),
+                ),
 
-              const SizedBox(height: 20),
-
-              _buildSectionTitle('Ngành'),
-              const SizedBox(height: 10),
-              _buildDropdownButtonFormField<Nganh>(
-                value: _selectedNganh,
-                items: danhSachNganh,
-                getLabel: (nganh) => nganh.tenNganh,
-                onChanged: (Nganh? newValue) =>
-                    setState(() => _selectedNganh = newValue),
-              ),
-              const SizedBox(height: 20),
-
-              _buildSectionTitle('Loại sản phẩm'),
-              const SizedBox(height: 10),
-              _buildDropdownButtonFormField<LoaiSanPham>(
-                value: _selectedLoai,
-                items: danhSachLoai,
-                getLabel: (loai) => loai.tenLoai,
-                onChanged: (LoaiSanPham? newValue) =>
-                    setState(() => _selectedLoai = newValue),
-              ),
               const SizedBox(height: 20),
 
               _buildSectionTitle('Ảnh sản phẩm'), // Đổi tiêu đề cho rõ ràng hơn
@@ -523,8 +648,7 @@ class _PostScreenState extends State<PostScreen> {
                       idLoai: idLoai,
                       idNganh: idNganh,
                       lopChuyenNganh: lopChuyenNganhController.text.trim(),
-                      namXuatBan:
-                          int.tryParse(namXuatBanController.text.trim()) ?? 0,
+                      namXuatBan: _selectedNamXuatBan ?? 0,
                       hinhAnh: _capturedImages,
                     );
 
@@ -536,15 +660,16 @@ class _PostScreenState extends State<PostScreen> {
                       _showSnackBar('Đăng bài thành công!', Colors.green[600]!,
                           Icons.check_circle_outline);
                       setState(() {
+                        _selectedNamXuatBan = DateTime.now().year;
                         titleController.text = 'Sách giáo trình ';
-                        priceController.clear();
-                        conditionController.text = '99';
+                        //priceController.clear();
+                        //conditionController.text = '99';
+                        _doMoi = 90;
                         _capturedImages.clear();
                         _selectedNganh =
                             danhSachNganh.isNotEmpty ? danhSachNganh[0] : null;
                         _selectedLoai =
                             danhSachLoai.isNotEmpty ? danhSachLoai[0] : null;
-                        namXuatBanController.clear();
                       });
 
                       // Navigator.pop(

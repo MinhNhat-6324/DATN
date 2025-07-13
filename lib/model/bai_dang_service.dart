@@ -101,26 +101,28 @@ Future<List<BaiDang>> getBaiDangTheoNganh(int idNganh) async {
   }
 }
 
-Future<List<BaiDang>> getBaiDangTheoNganhVaLoai(
-    int idNganh, int? idLoai) async {
+Future<List<BaiDang>> getBaiDangTheoNganhVaLoai(int idNganh, int idLoai,
+    {int? limit}) async {
   try {
-    final url = idLoai == null
-        ? Uri.parse('http://10.0.2.2:8000/api/bai-dang/nganh/$idNganh')
+    // Tạo URL đúng theo route Laravel
+    final url = limit == null
+        ? Uri.parse(
+            'http://10.0.2.2:8000/api/bai-dang/nganh/$idNganh/loai/$idLoai')
         : Uri.parse(
-            'http://10.0.2.2:8000/api/bai-dang/nganh/$idNganh/loai/$idLoai');
+            'http://10.0.2.2:8000/api/bai-dang/nganh/$idNganh/loai/$idLoai/$limit');
 
     final response = await http.get(url);
-    print("JSON ngành + loại: ${response.body}");
+    print("📦 JSON ngành + loại: ${response.body}");
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => BaiDang.fromJson(json)).toList();
     } else {
-      print('Status code: ${response.statusCode}');
+      print('⚠️ Status code: ${response.statusCode}');
       throw Exception('Không lấy được bài đăng theo ngành và loại');
     }
   } catch (e) {
-    print('Lỗi khi gọi API: $e');
+    print('❌ Lỗi khi gọi API ngành + loại: $e');
     rethrow;
   }
 }
@@ -276,6 +278,7 @@ Future<bool> postBaiDang({
     if (response.statusCode != 201) {
       print('⚠️ Đăng bài thất bại! Mã lỗi: ${response.statusCode}');
       print('⚠️ Nội dung lỗi: ${response.body}');
+      print('⚠️ Headers: ${response.headers}');
     }
 
     return response.statusCode == 201;

@@ -104,8 +104,8 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Future<void> _fetchBaiDangChung() async {
-    final data =
-        await getBaiDangTheoNganhVaLoai(8, selectedLoaiChung?.id ?? -1);
+    final data = await getBaiDangTheoNganhVaLoai(8, selectedLoaiChung?.id ?? -1,
+        limit: 4);
     setState(() {
       dataChung = data;
     });
@@ -113,7 +113,8 @@ class _HomeTabState extends State<HomeTab> {
 
   Future<void> _fetchBaiDangNganh() async {
     final loaiId = selectedLoai?.id ?? -1;
-    final data = await getBaiDangTheoNganhVaLoai(selectedIdNganh, loaiId);
+    final data =
+        await getBaiDangTheoNganhVaLoai(selectedIdNganh, loaiId, limit: 4);
     setState(() {
       futureBaiDangNganh = Future.value(data);
     });
