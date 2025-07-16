@@ -26,6 +26,10 @@ class UpdatePostScreen extends StatefulWidget {
 class _UpdatePostScreenState extends State<UpdatePostScreen> {
   final _formKey = GlobalKey<FormState>();
   // Khởi tạo và dispose các controller trong initState/dispose
+  final int currentYear = DateTime.now().year;
+  late final List<int> namXuatBanOptions =
+      List.generate(8, (index) => currentYear - index);
+
   late TextEditingController titleController;
   late TextEditingController conditionController;
   late TextEditingController lopChuyenNganhController;
@@ -43,28 +47,71 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
   @override
   void initState() {
     super.initState();
-    lopChuyenNganhController =
-        TextEditingController(text: widget.baiDang.lopChuyenNganh ?? '');
-    namXuatBanController = TextEditingController(
-        text: widget.baiDang.namXuatBan?.toString() ?? '');
-    print('[DEBUG] Năm xuất bản: ${widget.baiDang.namXuatBan}');
 
     titleController = TextEditingController(text: widget.baiDang.tieuDe);
+    namXuatBanController = TextEditingController(
+        text: widget.baiDang.namXuatBan?.toString() ?? currentYear.toString());
+
+    _sliderValue = widget.baiDang.doMoi ?? 100;
     _selectedLopChuyenNganh = widget.baiDang.lopChuyenNganh ?? 'CĐ Ngành';
 
-    // Kiểm tra xem có ảnh không
-    if (widget.baiDang.anhBaiDang.isEmpty) {
-      print('[DEBUG] Không có ảnh nào trong bài đăng!');
-    } else {
+    // Xử lý ảnh cũ
+    if (widget.baiDang.anhBaiDang.isNotEmpty) {
       for (var e in widget.baiDang.anhBaiDang) {
-        final imageUrl = buildImageUrl(e.duongDan);
-        print('[DEBUG] Image URL: $imageUrl');
-        _existingImageUrls.add(imageUrl);
+        _existingImageUrls.add(buildImageUrl(e.duongDan));
       }
     }
 
     _loadDropdownData();
-    _sliderValue = widget.baiDang.doMoi ?? 99;
+  }
+
+  Map<int, List<Map<String, dynamic>>> danhSachDoMoiTheoLoai = {
+    1: [
+      // 📘 Sách giáo trình
+      {'percent': '100', 'desc': 'Mới tinh, chưa sử dụng'},
+      {'percent': '90', 'desc': 'Gần như mới, không rách'},
+      {'percent': '70', 'desc': 'Đã sử dụng, có vết gấp nhẹ'},
+      {'percent': '50', 'desc': 'Cũ, tróc bìa nhẹ hoặc ố màu'},
+      {'percent': '30', 'desc': 'Hư nhẹ, rách vài trang'},
+      {'percent': '10', 'desc': 'Hư nặng, chỉ tham khảo'},
+    ],
+    2: [
+      // 🛠️ Dụng cụ
+      {'percent': '100', 'desc': 'Chưa sử dụng, còn nguyên bao bì'},
+      {'percent': '90', 'desc': 'Ít dùng, còn mới'},
+      {'percent': '70', 'desc': 'Đã sử dụng, hoạt động tốt'},
+      {'percent': '50', 'desc': 'Có trầy xước nhẹ'},
+      {'percent': '30', 'desc': 'Cũ, mòn hoặc có lỗi nhỏ'},
+      {'percent': '10', 'desc': 'Cũ nặng, dùng tạm'},
+    ],
+    3: [
+      // 📄 Tài liệu học tập
+      {'percent': '100', 'desc': 'Bản in rõ nét, chưa sử dụng'},
+      {'percent': '90', 'desc': 'Gần như mới, sạch sẽ'},
+      {'percent': '70', 'desc': 'Đã sử dụng, gấp góc nhẹ'},
+      {'percent': '50', 'desc': 'Bị lem mực hoặc rách nhẹ'},
+      {'percent': '30', 'desc': 'Thiếu vài trang, vẫn đọc được'},
+      {'percent': '10', 'desc': 'Mất nhiều nội dung, chỉ để tham khảo'},
+    ],
+  };
+
+  Widget _buildDoMoiTheoLoaiSanPham() {
+    final idLoai = _selectedLoai?.id ?? 1;
+    final danhSach = danhSachDoMoiTheoLoai[idLoai] ?? [];
+    return Column(
+      children: danhSach
+          .map((item) => RadioListTile<int>(
+                title: Text('${item['percent']}% - ${item['desc']}'),
+                value: int.parse(item['percent']),
+                groupValue: _sliderValue,
+                onChanged: (value) {
+                  setState(() {
+                    _sliderValue = value!;
+                  });
+                },
+              ))
+          .toList(),
+    );
   }
 
   String _getMoTaDoMoi(int value) {
@@ -127,14 +174,14 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
 
     final success = await updateBaiDang(
       idBaiDang: widget.baiDang.id!,
-      tieuDe: tieuDe,
+      tieuDe: titleController.text.trim(),
       doMoi: _sliderValue,
-      idLoai: idLoai,
-      idNganh: idNganh,
+      idLoai: _selectedLoai!.id,
+      idNganh: _selectedNganh!.id,
       hinhAnhMoi: _capturedImages,
       hinhAnhCanXoa: _deletedImageUrls,
       lopChuyenNganh: _selectedLopChuyenNganh!,
-      namXuatBan: int.parse(namXuatBanController.text),
+      namXuatBan: int.tryParse(namXuatBanController.text) ?? currentYear,
     );
 
     if (context.mounted) {
@@ -201,9 +248,7 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
           );
           _selectedLoai = danhSachLoai.firstWhere(
             (e) => e.id == widget.baiDang.idLoai,
-            orElse: () => danhSachLoai.isNotEmpty
-                ? danhSachLoai.first
-                : throw Exception('No loai data'), // Handle empty list
+            orElse: () => danhSachLoai.first,
           );
         });
       }
@@ -295,77 +340,35 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
               const SizedBox(height: 20), // Increased spacing
 
               _buildSectionTitle('Độ mới sản phẩm'),
-              const SizedBox(height: 10),
-              Slider(
-                value: _sliderValue.toDouble(),
-                min: 0,
-                max: 100,
-                divisions: 20,
-                label: '${_sliderValue.round()}%',
-                onChanged: (value) {
-                  setState(() {
-                    _sliderValue = value.round();
-                  });
-                },
-              ),
-              Text(
-                'Độ mới: ${_sliderValue.round()}% - ${_getMoTaDoMoi(_sliderValue.round())}',
-                style: const TextStyle(fontSize: 15),
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 8),
+              _buildDoMoiTheoLoaiSanPham(),
 
-              const SizedBox(height: 20), // Increased spacing
+              const SizedBox(height: 20),
               _buildSectionTitle('Lớp chuyên ngành'),
               const SizedBox(height: 8),
-              Card(
-                margin: EdgeInsets.zero,
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                child: DropdownButtonFormField<String>(
-                  value: _selectedLopChuyenNganh,
-                  items: ['CĐ Nghề', 'CĐ Ngành']
-                      .map((lop) =>
-                          DropdownMenuItem(value: lop, child: Text(lop)))
-                      .toList(),
-                  onChanged: (value) =>
-                      setState(() => _selectedLopChuyenNganh = value),
-                  decoration: InputDecoration(
-                    border: _inputBorder(),
-                    enabledBorder: _inputBorder(),
-                    focusedBorder: _inputBorder(color: const Color(0xFF0079CF)),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
+              DropdownButtonFormField<String>(
+                value: _selectedLopChuyenNganh,
+                items: ['CĐ Nghề', 'CĐ Ngành']
+                    .map(
+                        (lop) => DropdownMenuItem(value: lop, child: Text(lop)))
+                    .toList(),
+                onChanged: (value) =>
+                    setState(() => _selectedLopChuyenNganh = value),
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  filled: true,
+                  fillColor: Colors.white,
                 ),
               ),
+
               const SizedBox(height: 20),
               _buildSectionTitle('Năm xuất bản'),
               const SizedBox(height: 8),
-              Card(
-                margin: EdgeInsets.zero,
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                child: _buildTextFormField(
-                  controller: namXuatBanController,
-                  //  hintText: 'Nhập năm (VD: 2023)',
-                  validator: (value) {
-                    if (value == null || value.isEmpty)
-                      return '❗ Vui lòng nhập năm xuất bản';
-                    final parsed = int.tryParse(value);
-                    final currentYear = DateTime.now().year;
-                    if (parsed == null || parsed <= 0 || parsed > currentYear) {
-                      return '❗ Năm không hợp lệ';
-                    }
-                    return null;
-                  },
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-              ),
+              _buildGridNamXuatBan(),
+
               const SizedBox(height: 20),
 
               _buildSectionTitle('Ngành'),
@@ -631,6 +634,38 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
               color: Colors.grey, size: 45), // Larger icon
         ),
       );
+  Widget _buildGridNamXuatBan() {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: namXuatBanOptions.map((nam) {
+        final isSelected = int.tryParse(namXuatBanController.text ?? '') == nam;
+
+        return GestureDetector(
+          onTap: () {
+            setState(() => namXuatBanController.text = nam.toString());
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: isSelected ? Color(0xFF0079CF) : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected ? Color(0xFF0079CF) : Colors.grey.shade300,
+              ),
+            ),
+            child: Text(
+              nam.toString(),
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
 
   void _showImageSourceActionSheet() => showModalBottomSheet(
         context: context,

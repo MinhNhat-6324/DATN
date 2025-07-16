@@ -76,7 +76,7 @@ class _PostScreenState extends State<PostScreen> {
     lopChuyenNganhController.text = 'CĐ Ngành';
     titleController.text = 'Sách giáo trình ';
     _namXuatBanOptions =
-        List.generate(6, (index) => DateTime.now().year - index);
+        List.generate(8, (index) => DateTime.now().year - index);
   }
 
   Future<void> _kiemTraTrangThaiTaiKhoan() async {
@@ -601,11 +601,12 @@ class _PostScreenState extends State<PostScreen> {
                       return;
                     }
 
-                    if (_capturedImages.isEmpty) {
+                    if (_capturedImages.length < 2) {
                       _showSnackBar(
-                          'Vui lòng chụp ít nhất một ảnh cho sản phẩm.',
-                          Colors.orange[700]!,
-                          Icons.image_not_supported);
+                        'Vui lòng thêm ít nhất 2 ảnh cho sản phẩm.',
+                        Colors.orange[700]!,
+                        Icons.image_not_supported,
+                      );
                       return;
                     }
 
