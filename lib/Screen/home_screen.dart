@@ -360,21 +360,14 @@ class _HomeTabState extends State<HomeTab> {
               child: Center(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => const Center(
-                      child: SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                  child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.broken_image,
+                        color: Colors.grey,
                       ),
-                    ),
-                    errorWidget: (context, url, error) => const Icon(
-                      Icons.broken_image,
-                      color: Colors.grey,
-                    ),
-                  ),
+                    )
                 ),
               ),
             ),
