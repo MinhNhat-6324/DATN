@@ -8,6 +8,7 @@ import 'post_list_screen.dart';
 import 'package:front_end/model/chuyen_nganh_service.dart';
 import 'package:front_end/model/loai_san_pham_service.dart';
 import 'package:front_end/model/sinh_vien.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userId;
@@ -97,10 +98,10 @@ class _HomeTabState extends State<HomeTab> {
     futureDanhSachNganh = getDanhSachNganh();
     futureLoaiList = getDanhSachLoai();
 
-    _fetchBaiDangNganh();
-    _fetchNganhTheoUser();
-    _fetchBaiDangChung();
-    print("Ngành được chọn: $selectedTenNganh");
+    Future.delayed(Duration(milliseconds: 300), () {
+      _fetchBaiDangChung();
+      _fetchNganhTheoUser();
+    });
   }
 
   Future<void> _fetchBaiDangChung() async {
@@ -330,6 +331,9 @@ class _HomeTabState extends State<HomeTab> {
 
   Widget _bookItem(BuildContext context, BaiDang baiDang, String imageUrl,
       double screenWidth) {
+    final chiHienTieuDeVaAnh = baiDang.idLoai != 1;
+    final laBaiDangChung = baiDang.idNganh == 8;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -356,13 +360,20 @@ class _HomeTabState extends State<HomeTab> {
               child: Center(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  // Điều chỉnh để ảnh hiển thị lớn hơn và chứa toàn bộ ảnh
-                  child: Image.network(
-                    imageUrl,
-                    fit: BoxFit
-                        .contain, // Thay đổi từ BoxFit.cover sang BoxFit.contain
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.broken_image),
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const Center(
+                      child: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => const Icon(
+                      Icons.broken_image,
+                      color: Colors.grey,
+                    ),
                   ),
                 ),
               ),
@@ -377,33 +388,37 @@ class _HomeTabState extends State<HomeTab> {
                 textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.school, size: 14, color: Colors.blueGrey),
-                const SizedBox(width: 4),
-                Text(
-                  "${baiDang.lopChuyenNganh ?? 'Không rõ'}",
-                  style: const TextStyle(fontSize: 12, color: Colors.black87),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.calendar_today,
-                    size: 14, color: Colors.blueGrey),
-                const SizedBox(width: 4),
-                Text(
-                  "Năm: ${baiDang.namXuatBan?.toString() ?? '---'}",
-                  style: const TextStyle(fontSize: 12, color: Colors.black87),
-                ),
-              ],
-            ),
+            if (!chiHienTieuDeVaAnh && !laBaiDangChung) ...[
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.school, size: 14, color: Colors.blueGrey),
+                  const SizedBox(width: 4),
+                  Text(
+                    baiDang.lopChuyenNganh ?? 'Không rõ',
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ],
+            if (!chiHienTieuDeVaAnh) ...[
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.calendar_today,
+                      size: 14, color: Colors.blueGrey),
+                  const SizedBox(width: 4),
+                  Text(
+                    "Năm: ${baiDang.namXuatBan?.toString() ?? '---'}",
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

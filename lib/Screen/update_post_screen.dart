@@ -29,15 +29,22 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
   final int currentYear = DateTime.now().year;
   late final List<int> namXuatBanOptions =
       List.generate(8, (index) => currentYear - index);
+  LoaiSanPham? _selectedLoai;
+  String? _selectedLop;
+  int? _selectedNamXuatBan;
 
   late TextEditingController titleController;
   late TextEditingController conditionController;
   late TextEditingController lopChuyenNganhController;
   late TextEditingController namXuatBanController;
+  final List<String> lopChuyenNganhOptions = [
+    'CĐ Ngành',
+    'CĐ Nghề',
+  ];
+
   List<Nganh> danhSachNganh = [];
   List<LoaiSanPham> danhSachLoai = [];
   Nganh? _selectedNganh;
-  LoaiSanPham? _selectedLoai;
   int _sliderValue = 99;
   String? _selectedLopChuyenNganh;
   final List<File> _capturedImages = [];
@@ -91,26 +98,42 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
       {'percent': '70', 'desc': 'Đã sử dụng, gấp góc nhẹ'},
       {'percent': '50', 'desc': 'Bị lem mực hoặc rách nhẹ'},
       {'percent': '30', 'desc': 'Thiếu vài trang, vẫn đọc được'},
-      {'percent': '10', 'desc': 'Mất nhiều nội dung, chỉ để tham khảo'},
+      {'percent': '10', 'desc': 'Mất nhiều nội dung, chỉ tham khảo'},
     ],
   };
 
-  Widget _buildDoMoiTheoLoaiSanPham() {
+  Widget _buildDropdownDoMoi() {
     final idLoai = _selectedLoai?.id ?? 1;
     final danhSach = danhSachDoMoiTheoLoai[idLoai] ?? [];
-    return Column(
-      children: danhSach
-          .map((item) => RadioListTile<int>(
-                title: Text('${item['percent']}% - ${item['desc']}'),
-                value: int.parse(item['percent']),
-                groupValue: _sliderValue,
-                onChanged: (value) {
-                  setState(() {
-                    _sliderValue = value!;
-                  });
-                },
+
+    return DropdownButtonFormField<int>(
+      value: _sliderValue,
+      items: danhSach
+          .map((item) => DropdownMenuItem<int>(
+                value: int.parse(item['percent']!),
+                child: Text(
+                  '${item['percent']}% - ${item['desc']}',
+                  overflow: TextOverflow.ellipsis, // CẮT TEXT nếu quá dài
+                  maxLines: 1, // Giới hạn 1 dòng
+                ),
               ))
           .toList(),
+      onChanged: (value) {
+        setState(() {
+          _sliderValue = value!;
+        });
+      },
+      decoration: InputDecoration(
+        border: _inputBorder(),
+        enabledBorder: _inputBorder(),
+        focusedBorder: _inputBorder(color: const Color(0xFF0079CF)),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        filled: true,
+        fillColor: Colors.white,
+      ),
+      isExpanded: true, // GIÃN dropdown để tránh tràn
+      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0079CF)),
     );
   }
 
@@ -151,11 +174,11 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
       }
       return;
     }
-    if (_existingImageUrls.isEmpty && _capturedImages.isEmpty) {
+    if (_existingImageUrls.length + _capturedImages.length < 2) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('❗ Bài đăng cần ít nhất một ảnh'),
+            content: Text('❗ Bài đăng cần ít nhất 2 ảnh'),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -322,6 +345,40 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _buildSectionTitle('Ngành'),
+              const SizedBox(height: 8), // Added spacing
+              Card(
+                margin: EdgeInsets.zero,
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                child: _buildDropdownButtonFormField<Nganh>(
+                  value: _selectedNganh,
+                  items: danhSachNganh,
+                  getLabel: (nganh) => nganh.tenNganh,
+                  onChanged: (Nganh? newVal) =>
+                      setState(() => _selectedNganh = newVal),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildSectionTitle('Loại sản phẩm'),
+              const SizedBox(height: 8), // Added spacing
+              Card(
+                margin: EdgeInsets.zero,
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                child: _buildDropdownButtonFormField<LoaiSanPham>(
+                  value: _selectedLoai,
+                  items: danhSachLoai,
+                  getLabel: (loai) => loai.tenLoai,
+                  onChanged: (LoaiSanPham? newVal) =>
+                      setState(() => _selectedLoai = newVal),
+                ),
+              ),
+
+              const SizedBox(
+                  height: 20), // Increased spacing // Increased spacing
               _buildSectionTitle('Tiêu đề bài viết'),
               const SizedBox(height: 8), // Added spacing
               Card(
@@ -341,69 +398,25 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
 
               _buildSectionTitle('Độ mới sản phẩm'),
               const SizedBox(height: 8),
-              _buildDoMoiTheoLoaiSanPham(),
-
-              const SizedBox(height: 20),
-              _buildSectionTitle('Lớp chuyên ngành'),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _selectedLopChuyenNganh,
-                items: ['CĐ Nghề', 'CĐ Ngành']
-                    .map(
-                        (lop) => DropdownMenuItem(value: lop, child: Text(lop)))
-                    .toList(),
-                onChanged: (value) =>
-                    setState(() => _selectedLopChuyenNganh = value),
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-              _buildSectionTitle('Năm xuất bản'),
-              const SizedBox(height: 8),
-              _buildGridNamXuatBan(),
-
+              _buildDropdownDoMoi(),
               const SizedBox(height: 20),
 
-              _buildSectionTitle('Ngành'),
-              const SizedBox(height: 8), // Added spacing
-              Card(
-                margin: EdgeInsets.zero,
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                child: _buildDropdownButtonFormField<Nganh>(
-                  value: _selectedNganh,
-                  items: danhSachNganh,
-                  getLabel: (nganh) => nganh.tenNganh,
-                  onChanged: (Nganh? newVal) =>
-                      setState(() => _selectedNganh = newVal),
+              if (_selectedLoai?.id == 1) ...[
+                _buildSectionTitle("Hệ đào tạo"),
+                _buildDropdownButtonFormField<String>(
+                  value: _selectedLopChuyenNganh,
+                  items: lopChuyenNganhOptions,
+                  getLabel: (lop) => lop,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedLopChuyenNganh = newValue!;
+                    });
+                  },
                 ),
-              ),
-              const SizedBox(height: 20), // Increased spacing
-
-              _buildSectionTitle('Loại sản phẩm'),
-              const SizedBox(height: 8), // Added spacing
-              Card(
-                margin: EdgeInsets.zero,
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                child: _buildDropdownButtonFormField<LoaiSanPham>(
-                  value: _selectedLoai,
-                  items: danhSachLoai,
-                  getLabel: (loai) => loai.tenLoai,
-                  onChanged: (LoaiSanPham? newVal) =>
-                      setState(() => _selectedLoai = newVal),
-                ),
-              ),
-              const SizedBox(height: 20), // Increased spacing
+                _buildSectionTitle("Năm xuất bản"),
+                const SizedBox(height: 20),
+                _buildGridNamXuatBan(),
+              ],
 
               _buildSectionTitle('Ảnh đã có và ảnh mới'),
               const SizedBox(height: 12), // Adjusted spacing

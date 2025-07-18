@@ -244,15 +244,22 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            '${baiDang.lopChuyenNganh ?? '---'}',
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Năm xuất bản: ${baiDang.namXuatBan?.toString() ?? '---'}',
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
-          ),
+          // Hiển thị lớp chuyên ngành nếu idLoai == 1 và idNganh != 8
+          if (baiDang.idLoai == 1 && baiDang.idNganh != 8) ...[
+            Text(
+              '${baiDang.lopChuyenNganh ?? '---'}',
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
+            ),
+            const SizedBox(height: 6),
+          ],
+
+// Hiển thị năm xuất bản nếu idLoai == 1
+          if (baiDang.idLoai == 1) ...[
+            Text(
+              'Năm xuất bản: ${baiDang.namXuatBan?.toString() ?? '---'}',
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
+            ),
+          ],
         ],
       ),
     );
@@ -464,30 +471,36 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
             ),
             const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.school, size: 14, color: Colors.blueGrey),
-                const SizedBox(width: 4),
-                Text(
-                  baiDang.lopChuyenNganh ?? '---',
-                  style: const TextStyle(fontSize: 12, color: Colors.black87),
+            if (baiDang.idLoai == 1) ...[
+              if (baiDang.idNganh != 8) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.school, size: 14, color: Colors.blueGrey),
+                    const SizedBox(width: 4),
+                    Text(
+                      baiDang.lopChuyenNganh ?? '---',
+                      style:
+                          const TextStyle(fontSize: 12, color: Colors.black87),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 4),
               ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.calendar_today,
-                    size: 14, color: Colors.blueGrey),
-                const SizedBox(width: 4),
-                Text(
-                  "Năm: ${baiDang.namXuatBan?.toString() ?? '---'}",
-                  style: const TextStyle(fontSize: 12, color: Colors.black87),
-                ),
-              ],
-            ),
+              // Hiển thị năm trong mọi trường hợp khi idLoai == 1
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.calendar_today,
+                      size: 14, color: Colors.blueGrey),
+                  const SizedBox(width: 4),
+                  Text(
+                    "Năm: ${baiDang.namXuatBan?.toString() ?? '---'}",
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

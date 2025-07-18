@@ -33,6 +33,7 @@ class _PostScreenState extends State<PostScreen> {
   List<LoaiSanPham> danhSachLoai = [];
   Nganh? _selectedNganh;
   LoaiSanPham? _selectedLoai;
+  int? _selectedDoMoi = 100;
 
   final List<File> _capturedImages = [];
   final ImagePicker _picker = ImagePicker();
@@ -64,7 +65,7 @@ class _PostScreenState extends State<PostScreen> {
       {'percent': '70', 'desc': 'Đã sử dụng, gấp góc nhẹ'},
       {'percent': '50', 'desc': 'Bị lem mực hoặc rách nhẹ'},
       {'percent': '30', 'desc': 'Thiếu vài trang, vẫn đọc được'},
-      {'percent': '10', 'desc': 'Mất nhiều nội dung, chỉ để tham khảo'},
+      {'percent': '10', 'desc': 'Mất nhiều nội dung, chỉ tham khảo'},
     ],
   };
 
@@ -254,6 +255,7 @@ class _PostScreenState extends State<PostScreen> {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width > 600;
+    final isLoaiSachGiaoTrinh = _selectedLoai?.id != 1;
 
     return Scaffold(
       backgroundColor: Colors.grey[50], // Màu nền nhẹ nhàng, hiện đại
@@ -355,155 +357,140 @@ class _PostScreenState extends State<PostScreen> {
 
               _buildSectionTitle('Độ mới sản phẩm'),
               const SizedBox(height: 10),
-              Column(
-                children: (doMoiTheoLoai[_selectedLoai?.id] ?? []).map((item) {
-                  final isSelected = _doMoi == double.parse(item['percent']!);
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _doMoi = double.parse(item['percent']!);
-                      });
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(
-                        color:
-                            isSelected ? const Color(0xFF0079CF) : Colors.white,
-                        border: Border.all(
-                          color: isSelected
-                              ? const Color(0xFF0079CF)
-                              : Colors.grey[300]!,
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            isSelected
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            color: isSelected ? Colors.white : Colors.grey[600],
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              '${item['percent']}% - ${item['desc']}',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color:
-                                    isSelected ? Colors.white : Colors.black87,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+              DropdownButtonFormField<double>(
+                decoration: const InputDecoration(
+                  labelText: 'Chọn độ mới',
+                  border: OutlineInputBorder(),
+                ),
+                isExpanded: true, // ⭐ Quan trọng để tránh tràn nội dung
+                value: _doMoi,
+                items: (doMoiTheoLoai[_selectedLoai?.id] ?? [])
+                    .map<DropdownMenuItem<double>>((item) {
+                  final percent = double.parse(item['percent']!);
+                  final desc = item['desc']!;
+                  return DropdownMenuItem<double>(
+                    value: percent,
+                    child: Text(
+                      '$percent% - $desc',
+                      overflow: TextOverflow.ellipsis, // ⭐ Tránh tràn
+                      maxLines: 1,
                     ),
                   );
                 }).toList(),
-              ),
-
-              const SizedBox(height: 20),
-              _buildSectionTitle('Lớp chuyên ngành'),
-              const SizedBox(height: 10),
-              Container(
-                decoration: _inputBoxDecoration(),
-                child: DropdownButtonFormField<String>(
-                  value: lopChuyenNganhController.text.isNotEmpty
-                      ? lopChuyenNganhController.text
-                      : null,
-                  items: ['CĐ Nghề', 'CĐ Ngành']
-                      .map((String value) => DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          ))
-                      .toList(),
-                  onChanged: (String? newValue) {
+                onChanged: (value) {
+                  if (value != null) {
                     setState(() {
-                      lopChuyenNganhController.text = newValue ?? '';
+                      _doMoi = value;
                     });
-                  },
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: Color(0xFF0079CF), width: 2),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
-                    filled: true,
-                    fillColor: Colors.transparent,
-                  ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Vui lòng chọn lớp chuyên ngành'
-                      : null,
-                ),
+                  }
+                },
+                validator: (value) =>
+                    value == null ? 'Vui lòng chọn độ mới' : null,
               ),
 
               const SizedBox(height: 20),
-              _buildSectionTitle('Năm xuất bản'),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: _namXuatBanOptions.map((year) {
-                  final isSelected = _selectedNamXuatBan == year;
-                  return GestureDetector(
-                    onTap: () {
+              if (!isLoaiSachGiaoTrinh) ...[
+                _buildSectionTitle('Hệ đào tạo'),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: _inputBoxDecoration(),
+                  child: DropdownButtonFormField<String>(
+                    value: lopChuyenNganhController.text.isNotEmpty
+                        ? lopChuyenNganhController.text
+                        : null,
+                    items: ['CĐ Nghề', 'CĐ Ngành']
+                        .map((String value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ))
+                        .toList(),
+                    onChanged: (String? newValue) {
                       setState(() {
-                        _selectedNamXuatBan = year;
+                        lopChuyenNganhController.text = newValue ?? '';
                       });
                     },
-                    child: Container(
-                      width: 80,
-                      height: 45,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color:
-                            isSelected ? const Color(0xFF0079CF) : Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: isSelected
-                              ? const Color(0xFF0079CF)
-                              : Colors.grey[300]!,
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          if (isSelected)
-                            BoxShadow(
-                              color: const Color(0xFF0079CF).withOpacity(0.2),
-                              blurRadius: 6,
-                              offset: const Offset(0, 3),
-                            )
-                        ],
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF0079CF), width: 2),
                       ),
-                      child: Text(
-                        '$year',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.white : Colors.black87,
-                        ),
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      filled: true,
+                      fillColor: Colors.transparent,
                     ),
-                  );
-                }).toList(),
-              ),
-              if (_selectedNamXuatBan == null)
-                const Padding(
-                  padding: EdgeInsets.only(top: 8),
-                  child: Text(
-                    'Vui lòng chọn năm xuất bản',
-                    style: TextStyle(color: Colors.red, fontSize: 13),
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Vui lòng chọn lớp chuyên ngành'
+                        : null,
                   ),
                 ),
+                const SizedBox(height: 20),
+              ],
+
+              const SizedBox(height: 20),
+              if (!isLoaiSachGiaoTrinh) ...[
+                _buildSectionTitle('Năm xuất bản'),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: _namXuatBanOptions.map((year) {
+                    final isSelected = _selectedNamXuatBan == year;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedNamXuatBan = year;
+                        });
+                      },
+                      child: Container(
+                        width: 80,
+                        height: 45,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFF0079CF)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFF0079CF)
+                                : Colors.grey[300]!,
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            if (isSelected)
+                              BoxShadow(
+                                color: const Color(0xFF0079CF).withOpacity(0.2),
+                                blurRadius: 6,
+                                offset: const Offset(0, 3),
+                              )
+                          ],
+                        ),
+                        child: Text(
+                          '$year',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                if (_selectedNamXuatBan == null)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Vui lòng chọn năm xuất bản',
+                      style: TextStyle(color: Colors.red, fontSize: 13),
+                    ),
+                  ),
+                const SizedBox(height: 20),
+              ],
 
               const SizedBox(height: 20),
 
