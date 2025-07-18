@@ -402,17 +402,19 @@ class _UpdatePostScreenState extends State<UpdatePostScreen> {
               const SizedBox(height: 20),
 
               if (_selectedLoai?.id == 1) ...[
-                _buildSectionTitle("Hệ đào tạo"),
-                _buildDropdownButtonFormField<String>(
-                  value: _selectedLopChuyenNganh,
-                  items: lopChuyenNganhOptions,
-                  getLabel: (lop) => lop,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedLopChuyenNganh = newValue!;
-                    });
-                  },
-                ),
+                if (_selectedNganh?.id != 8) ...[
+                  _buildSectionTitle("Hệ đào tạo"),
+                  _buildDropdownButtonFormField<String>(
+                    value: _selectedLopChuyenNganh,
+                    items: lopChuyenNganhOptions,
+                    getLabel: (lop) => lop,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedLopChuyenNganh = newValue!;
+                      });
+                    },
+                  ),
+                ],
                 _buildSectionTitle("Năm xuất bản"),
                 const SizedBox(height: 20),
                 _buildGridNamXuatBan(),

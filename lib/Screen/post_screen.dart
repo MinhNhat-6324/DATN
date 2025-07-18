@@ -390,47 +390,47 @@ class _PostScreenState extends State<PostScreen> {
 
               const SizedBox(height: 20),
               if (!isLoaiSachGiaoTrinh) ...[
-                _buildSectionTitle('Hệ đào tạo'),
-                const SizedBox(height: 10),
-                Container(
-                  decoration: _inputBoxDecoration(),
-                  child: DropdownButtonFormField<String>(
-                    value: lopChuyenNganhController.text.isNotEmpty
-                        ? lopChuyenNganhController.text
-                        : null,
-                    items: ['CĐ Nghề', 'CĐ Ngành']
-                        .map((String value) => DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            ))
-                        .toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        lopChuyenNganhController.text = newValue ?? '';
-                      });
-                    },
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                            color: Color(0xFF0079CF), width: 2),
+                if (_selectedNganh?.id != 8) ...[
+                  _buildSectionTitle('Hệ đào tạo'),
+                  const SizedBox(height: 10),
+                  Container(
+                    decoration: _inputBoxDecoration(),
+                    child: DropdownButtonFormField<String>(
+                      value: lopChuyenNganhController.text.isNotEmpty
+                          ? lopChuyenNganhController.text
+                          : null,
+                      items: ['CĐ Nghề', 'CĐ Ngành']
+                          .map((String value) => DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              ))
+                          .toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          lopChuyenNganhController.text = newValue ?? '';
+                        });
+                      },
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF0079CF), width: 2),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        filled: true,
+                        fillColor: Colors.transparent,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
-                      filled: true,
-                      fillColor: Colors.transparent,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Vui lòng chọn lớp chuyên ngành'
+                          : null,
                     ),
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Vui lòng chọn lớp chuyên ngành'
-                        : null,
                   ),
-                ),
-                const SizedBox(height: 20),
+                ],
               ],
 
-              const SizedBox(height: 20),
               if (!isLoaiSachGiaoTrinh) ...[
                 _buildSectionTitle('Năm xuất bản'),
                 const SizedBox(height: 10),
