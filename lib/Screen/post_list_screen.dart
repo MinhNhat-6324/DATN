@@ -345,6 +345,8 @@ class _PostListScreenState extends State<PostListScreen> {
 
   Widget _bookItem(BuildContext context, BaiDang baiDang, String imageUrl,
       double screenWidth) {
+            final chiHienTieuDeVaAnh = baiDang.idLoai != 1;
+    final laBaiDangChung = baiDang.idNganh == 8;
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -367,39 +369,62 @@ class _PostListScreenState extends State<PostListScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.broken_image),
+           Expanded(
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.broken_image,
+                        color: Colors.grey,
+                      ),
+                    )
                 ),
               ),
             ),
             const SizedBox(height: 6),
-            Text(
-              baiDang.tieuDe,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            Center(
+              child: Text(
+                baiDang.tieuDe,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
             ),
-            const SizedBox(height: 4),
-
-            // 🆕 Lớp chuyên ngành
-            Text(
-              "Lớp: ${baiDang.lopChuyenNganh ?? 'Không rõ'}",
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-
-            // 🆕 Năm xuất bản
-            Text(
-              "Năm: ${baiDang.namXuatBan?.toString() ?? '---'}",
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
-            ),
+            if (!chiHienTieuDeVaAnh && !laBaiDangChung) ...[
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.school, size: 14, color: Colors.blueGrey),
+                  const SizedBox(width: 4),
+                  Text(
+                    baiDang.lopChuyenNganh ?? 'Không rõ',
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ],
+            if (!chiHienTieuDeVaAnh) ...[
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.calendar_today,
+                      size: 14, color: Colors.blueGrey),
+                  const SizedBox(width: 4),
+                  Text(
+                    "Năm: ${baiDang.namXuatBan?.toString() ?? '---'}",
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
